@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "tools.h"
-
 typedef size_t value_type;
 
 enum stack_function_errors_e

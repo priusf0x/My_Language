@@ -17,8 +17,6 @@ do\
     { return output; }\
 } while (0);
 
-static const state_t UNDEFINED_ELEMENT = END_STATE_FLAG | KEYWORD_UNDEFINED;
-
 // ============================ STATE_MACHINE_INIT ============================
 
 static state_machine_return_e
@@ -265,30 +263,6 @@ AddKeyWord(char*           key_word,
 
 // ============================== WRITING_IN_FILE =============================
 
-static void  
-WriteRowInFile(state_t         row_index,
-               state_machine_t state_machine,
-               FILE*           file_output)
-{
-    ASSERT(state_machine != NULL);
-    ASSERT(file_output != NULL);
-
-    fprintf(file_output, "{");
-
-    for (unsigned char state_index = 0; state_index < MAX_CHAR_AMOUNT - 1;
-                                                             state_index++)
-    {   
-        fprintf(file_output, "%u, ", GetNextState(state_index, 
-                                            row_index, state_machine));
-    }
-    
-    fprintf(file_output, "%u", 
-                GetNextState((unsigned char) (MAX_CHAR_AMOUNT - 1), 
-                                        row_index, state_machine));
-        
-    fprintf(file_output, "}\n");
-}
-
 state_machine_return_e 
 WriteInFileStateMachine(state_machine_t state_machine,
                         const char*     file_name)
@@ -303,12 +277,10 @@ WriteInFileStateMachine(state_machine_t state_machine,
         return STATE_MACHINE_RETURN_FILE_OPEN_ERROR;
     }    
 
-    for(state_t row_index = 0; row_index < state_machine->state_amount;
-                                                            row_index++)
-    {
-        WriteRowInFile(row_index, state_machine, opened_file);
-    }
-
+    fwrite(&state_machine->state_amount, sizeof(state_t), 1, opened_file);
+    fwrite(state_machine->data, sizeof(state_t), 
+                state_machine->state_amount * MAX_CHAR_AMOUNT, opened_file);
+    
     if (fclose(opened_file) == 0)
     {
         return STATE_MACHINE_RETURN_FILE_CLOSE_ERROR;
@@ -317,7 +289,7 @@ WriteInFileStateMachine(state_machine_t state_machine,
     return STATE_MACHINE_RETURN_SUCCESS;
 }
 
-// ================================== UNDEFINITION ============================
+// =============================== UNDEFINITION ===============================
 
 #undef RETURN_IF_STATE_MACHINE_ERROR
 

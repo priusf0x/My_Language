@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
+#include <sys/stat.h>
 #include <stdarg.h>
 
 #include "Assert.h"
@@ -82,4 +83,21 @@ CheckIfEqual(double number_1, double number_2)
     }
 
     return false;
+}
+
+ssize_t 
+GetFileSize(const char* file_name)
+{
+    ASSERT(file_name != NULL);
+    
+    struct stat file_stat = {};
+
+    if (stat(file_name, &file_stat) != 0)
+    {
+        return -1;
+    }
+
+    ssize_t char_number = file_stat.st_size;
+    
+    return char_number;
 }

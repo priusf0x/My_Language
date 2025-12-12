@@ -2,7 +2,6 @@
 #define TREE_H
 
 #include <stdio.h>
-#include "name_space.h"
 
 enum edge_dir_e
 {

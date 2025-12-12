@@ -23,12 +23,25 @@ typedef buffer_s* buffer_t;
 
 // =========================== BUFFER_FUNCTIONS ===============================
 
+// ========================== MEMORY_CONTROLLING ============================== 
+
 buffer_return_e
 BufferInit(buffer_t*    buffer,
            const char*  file_name);
 
 buffer_return_e
 BufferDestroy(buffer_t* buffer);
+
+// ================================ ACTIONS ===================================
+
+void 
+SkipSpacesInBuffer(buffer_t buffer);
+
+void 
+SkipNSymbols(buffer_t buffer,
+             size_t   n);
+
+// ================================= DUMP =====================================
 
 void
 BufferDump(const buffer_t buffer);

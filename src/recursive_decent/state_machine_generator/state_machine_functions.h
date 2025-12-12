@@ -26,6 +26,17 @@ typedef state_machine_s* state_machine_t;
 const state_t END_STATE_FLAG = state_t (1 << (8 * sizeof(state_t) -  1));
 const size_t  MAX_CHAR_AMOUNT = 1 << 8;
 
+
+#define VECTOR_CUR_DIR "src/recursive_decent/state_machine_generator/"
+
+const char* const OP_FILE_NAME   = VECTOR_CUR_DIR "op_vector.conf";
+const char* const KW_FILE_NAME   = VECTOR_CUR_DIR "key_word_vector.conf";
+const char* const SYNT_FILE_NAME = VECTOR_CUR_DIR "syntax_vector.conf";
+
+#undef VECTOR_CUR_DIR
+
+const state_t UNDEFINED_ELEMENT = END_STATE_FLAG;
+
 // ========================== MEMORY_CONTROLLING_FUNCTIONS ====================
 
 state_machine_return_e 
@@ -51,17 +62,5 @@ GetNextState(unsigned char   current_char,
 state_machine_return_e 
 WriteInFileStateMachine(state_machine_t state_machine,
                         const char*     file_name);
-
-
-// =============================== KEYWORDS_ENUM ==============================
-
-enum keywords_e 
-{
-    KEYWORD_UNDEFINED,
-    KEYWORD_IF,
-    KEYWORD_WHILE,
-    KEYWORD_ELSE,
-    KEYWORD_MEOW
-};
 
 #endif // STATE_MACHINE_FUNCTIONS_H
