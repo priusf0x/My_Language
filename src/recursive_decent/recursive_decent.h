@@ -5,6 +5,7 @@
 
 #include "state_machine_functions.h" 
 #include "buffer.h"
+#include "vector.h"
 
 enum recursive_return_e 
 {
@@ -20,9 +21,10 @@ enum recursive_return_e
 struct read_context_s 
 {
     buffer_t        input_buffer;
-    state_machine_t key_word_vector;
-    state_machine_t operator_vector;
-    state_machine_t syntax_vector;
+    state_machine_t key_word_machine;
+    state_machine_t operator_machine;
+    state_machine_t syntax_machine;
+    vector_t        lex_vector;
 };
 
 typedef read_context_s* read_context_t;

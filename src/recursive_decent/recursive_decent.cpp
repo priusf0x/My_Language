@@ -1,7 +1,5 @@
 #include "recursive_decent.h"
 
-#include <cstddef>
-#include <exception>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -78,11 +76,11 @@ InitReadContext(read_context_t* context)
     }
 
     RETURN_IF_RECURSIVE_ERROR(InitVector(KW_FILE_NAME, 
-                                &(*context)->key_word_vector));
+                                &(*context)->key_word_machine));
     RETURN_IF_RECURSIVE_ERROR(InitVector(OP_FILE_NAME, 
-                                &(*context)->operator_vector));
+                                &(*context)->operator_machine));
     RETURN_IF_RECURSIVE_ERROR(InitVector(SYNT_FILE_NAME, 
-                                &(*context)->syntax_vector));
+                                &(*context)->syntax_machine));
     
     return RECURSIVE_RETURN_SUCCESS;
 } 
@@ -95,9 +93,9 @@ DestroyReadContext(read_context_t* context)
         return RECURSIVE_RETURN_SUCCESS;
     }
 
-    StateMachineDestroy(&(*context)->key_word_vector);
-    StateMachineDestroy(&(*context)->operator_vector);
-    StateMachineDestroy(&(*context)->syntax_vector);
+    StateMachineDestroy(&(*context)->key_word_machine);
+    StateMachineDestroy(&(*context)->operator_machine);
+    StateMachineDestroy(&(*context)->syntax_machine);
     BufferDestroy(&(*context)->input_buffer);
     free(*context);
     *context = NULL;
@@ -245,17 +243,17 @@ IdentifyLex(token_s*       token,
 
     buffer_t buffer = context->input_buffer;
 
-    if ((output = CheckIfType(buffer, context->key_word_vector)))
+    if ((output = CheckIfType(buffer, context->key_word_machine)))
     {   
         token->lex_type = LEX_TYPE_KEY_WORD;
         token->value.key_word = (key_word_type_e) output;
     }
-    else if ((output = CheckIfType(buffer, context->operator_vector)))
+    else if ((output = CheckIfType(buffer, context->operator_machine)))
     {
         token->lex_type = LEX_TYPE_OPERATOR;
         token->value.op = (operator_type_e) output;
     }
-    else if ((output = CheckIfType(buffer, context->syntax_vector)))
+    else if ((output = CheckIfType(buffer, context->syntax_machine)))
     {
         token->lex_type = LEX_TYPE_SYNTAX;
         token->value.syntax = (syntax_type_e) output;
