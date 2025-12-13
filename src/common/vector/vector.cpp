@@ -16,7 +16,6 @@ struct vector_s
     size_t   elements_amount;
     size_t   first_element;
     size_t   capacity;
-    size_t   byte_capacity;
 };
 
 static vector_function_return_e
@@ -54,10 +53,9 @@ VectorInit(vector_t*   vector,
     }
     
     (*vector)->element_size = element_size;
-    (*vector)->byte_capacity = element_size * expected_capacity;
+    size_t byte_capacity = element_size * expected_capacity;
 
-    (*vector)->data = (uint8_t*) calloc((*vector)->byte_capacity, 
-                                            sizeof(uint8_t));
+    (*vector)->data = (uint8_t*) calloc(byte_capacity, sizeof(uint8_t));
     if ((*vector)->data == NULL)
     {
         return VECTOR_FUNCTION_ALLOCATION_ERROR;
@@ -110,6 +108,49 @@ VectorPop(void*    value,
     ASSERT(value != NULL);
     ASSERT(vector != NULL);
 
+    vector_function_return_e output = VECTOR_FUNCTION_SUCCESS;
+
+    if ((output = VectorViewValue(value, vector)) != VECTOR_FUNCTION_SUCCESS)
+    {
+        return output;
+    }
+
+    if ((output = VectorEraseFirst(vector)) != VECTOR_FUNCTION_SUCCESS)
+    {
+        return output;
+    }
+
+    return VECTOR_FUNCTION_SUCCESS;
+}
+
+vector_function_return_e
+VectorViewValue(void*    value, 
+                vector_t vector)
+{
+    ASSERT(value != NULL);
+    ASSERT(vector != NULL);
+
+    if (VectorNormalizeSize(vector) != 0)
+    {
+        return VECTOR_FUNCTION_ALLOCATION_ERROR;
+    }   
+
+    if ((vector->elements_amount) == 0)
+    {
+        return VECTOR_FUNCTION_EMPTY;
+    }
+
+    memcpy(value, GetFirstElementPointer(vector), vector->element_size);
+
+    return VECTOR_FUNCTION_SUCCESS;
+}
+
+vector_function_return_e
+VectorEraseFirst(vector_t vector)
+{
+    ASSERT(value != NULL);
+    ASSERT(vector != NULL);
+    
     if (VectorNormalizeSize(vector) != 0)
     {
         return VECTOR_FUNCTION_ALLOCATION_ERROR;
@@ -121,7 +162,6 @@ VectorPop(void*    value,
     }
 
     memset(GetFirstElementPointer(vector), 0, vector->element_size);
-    memcpy(value, GetFirstElementPointer(vector), vector->element_size);
     vector->elements_amount--;
     vector->first_element++;
 
@@ -138,9 +178,11 @@ VectorNormalizeSize(vector_t vector)
     if ((vector->elements_amount + vector->first_element)   
             >= vector->capacity)
     {
-        void* new_memory_block = recalloc(vector->data, 
-                                          vector->byte_capacity,    
-                                          vector->byte_capacity << 1);
+        size_t byte_capacity = vector->capacity * vector->element_size;
+
+        void* new_memory_block = recalloc(vector->data,
+                                          byte_capacity,    
+                                          byte_capacity << 1);
                                                   
         if (new_memory_block == NULL)
         {
@@ -148,7 +190,6 @@ VectorNormalizeSize(vector_t vector)
         }
 
         vector->data = (uint8_t*) new_memory_block;
-        vector->byte_capacity <<= 1;
         vector->capacity <<= 1;
     }
 
@@ -163,7 +204,10 @@ VectorDump(const vector_t vector)
 {
     ASSERT(vector != NULL);
 
-    for (size_t index = 0; index < vector->byte_capacity; index++)
+    
+    size_t byte_capacity = vector->capacity * vector->element_size;
+
+    for (size_t index = 0; index < byte_capacity; index++)
     {
         if ((index % 16 == 0))
         {

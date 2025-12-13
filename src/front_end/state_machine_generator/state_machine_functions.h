@@ -27,13 +27,13 @@ const state_t END_STATE_FLAG = state_t (1 << (8 * sizeof(state_t) -  1));
 const size_t  MAX_CHAR_AMOUNT = 1 << 8;
 
 
-#define VECTOR_CUR_DIR "src/recursive_decent/state_machine_generator/"
+#define MACHINE_CUR_DIR "src/front_end/state_machine_generator/"
 
-const char* const OP_FILE_NAME   = VECTOR_CUR_DIR "op_machine.conf";
-const char* const KW_FILE_NAME   = VECTOR_CUR_DIR "key_word_machine.conf";
-const char* const SYNT_FILE_NAME = VECTOR_CUR_DIR "syntax_machine.conf";
+const char* const OP_FILE_NAME   = MACHINE_CUR_DIR "op_machine.conf";
+const char* const KW_FILE_NAME   = MACHINE_CUR_DIR "key_word_machine.conf";
+const char* const SYNT_FILE_NAME = MACHINE_CUR_DIR "syntax_machine.conf";
 
-#undef VECTOR_CUR_DIR
+#undef MACHINE_CUR_DIR
 
 const state_t UNDEFINED_ELEMENT = END_STATE_FLAG;
 

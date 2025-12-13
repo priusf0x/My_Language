@@ -50,12 +50,18 @@ enum syntax_type_e
 
 // ============================= STRUCT_AND_UNIONS ============================
 
+struct id_s 
+{
+    size_t   table_index;
+    string_s id;
+};
+
 union token_value_u 
 {
     key_word_type_e key_word;
     operator_type_e op;
     syntax_type_e   syntax;
-    string_s        string;
+    id_s            id;
 };
 
 struct token_s 

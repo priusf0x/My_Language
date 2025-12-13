@@ -5,7 +5,7 @@
 
 #include "Assert.h"
 #include "stack.h"
-#include "name_space.h"
+#include "tools.h"
 
 static tree_return_e SetTreeSize(tree_t tree, size_t  new_size);
 static tree_return_e NumerizeElements(tree_t tree, size_t start_index);
@@ -57,12 +57,6 @@ ClearNode(tree_t tree,
           size_t current_node)
 {
     node_s* node = &tree->nodes_array[current_node]; 
-
-    if (node->node_value.expression_type == EXPRESSION_TYPE_VAR)
-    {
-        DeleteElementInTable(node->node_value.expression.variable.name_table_index,
-                                 tree->name_table);
-    }
 
     node->right_index = -1;
     node->left_index = -1;
@@ -119,7 +113,7 @@ const uint8_t CHILD_RIGHT_USAGE = 0b0000'0001;
 const uint8_t CHILD_LEFT_USAGE = 0b0000'0010;
 const uint8_t INVALID_NODE =  0b0000'0100;
 
-static uint8_t CheckTreeChildren(tree_s* tree, node_s* node);
+static uint8_t CheckTreeChildren(node_s* node);
 static tree_return_e InitNode(tree_s* tree, node_s* node, uint8_t children_usage);
 static tree_return_e TreeNormilizeSize(tree_s* tree);
 
@@ -131,7 +125,7 @@ TreeAddNode(tree_t  tree,
     ASSERT(node != NULL);
 
     uint8_t children_usage = 0b0000'0000;
-    if((children_usage = CheckTreeChildren(tree, node)) == INVALID_NODE)
+    if((children_usage = CheckTreeChildren(node)) == INVALID_NODE)
     { 
         return TREE_RETURN_INVALID_NODE;
     }
@@ -155,8 +149,7 @@ TreeAddNode(tree_t  tree,
 // ============================== ADD_NODES_HELPERS ===========================
 
 static uint8_t
-CheckTreeChildren(tree_t  tree,
-                  node_s* node)
+CheckTreeChildren(node_s* node)
 {
     ASSERT(tree != NULL);
     ASSERT(node != NULL);
@@ -256,17 +249,6 @@ InitNode(tree_t  tree,
             = (ssize_t) node->index_in_tree;
     }
 
-    if (node->node_value.expression_type == EXPRESSION_TYPE_VAR)
-    {
-        if (AddNameInTable(&node->node_value.expression.variable.variable_name,
-                                &node->node_value.expression.variable.name_table_index,
-                                    node->index_in_tree, tree->name_table) != 0)
-        {
-
-            return TREE_RETURN_NAME_TABLE_ERROR;
-        }
-    }
-
     memcpy(tree->nodes_array + node->index_in_tree, node, sizeof(node_s));
 
     return TREE_RETURN_SUCCESS;
@@ -284,7 +266,7 @@ CheckNode(tree_t  tree,
     {
         return TREE_RETURN_INCORRECT_VALUE;
     }
-    else if (current_index > tree->nodes_capacity)
+    else if ((size_t) current_index > tree->nodes_capacity)
     {
         return TREE_RETURN_INCORRECT_VALUE;
     }
@@ -306,7 +288,7 @@ CheckNode(tree_t  tree,
 // ========================== TREE_METHODS/FUNCTIONS ==========================
 
 tree_return_e 
-ForceConnect(tree_t     tree, //NOTE -  MAKE VERIFICATOR 
+ForceConnect(tree_t     tree, 
              ssize_t    current_index,  
              ssize_t    new_parent,
              edge_dir_e new_direction)

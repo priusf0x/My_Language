@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
 #include "buffer.h"
-#include "vector.h"
+#include "tools.h"
 #include "recursive_decent.h"
 
 int

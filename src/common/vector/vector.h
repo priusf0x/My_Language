@@ -33,6 +33,12 @@ VectorPush(void* value, vector_t vector);
 vector_function_return_e 
 VectorPop(void* value, vector_t vector);
 
+vector_function_return_e
+VectorViewValue(void* value, vector_t vector);
+
+vector_function_return_e
+VectorEraseFirst(vector_t vector);
+
 // ================================== DUMP ====================================
  
 void

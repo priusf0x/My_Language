@@ -1,111 +1,12 @@
 #include "recursive_decent.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-
 #include "Assert.h"
-#include "buffer.h"
+#include "my_string.h"
 #include "lexes.h"
-#include "state_machine_functions.h"
-#include "tools.h"
-
-const char* INPUT_FILE_NAME = "pletnev.zov";
-
-#define RETURN_IF_RECURSIVE_ERROR(___X___) \
-do\
-{\
-    recursive_return_e output = ___X___;\
-    if (output != RECURSIVE_RETURN_SUCCESS)\
-    { return output; }\
-} while (0);
-
-// ================================= INIT_HELPERS =============================
-
-static recursive_return_e 
-InitVector(const char*      file_name,
-           state_machine_t* state_machine)
-{   
-    ASSERT(file_name != NULL);
-    ASSERT(state_machine != NULL);
-
-    FILE* vector_file = fopen(file_name, "r");
-    if (vector_file == NULL)
-    {
-        return RECURSIVE_RETURN_FILE_OPEN_ERROR;
-    }
-
-    state_t state_amount = 0;
-    fread(&state_amount, sizeof(state_t), 1, vector_file);
-    
-    if (StateMachineInit(state_machine, state_amount) != 0)
-    {
-        return RECURSIVE_RETURN_ALLOCATION_ERROR;
-    }
-
-    fread((*state_machine)->data, sizeof(state_t), state_amount 
-                * MAX_CHAR_AMOUNT, vector_file);     
-    
-    if (fclose(vector_file))
-    {
-        return RECURSIVE_RETURN_FILE_CLOSE_ERROR;
-    }
-    
-    return RECURSIVE_RETURN_SUCCESS;
-}
-
-// ================================ INITIALIZATION ============================ 
-
-recursive_return_e 
-InitReadContext(read_context_t* context)
-{
-    ASSERT(context != NULL);
-
-    *context = (read_context_t) calloc(1, sizeof(read_context_s));
-
-    if (*context == NULL)
-    {
-        return RECURSIVE_RETURN_ALLOCATION_ERROR;
-    }
-
-    if(BufferInit(&(*context)->input_buffer, INPUT_FILE_NAME) != 0)
-    {
-        free(*context);
-        *context = NULL;
-
-        return RECURSIVE_RETURN_BUFFER_ERROR;
-    }
-
-    RETURN_IF_RECURSIVE_ERROR(InitVector(KW_FILE_NAME, 
-                                &(*context)->key_word_machine));
-    RETURN_IF_RECURSIVE_ERROR(InitVector(OP_FILE_NAME, 
-                                &(*context)->operator_machine));
-    RETURN_IF_RECURSIVE_ERROR(InitVector(SYNT_FILE_NAME, 
-                                &(*context)->syntax_machine));
-    
-    return RECURSIVE_RETURN_SUCCESS;
-} 
-
-recursive_return_e
-DestroyReadContext(read_context_t* context)
-{
-    if ((context == NULL) || (*context == NULL))
-    {
-        return RECURSIVE_RETURN_SUCCESS;
-    }
-
-    StateMachineDestroy(&(*context)->key_word_machine);
-    StateMachineDestroy(&(*context)->operator_machine);
-    StateMachineDestroy(&(*context)->syntax_machine);
-    BufferDestroy(&(*context)->input_buffer);
-    free(*context);
-    *context = NULL;
-
-    return RECURSIVE_RETURN_SUCCESS;
-}
-
-// =============================== READ_HELPER ================================
 
 #define CURRENT_POSITION (buffer->buffer + buffer->current_position)
+
+// =============================== READ_HELPER ================================
 
 // temp // temp // temp // temp // temp // temp // temp // temp // temp // temp
 
@@ -261,29 +162,36 @@ IdentifyLex(token_s*       token,
     else if (CheckIfDigit(CURRENT_POSITION))
     {
         token->lex_type = LEX_TYPE_CONST;
-        ReadConstFromBuffer(buffer, &token->value.string);
+        ReadConstFromBuffer(buffer, &token->value.id.id);
     } 
     else
     {
         token->lex_type = LEX_TYPE_ID;
-        ReadIdFromBuffer(buffer, &token->value.string);
+        ReadIdFromBuffer(buffer, &token->value.id.id);
     }
 }
 
 recursive_return_e 
 DivideInLexems(read_context_t context)
 {
-    ASSERT(input_string != NULL);
+    ASSERT(context != NULL);
 
     token_s token = {};
-
-    IdentifyLex(&token, context);
+    buffer_t buffer = context->input_buffer;
+    
+    do 
+    {
+        IdentifyLex(&token, context);
+        if (VectorPush(&token, context->lex_vector) != 0)
+        {
+            return RECURSIVE_RETURN_VECTOR_ERROR;
+        }
+    } 
+    while ((*CURRENT_POSITION != 0) && token.lex_type != LEX_TYPE_UNDEFINED);
 
     return RECURSIVE_RETURN_SUCCESS;
 }
 
+// ================================ UNDEFINITION ===============================
 
-// =============================== UNDEFINITION ===============================
-
-#undef RETURN_IF_RECURSIVE_ERROR
 #undef CURRENT_POSITION
