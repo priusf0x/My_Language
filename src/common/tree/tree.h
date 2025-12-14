@@ -1,6 +1,7 @@
 #ifndef TREE_H
 #define TREE_H
 
+#include "lexes.h"
 #include <stdio.h>
 
 enum edge_dir_e
@@ -23,23 +24,23 @@ enum tree_return_e
     TREE_RETURN_EMPTY_TREE
 };
 
-typedef int node_data_t;
+typedef token_s node_data_t;
 
 struct node_s
 {
-    ssize_t     parent_index;
-    edge_dir_e  parent_connection;
-    ssize_t     right_index;
-    ssize_t     left_index;
-    node_data_t node_value;
-    ssize_t     index_in_tree;
+    ssize_t       parent_index;
+    edge_dir_e    parent_connection;
+    ssize_t       right_index;
+    ssize_t       left_index;
+    node_data_t   node_value;
+    ssize_t       index_in_tree;
 };
 
 struct tree_s
 {
-    node_s*      nodes_array;
-    size_t       nodes_count;
-    size_t       nodes_capacity;
+    node_s*       nodes_array;
+    size_t        nodes_count;
+    size_t        nodes_capacity;
 };
 
 typedef tree_s* tree_t;
@@ -49,7 +50,7 @@ const ssize_t NO_LINK = -1;
 // ============================= MEMORY_CONTROLLING ===========================
 
 tree_return_e TreeInit(tree_t* tree, size_t start_tree_size);
-tree_return_e TreeDestroy(tree_t tree);
+tree_return_e TreeDestroy(tree_t* tree);
 
 //============================= NODES_ACTIONS =================================
 

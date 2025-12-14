@@ -6,6 +6,7 @@
 #include "state_machine_functions.h" 
 #include "buffer.h"
 #include "vector.h"
+#include "tree.h"
 
 enum recursive_return_e 
 {
@@ -15,17 +16,20 @@ enum recursive_return_e
     RECURSIVE_RETURN_BUFFER_ERROR,
     RECURSIVE_RETURN_FILE_OPEN_ERROR,
     RECURSIVE_RETURN_FILE_CLOSE_ERROR,
-    RECURSIVE_RETURN_STATE_MACHINE_ERRORS
+    RECURSIVE_RETURN_STATE_MACHINE_ERROR,
+    RECURSIVE_RETURN_TREE_ERROR
 };
 
 
 struct read_context_s 
 {
-    buffer_t        input_buffer;
-    state_machine_t key_word_machine;
-    state_machine_t operator_machine;
-    state_machine_t syntax_machine;
-    vector_t        lex_vector;
+    buffer_t           input_buffer;
+    state_machine_t    key_word_machine;
+    state_machine_t    operator_machine;
+    state_machine_t    syntax_machine;
+    vector_t           lex_vector;
+    tree_t             lex_tree;
+    recursive_return_e status;
 };
 
 typedef read_context_s* read_context_t;

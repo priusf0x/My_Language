@@ -1,8 +1,10 @@
+#include "buffer.h"
 #include "recursive_decent.h"
 
 #include "Assert.h"
 #include "my_string.h"
 #include "lexes.h"
+#include "tools.h"
 
 #define CURRENT_POSITION (buffer->buffer + buffer->current_position)
 
@@ -56,24 +58,16 @@ CheckIfAlNum(const char* string)
 
 static void
 ReadConstFromBuffer(buffer_t  buffer,
-                    string_s* const_string)
+                    long int* constant)
 {
     ASSERT(buffer != NULL);
-    ASSERT(const_string != NULL);
+    ASSERT(constant != NULL);
 
-    size_t check_output = 0;
-    size_t string_length = 0;
-    const_string->string_source = CURRENT_POSITION;
+    char* end_ptr = NULL;
 
-    do 
-    {
-        check_output = CheckIfDigit(CURRENT_POSITION);
-        SkipNSymbols(buffer, check_output);
-        string_length += check_output;
-    } 
-    while (check_output);
+    *constant = strtol(CURRENT_POSITION, &end_ptr, 0);
 
-    const_string->string_size += string_length;
+    buffer->current_position += (size_t) (end_ptr - CURRENT_POSITION);
 }
 
 static void
@@ -127,7 +121,6 @@ CheckIfType(buffer_t        buffer,
     if (current_state & (~END_STATE_FLAG))
     {
         SkipNSymbols(buffer, read_amount);
-        SkipSpacesInBuffer(buffer);
     }
 
     return current_state & (~END_STATE_FLAG);
@@ -162,12 +155,16 @@ IdentifyLex(token_s*       token,
     else if (CheckIfDigit(CURRENT_POSITION))
     {
         token->lex_type = LEX_TYPE_CONST;
-        ReadConstFromBuffer(buffer, &token->value.id.id);
+        ReadConstFromBuffer(buffer, &token->value.constant);
     } 
-    else
-    {
+    else if (CheckIfSymb(CURRENT_POSITION))
+    {  
         token->lex_type = LEX_TYPE_ID;
         ReadIdFromBuffer(buffer, &token->value.id.id);
+    }
+    else
+    {
+        token->lex_type = LEX_TYPE_UNDEFINED;
     }
 }
 
@@ -181,13 +178,15 @@ DivideInLexems(read_context_t context)
     
     do 
     {
+        BufferDump(buffer);
         IdentifyLex(&token, context);
         if (VectorPush(&token, context->lex_vector) != 0)
         {
             return RECURSIVE_RETURN_VECTOR_ERROR;
         }
+        SkipSpacesInBuffer(buffer);
     } 
-    while ((*CURRENT_POSITION != 0) && token.lex_type != LEX_TYPE_UNDEFINED);
+    while ((*CURRENT_POSITION != 0) && (token.lex_type != LEX_TYPE_UNDEFINED));
 
     return RECURSIVE_RETURN_SUCCESS;
 }

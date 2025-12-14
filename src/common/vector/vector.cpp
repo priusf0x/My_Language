@@ -148,7 +148,6 @@ VectorViewValue(void*    value,
 vector_function_return_e
 VectorEraseFirst(vector_t vector)
 {
-    ASSERT(value != NULL);
     ASSERT(vector != NULL);
     
     if (VectorNormalizeSize(vector) != 0)
@@ -173,7 +172,7 @@ VectorEraseFirst(vector_t vector)
 static vector_function_return_e
 VectorNormalizeSize(vector_t vector)
 {
-    ASSERT(swag != NULL);
+    ASSERT(vector != NULL);
 
     if ((vector->elements_amount + vector->first_element)   
             >= vector->capacity)

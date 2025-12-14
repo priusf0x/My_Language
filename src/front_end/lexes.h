@@ -23,6 +23,14 @@ enum key_word_type_e
     KEY_WORD_WHILE
 };
 
+const char* const KEY_WORD_NAMINGS[] = 
+{
+    "UNDEFINED",
+    "if",
+    "var",
+    "while"
+};
+
 enum operator_type_e 
 {
     OPERATOR_UNDEFINED,
@@ -38,6 +46,21 @@ enum operator_type_e
     OPERATOR_LESS_OR_EQUAL
 };
 
+const char* const OP_NAMINGS[] = 
+{
+    "UNDEFINED",
+    "+",
+    "-",
+    "*",
+    "/",
+    "!=",
+    "=",    
+    ">",
+    ">=",
+    "<",
+    "<="
+};
+
 enum syntax_type_e
 {
     SYNTAX_UNDEFINED,
@@ -46,6 +69,16 @@ enum syntax_type_e
     SYNTAX_END_BODY,
     SYNTAX_START_BRACKET,
     SYNTAX_END_BRACKET
+};
+
+const char* const SYNTAX_NAMINGS[] = 
+{
+    "UNDEFINED",
+    ";",
+    "{",
+    "}",
+    "(",
+    ")"
 };
 
 // ============================= STRUCT_AND_UNIONS ============================
@@ -61,6 +94,7 @@ union token_value_u
     key_word_type_e key_word;
     operator_type_e op;
     syntax_type_e   syntax;
+    long int        constant;
     id_s            id;
 };
 

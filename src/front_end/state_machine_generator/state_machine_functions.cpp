@@ -162,7 +162,7 @@ FindDifference(state_machine_t state_machine,
                string_s*       key_word_string)
 {
     ASSERT(state_machine != NULL);
-    ASSERT(key_word != NULL);
+    ASSERT(key_word_string != NULL);
 
     unsigned char character = (unsigned char) *key_word_string->string_source;
     state_t next_state = GetNextState(character, 0, state_machine);;
@@ -189,7 +189,6 @@ AddWordToDictionary(state_t*        state,
 {
     ASSERT(state_machine != NULL);
     ASSERT(key_word_string != NULL);
-    ASSERT(last_state != NULL);
 
     unsigned char character = 0;
     state_t current_state = *state;

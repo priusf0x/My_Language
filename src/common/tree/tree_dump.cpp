@@ -2,14 +2,11 @@
 
 #include "tree.h"
 
-#include <cstddef>
 #include <stdio.h>
 
 #include "Assert.h"
 #include "tools.h"
-#include "stack.h"
-#include "expression.h"
-#include "operation_info.h"
+#include "lexes.h"
 
 static tree_return_e TreeDot(const tree_t tree, const char* current_time);
 static void DrawNode(const node_s* node, FILE* dot_file);
@@ -63,13 +60,13 @@ PrintHTMLHeader(FILE*       log_file,
     ASSERT(current_time != NULL);
 
     fprintf(log_file, "<html>\n"
-                        "<style>"
-                        "body{background-color: rgb(48, 48, 48);}"
-                        "h1{color: rgb(212, 58, 56);}"
-                        "h2{color: rgba(153, 26, 24, 1);}"
-                        "h4{color: rgb(182, 182, 182);}"
-                        "</style>"
-                        "<h1> TREE_DUMP %s</h1>\n",  current_time);
+                      "<style>"
+                      "body{background-color: rgb(48, 48, 48);}"
+                      "h1{color: rgb(212, 58, 56);}"
+                      "h2{color: rgba(153, 26, 24, 1);}"
+                      "h4{color: rgb(182, 182, 182);}"
+                      "</style>"
+                      "<h1> TREE_DUMP %s</h1>\n",  current_time);
 }
 
 static void
@@ -89,35 +86,42 @@ PrintTreeInfo(const tree_t tree,
 }
 
 static void
-PrintElementInString(const expression_s* expr,
-                     char*               address,
-                     size_t              string_length)
+PrintElementInString(const token_s* token,
+                     char*          address,
+                     size_t         string_length)
 {
-    ASSERT(expr != NULL);
+    ASSERT(token != NULL);
     ASSERT(address != NULL);
 
-    string_s var_str = {};
-
-    switch(expr->expression_type)
-    {
-        case EXPRESSION_TYPE_CONST:
-            snprintf(address, string_length, "constant %f", 
-                        expr->expression.constant);
+    switch(token->lex_type)
+    {   
+        case LEX_TYPE_ID:
+            snprintf(address, string_length, "id %*s", 
+                        (int) token->value.id.id.string_size,
+                        token->value.id.id.string_source);
             break;
 
-        case EXPRESSION_TYPE_OPERATOR:
-            snprintf(address, string_length, "operation %s", 
-                     OPERATION_INFO[expr->expression.operation].
-                                        operation_name.string_source); 
+        case LEX_TYPE_CONST:
+            snprintf(address, string_length, "constant %ld", 
+                        token->value.constant);
+            break;    
+            
+        case LEX_TYPE_KEY_WORD:
+            snprintf(address, string_length, "key word %s", 
+                        KEY_WORD_NAMINGS[token->value.key_word]);
             break;
 
-        case EXPRESSION_TYPE_VAR:
-            var_str = expr->expression.variable.variable_name;
-            snprintf(address, string_length, "variable %.*s", 
-                        (int) var_str.string_size, var_str.string_source);
+        case LEX_TYPE_OPERATOR:
+            snprintf(address, string_length, "operator %s", 
+                        KEY_WORD_NAMINGS[token->value.op]); 
+            break;
+        
+        case LEX_TYPE_SYNTAX:
+            snprintf(address, string_length, "syntax %s", 
+                        KEY_WORD_NAMINGS[token->value.op]); 
             break;
 
-        case EXPRESSION_TYPE_UNDEFINED:
+        case LEX_TYPE_UNDEFINED:
         default: return;
     }
 }
@@ -182,8 +186,8 @@ TreeDot(const tree_t tree,
 
     for (size_t index = 1; index < tree->nodes_capacity; index++)
     {
-        if (tree->nodes_array[index].node_value.expression_type 
-            != EXPRESSION_TYPE_UNDEFINED)
+        if (tree->nodes_array[index].node_value.lex_type 
+            != LEX_TYPE_UNDEFINED)
         {
             DrawNode(tree->nodes_array + index, dot_file);
         }
@@ -231,25 +235,40 @@ DrawNode(const node_s* node,
 
     fprintf(dot_file, "%s\n", graphviz_node);
 
-    const char* operator_color = "#3bd02dff"; 
-    const char* var_color = "#3f31dbff";
+    const char* operator_color = "#2d3bd0ff"; 
+    const char* id_color = "#fb2014ff";
+    const char* key_word_color = "#2dcbd0ff"; 
+    const char* syntax_color = "#acacacff"; 
+    const char* constant_color = "#ff01f7ff";
 
-    switch(node->node_value.expression_type) // coloring node 
+    switch(node->node_value.lex_type) // coloring node 
     {
-        case EXPRESSION_TYPE_CONST:
-            break;
-
-        case EXPRESSION_TYPE_OPERATOR:        
+        case LEX_TYPE_ID:
             fprintf(dot_file, "%ld[fillcolor = \"%s\"]", node->index_in_tree, 
-                    operator_color);
+                        id_color);
             break;
 
-        case EXPRESSION_TYPE_VAR:
+        case LEX_TYPE_CONST:        
             fprintf(dot_file, "%ld[fillcolor = \"%s\"]", node->index_in_tree, 
-                    var_color);
+                        constant_color);
             break;
 
-        case EXPRESSION_TYPE_UNDEFINED:
+        case LEX_TYPE_KEY_WORD:
+            fprintf(dot_file, "%ld[fillcolor = \"%s\"]", node->index_in_tree, 
+                        key_word_color);
+            break;
+
+        case LEX_TYPE_OPERATOR:
+            fprintf(dot_file, "%ld[fillcolor = \"%s\"]", node->index_in_tree, 
+                        operator_color);
+            break;
+
+        case LEX_TYPE_SYNTAX:
+            fprintf(dot_file, "%ld[fillcolor = \"%s\"]", node->index_in_tree, 
+                        syntax_color);
+            break;
+
+        case LEX_TYPE_UNDEFINED:
         default: break;
     }
 

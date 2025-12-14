@@ -1,5 +1,6 @@
 #include "tree.h"
 
+#include <cstddef>
 #include <stdio.h>
 #include <string.h>
 
@@ -41,11 +42,14 @@ TreeInit(tree_t* tree,
 }
 
 tree_return_e
-TreeDestroy(tree_t tree)
+TreeDestroy(tree_t* tree)
 {
-    free(tree->nodes_array);
-    free(tree);
-    tree = NULL;
+    if ((tree != NULL) && (*tree != NULL))
+    {
+        free((*tree)->nodes_array);
+        *tree = NULL;
+        free(tree);
+    }
 
     return TREE_RETURN_SUCCESS;
 }
@@ -75,7 +79,7 @@ SetTreeSize(tree_t tree,
         return TREE_RETURN_INCORRECT_VALUE;
     }
 
-    if ((tree->nodes_array = (node_s*) recalloc(tree->nodes_array,
+    if ((tree->nodes_array = (node_s*) recalloc(tree->nodes_array, // FIXME: add bufferization before recalloc
         sizeof(node_s) * (tree->nodes_count + 1),
         sizeof(node_s) * new_size)) == NULL)
     {
@@ -151,7 +155,6 @@ TreeAddNode(tree_t  tree,
 static uint8_t
 CheckTreeChildren(node_s* node)
 {
-    ASSERT(tree != NULL);
     ASSERT(node != NULL);
 
     ssize_t child_left = node->left_index;
@@ -333,7 +336,7 @@ ForceConnect(tree_t     tree,
     {
         if ((node_array[new_parent].right_index != NO_LINK) &&
             (output = DeleteSubgraph(tree, node_array[new_parent].right_index)) 
-            != TREE_RETURN_SUCCESS)
+                != TREE_RETURN_SUCCESS)
         {
             return output;
         } 
@@ -369,11 +372,13 @@ DeleteSubgraph(tree_t tree,
     
     if (tree->nodes_array[node_index].parent_connection == EDGE_DIR_RIGHT)
     {
-        tree->nodes_array[tree->nodes_array[node_index].parent_index].right_index = NO_LINK;
+        tree->nodes_array[tree->nodes_array[node_index].parent_index]
+                                                    .right_index = NO_LINK;
     }
     else if (tree->nodes_array[node_index].parent_connection == EDGE_DIR_LEFT)
     {
-        tree->nodes_array[tree->nodes_array[node_index].parent_index].left_index = NO_LINK;
+        tree->nodes_array[tree->nodes_array[node_index].parent_index]
+                                                    .left_index = NO_LINK;
     }
 
     if (StackPush(bypass_stack, (size_t) node_index) != 0)
@@ -448,16 +453,12 @@ CopySubgraph(tree_t     tree,
         return output;
     }
 
-    #ifndef NDEBUG
-        TreeDump(tree);
-    #endif 
-
     if (current_node.left_index != NO_LINK)
     {
         if ((output = CopySubgraph(tree, dest_index, current_node.left_index, 
             NULL, EDGE_DIR_LEFT)) != TREE_RETURN_SUCCESS)
         {
-            return TREE_RETURN_SUCCESS;
+            return output;
         }
     }
 
@@ -466,7 +467,7 @@ CopySubgraph(tree_t     tree,
         if ((output = CopySubgraph(tree, dest_index, current_node.right_index, 
             NULL, EDGE_DIR_RIGHT)) != TREE_RETURN_SUCCESS)
         {
-            return TREE_RETURN_SUCCESS;
+            return output;
         }
     }
 
