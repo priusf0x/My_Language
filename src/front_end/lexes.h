@@ -20,7 +20,8 @@ enum key_word_type_e
     KEY_WORD_UNDEFINED,
     KEY_WORD_IF,
     KEY_WORD_VAR,
-    KEY_WORD_WHILE
+    KEY_WORD_WHILE,
+    KEY_WORD_FUNCTION
 };
 
 const char* const KEY_WORD_NAMINGS[] = 
@@ -28,7 +29,8 @@ const char* const KEY_WORD_NAMINGS[] =
     "UNDEFINED",
     "if",
     "var",
-    "while"
+    "while",
+    "function"
 };
 
 enum operator_type_e 
@@ -38,6 +40,7 @@ enum operator_type_e
     OPERATOR_MINUS,
     OPERATOR_MUL,
     OPERATOR_DIV,
+    OPERATOR_EQUALITY,
     OPERATOR_N_EQUALITY,
     OPERATOR_ASSIGNMENT,
     OPERATOR_MORE,
@@ -53,6 +56,7 @@ const char* const OP_NAMINGS[] =
     "-",
     "*",
     "/",
+    "==",
     "!=",
     "=",    
     ">",
@@ -68,7 +72,8 @@ enum syntax_type_e
     SYNTAX_START_BODY,
     SYNTAX_END_BODY,
     SYNTAX_START_BRACKET,
-    SYNTAX_END_BRACKET
+    SYNTAX_END_BRACKET,
+    SYNTAX_ARG_CONNECTOR
 };
 
 const char* const SYNTAX_NAMINGS[] = 
@@ -78,7 +83,8 @@ const char* const SYNTAX_NAMINGS[] =
     "{",
     "}",
     "(",
-    ")"
+    ")",
+    ","
 };
 
 // ============================= STRUCT_AND_UNIONS ============================
@@ -102,6 +108,7 @@ struct token_s
 {
     lex_types_e   lex_type;
     token_value_u value;
+    size_t        buf_pos;
 };
 
 #endif // LEXES_H

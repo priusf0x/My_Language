@@ -17,7 +17,8 @@ enum recursive_return_e
     RECURSIVE_RETURN_FILE_OPEN_ERROR,
     RECURSIVE_RETURN_FILE_CLOSE_ERROR,
     RECURSIVE_RETURN_STATE_MACHINE_ERROR,
-    RECURSIVE_RETURN_TREE_ERROR
+    RECURSIVE_RETURN_TREE_ERROR,
+    RECURSIVE_RETURN_READ_ERROR
 };
 
 
@@ -30,6 +31,7 @@ struct read_context_s
     vector_t           lex_vector;
     tree_t             lex_tree;
     recursive_return_e status;
+    size_t             last_read_pos;
 };
 
 typedef read_context_s* read_context_t;

@@ -11,10 +11,6 @@ main()
      
     InitReadContext(&read_context);
 
-    DivideInLexems(read_context);
-
-    BufferDump(read_context->input_buffer);
-
     DestroyReadContext(&read_context);
  
     return 0;

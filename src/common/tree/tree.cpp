@@ -47,8 +47,8 @@ TreeDestroy(tree_t* tree)
     if ((tree != NULL) && (*tree != NULL))
     {
         free((*tree)->nodes_array);
+        free(*tree);
         *tree = NULL;
-        free(tree);
     }
 
     return TREE_RETURN_SUCCESS;
@@ -144,7 +144,6 @@ TreeAddNode(tree_t  tree,
         tree->nodes_array[node->index_in_tree].parent_index;
 
     InitNode(tree, node, children_usage);
-
     tree->nodes_count++;
 
     return TREE_RETURN_SUCCESS;
@@ -262,9 +261,7 @@ InitNode(tree_t  tree,
 static tree_return_e
 CheckNode(tree_t  tree,
           ssize_t current_index)
-{
-    node_s current_node = tree->nodes_array[current_index];
-    
+{    
     if (current_index == NO_LINK)
     {
         return TREE_RETURN_INCORRECT_VALUE;
@@ -272,13 +269,6 @@ CheckNode(tree_t  tree,
     else if ((size_t) current_index > tree->nodes_capacity)
     {
         return TREE_RETURN_INCORRECT_VALUE;
-    }
-    else if ((current_index != 0) 
-            && ((current_node.parent_connection == EDGE_DIR_NO_DIRECTION)
-                && (current_node.right_index == NO_LINK) 
-                && (current_node.left_index == NO_LINK)))
-    {
-        return TREE_RETURN_INVALID_NODE;        
     }
 
     return TREE_RETURN_SUCCESS;

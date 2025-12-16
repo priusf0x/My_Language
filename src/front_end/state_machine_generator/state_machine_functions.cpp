@@ -168,7 +168,7 @@ FindDifference(state_machine_t state_machine,
     state_t next_state = GetNextState(character, 0, state_machine);;
     state_t current_state = 0;
     
-    while ((next_state != UNDEFINED_ELEMENT) // change to check if end state 
+    while (!(next_state & END_STATE_FLAG) // change to check if end state 
                 && (key_word_string->string_size != 0))
     {
         key_word_string->string_source++;
@@ -192,7 +192,7 @@ AddWordToDictionary(state_t*        state,
 
     unsigned char character = 0;
     state_t current_state = *state;
-    state_t next_state = 0;
+    state_t next_state = *state;
 
     while (key_word_string->string_size != 0) 
     {

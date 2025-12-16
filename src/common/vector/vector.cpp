@@ -137,6 +137,7 @@ VectorViewValue(void*    value,
 
     if ((vector->elements_amount) == 0)
     {
+        memset(value, 0, vector->element_size);
         return VECTOR_FUNCTION_EMPTY;
     }
 
@@ -191,7 +192,7 @@ VectorNormalizeSize(vector_t vector)
         vector->data = (uint8_t*) new_memory_block;
         vector->capacity <<= 1;
     }
-
+    
     return VECTOR_FUNCTION_SUCCESS;
 }
 

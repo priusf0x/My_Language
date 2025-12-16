@@ -1,10 +1,1 @@
-134 + x - (343 * y);
-
-#include <stdio.h>
-
-int main(void)
-{
-  fprintf(stderr, "meow");
-  
-  return 0;
-  }
+3242 - yey( 12, x(2) + 3) * (234 / (32 - y()))

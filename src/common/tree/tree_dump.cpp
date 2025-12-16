@@ -96,7 +96,7 @@ PrintElementInString(const token_s* token,
     switch(token->lex_type)
     {   
         case LEX_TYPE_ID:
-            snprintf(address, string_length, "id %*s", 
+            snprintf(address, string_length, "id %.*s", 
                         (int) token->value.id.id.string_size,
                         token->value.id.id.string_source);
             break;
@@ -113,12 +113,12 @@ PrintElementInString(const token_s* token,
 
         case LEX_TYPE_OPERATOR:
             snprintf(address, string_length, "operator %s", 
-                        KEY_WORD_NAMINGS[token->value.op]); 
+                        OP_NAMINGS[token->value.op]); 
             break;
         
         case LEX_TYPE_SYNTAX:
             snprintf(address, string_length, "syntax %s", 
-                        KEY_WORD_NAMINGS[token->value.op]); 
+                        SYNTAX_NAMINGS[token->value.syntax]); 
             break;
 
         case LEX_TYPE_UNDEFINED:

@@ -3,8 +3,8 @@
 #include "Assert.h"
 #include "lexes.h"
 #include "recursive_decent.h"
-#include "tools.h"
 #include "tree.h"
+#include "tools.h"
 
 #define RETURN_NO_LINK_IF_ERROR (void)0
 
@@ -41,118 +41,38 @@ ConnectLexes(ssize_t        parent_node,
             return;
         }
     }
-
 }
 
 ssize_t 
-AddIdNode(const id_s*    id_value,
-          read_context_t context)
+AddLexem(const token_s* token,
+         read_context_t context)
 {
+    ASSERT(token != NULL);
     ASSERT(context != NULL);
-    RETURN_NO_LINK_IF_ERROR;
-
-    node_s id_node = {.parent_index  = NO_LINK,
-                      .right_index   = NO_LINK,
-                      .left_index    = NO_LINK,
-                      .index_in_tree = NO_LINK};    
-    id_node.node_value.lex_type = LEX_TYPE_ID; 
-    id_node.node_value.value.id = *id_value;
-
-    if (TreeAddNode(context->lex_tree, &id_node) != 0)
-    {
-        context->status = RECURSIVE_RETURN_TREE_ERROR;
-    }
-
-    return id_node.index_in_tree;
-}
-
-ssize_t 
-AddKeyWordNode(key_word_type_e key_word,
-               read_context_t  context)
-{
-    ASSERT(context != NULL);
-    RETURN_NO_LINK_IF_ERROR;
-
-    node_s kw_node = {.parent_index  = NO_LINK,
-                      .right_index   = NO_LINK,
-                      .left_index    = NO_LINK,
-                      .index_in_tree = NO_LINK};    
     
-    kw_node.node_value.lex_type = LEX_TYPE_KEY_WORD; 
-    kw_node.node_value.value.key_word = key_word;
-
-    if (TreeAddNode(context->lex_tree, &kw_node) != 0)
+    node_s new_node = {.parent_index  = NO_LINK,
+                       .right_index   = NO_LINK,
+                       .left_index    = NO_LINK,
+                       .index_in_tree = NO_LINK};    
+    new_node.node_value = *token;
+    
+    if (TreeAddNode(context->lex_tree, &new_node) != 0)
     {
         context->status = RECURSIVE_RETURN_TREE_ERROR;
     }
 
-    return kw_node.index_in_tree;
+    return new_node.index_in_tree;
 }
 
 ssize_t 
-AddConstNode(long int        constant,
-             read_context_t  context)
+AddArgConnector(read_context_t context)
 {
     ASSERT(context != NULL);
-    RETURN_NO_LINK_IF_ERROR;
 
-    node_s const_node = {.parent_index  = NO_LINK,
-                         .right_index   = NO_LINK,
-                         .left_index    = NO_LINK,
-                         .index_in_tree = NO_LINK};    
-    const_node.node_value.lex_type = LEX_TYPE_CONST; 
-    const_node.node_value.value.constant = constant;
+    token_s token = {.lex_type = LEX_TYPE_SYNTAX,
+                     .value    = {.syntax = SYNTAX_ARG_CONNECTOR}};
 
-    if (TreeAddNode(context->lex_tree, &const_node) != 0)
-    {
-        context->status = RECURSIVE_RETURN_TREE_ERROR;
-    }
-
-    return const_node.index_in_tree;
-}
-
-ssize_t 
-AddOpNode(operator_type_e op,
-          read_context_t  context)
-{
-    ASSERT(context != NULL);
-    RETURN_NO_LINK_IF_ERROR;
-
-    node_s const_node = {.parent_index  = NO_LINK,
-                         .right_index   = NO_LINK,
-                         .left_index    = NO_LINK,
-                         .index_in_tree = NO_LINK};    
-    const_node.node_value.lex_type = LEX_TYPE_OPERATOR; 
-    const_node.node_value.value.op = op;
-
-    if (TreeAddNode(context->lex_tree, &const_node) != 0)
-    {
-        context->status = RECURSIVE_RETURN_TREE_ERROR;
-    }
-
-    return const_node.index_in_tree;
-}
-
-ssize_t 
-AddSyntaxNode(syntax_type_e   syntax,
-              read_context_t  context)
-{
-    ASSERT(context != NULL);
-    RETURN_NO_LINK_IF_ERROR;
-
-    node_s const_node = {.parent_index  = NO_LINK,
-                         .right_index   = NO_LINK,
-                         .left_index    = NO_LINK,
-                         .index_in_tree = NO_LINK};    
-    const_node.node_value.lex_type = LEX_TYPE_SYNTAX; 
-    const_node.node_value.value.syntax = syntax;
-
-    if (TreeAddNode(context->lex_tree, &const_node) != 0)
-    {
-        context->status = RECURSIVE_RETURN_TREE_ERROR;
-    }
-
-    return const_node.index_in_tree;
+    return AddLexem(&token, context);
 }
 
 // ============================= UNDEFINITION =================================

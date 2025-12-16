@@ -72,24 +72,25 @@ ReadConstFromBuffer(buffer_t  buffer,
 
 static void
 ReadIdFromBuffer(buffer_t  buffer,
-                  string_s* const_string)
+                 string_s* id_string)
 {
     ASSERT(buffer != NULL);
-    ASSERT(const_string != NULL);
+    ASSERT(id_string != NULL);
 
     size_t check_output = 0;
     size_t string_length = 0;
-    const_string->string_source = CURRENT_POSITION;
+    id_string->string_source = CURRENT_POSITION;
 
     do 
     {
         check_output = CheckIfAlNum(CURRENT_POSITION);
         SkipNSymbols(buffer, check_output);
         string_length += check_output;
-    } 
+    }
     while (check_output);
 
-    const_string->string_size += string_length;
+
+    id_string->string_size = string_length;
 }
 
 // ================================== LEXER ===================================
@@ -109,6 +110,7 @@ CheckIfType(buffer_t        buffer,
     {
         current_state = GetNextState((unsigned char) *string, 
                                         current_state, state_machine);
+                                        
         if (current_state & END_STATE_FLAG)
         {
             break;
@@ -122,7 +124,7 @@ CheckIfType(buffer_t        buffer,
     {
         SkipNSymbols(buffer, read_amount);
     }
-
+    
     return current_state & (~END_STATE_FLAG);
 }
 
@@ -175,10 +177,11 @@ DivideInLexems(read_context_t context)
 
     token_s token = {};
     buffer_t buffer = context->input_buffer;
-    
+    SkipSpacesInBuffer(context->input_buffer);
+
     do 
     {
-        BufferDump(buffer);
+        token.buf_pos = context->input_buffer->current_position;
         IdentifyLex(&token, context);
         if (VectorPush(&token, context->lex_vector) != 0)
         {
