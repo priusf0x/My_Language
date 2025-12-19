@@ -1,5 +1,6 @@
 #include "recursive_decent.h"
 
+
 #include <cstdio>
 #include <stdlib.h>
 #include <stdio.h>
@@ -59,7 +60,7 @@ InitMachine(const char*      file_name,
 
 // ================================ INITIALIZATION ============================ 
 
-static ssize_t GetStatement(read_context_t context);
+static ssize_t GetGlobal(read_context_t context);
 
 recursive_return_e 
 InitReadContext(read_context_t* context)
@@ -108,7 +109,7 @@ InitReadContext(read_context_t* context)
 
     TreeInit(&(*context)->lex_tree, 10);
 
-    ssize_t meow =  GetStatement(*context);
+    ssize_t meow =  GetGlobal(*context);
     (*context)->lex_tree->nodes_array[0].left_index = meow; 
     
     fprintf(stderr, "%zu", (*context)->last_read_pos);
@@ -164,7 +165,7 @@ static ssize_t GetReturn(read_context_t context);
 static ssize_t GetInitVar(read_context_t context);
 static ssize_t GetFuncDefinition(read_context_t context);
 static ssize_t GetIfWhile(read_context_t context);
-// static ssize_t GetStatement(read_context_t context);
+static ssize_t GetStatement(read_context_t context);
 
 static ssize_t 
 GetFunctionArg(read_context_t context)
@@ -172,21 +173,24 @@ GetFunctionArg(read_context_t context)
     ASSERT(context != NULL);
     RETURN_IF_ERROR;
 
-    ssize_t return_node = GetExpression(context); 
-    ssize_t arg_connector = NO_LINK; 
+    ssize_t arg_connector = ARG_CON;
+    CONNECT_LEXES(arg_connector, NO_LINK, GetExpression(context)); 
+    ssize_t return_node = arg_connector; 
+    ssize_t last_connector = arg_connector;
     token_s token = {};
-    VectorViewValue(&token, context->lex_vector);
+    VECTOR_VIEW(token);
 
     while ((token.lex_type == LEX_TYPE_SYNTAX)
                 && (token.value.syntax == SYNTAX_ARG_CONNECTOR))
     {
         VECTOR_ERASE;
         arg_connector = ARG_CON;
-        CONNECT_LEXES(arg_connector, GetExpression(context), return_node);
-        return_node = arg_connector;
+        CONNECT_LEXES(arg_connector, NO_LINK, GetExpression(context));
+        CONNECT_LEXES(last_connector, arg_connector, NO_LINK);
+        last_connector = arg_connector;
         VECTOR_VIEW(token);
     }
-
+    
     return return_node;
 }
 
@@ -431,6 +435,13 @@ GetInitVar(read_context_t context)
 
     token_s var_kw_token = {};
     VECTOR_VIEW(var_kw_token);
+
+    if ((var_kw_token.lex_type != LEX_TYPE_KEY_WORD)
+            || (var_kw_token.value.key_word != KEY_WORD_VAR))
+    {
+        return NO_LINK;
+    }
+
     VECTOR_ERASE;
     ssize_t var_kw_node = ADD__(var_kw_token);
     
@@ -444,7 +455,6 @@ GetInitVar(read_context_t context)
     }
     VECTOR_ERASE;
     ssize_t var_node = ADD__(id_token);
-
 
     token_s a_token = {};             
     VECTOR_VIEW(a_token);
@@ -493,19 +503,29 @@ GetFuncDefinition(read_context_t context)
     VECTOR_ERASE;
 
     ssize_t var_node = GetInitVar(context);
-    ssize_t arg_connector = NO_LINK; 
-    token_s token = {};
-    VECTOR_VIEW(token);
-    while ((token.lex_type == LEX_TYPE_SYNTAX)
-                && (token.value.syntax == SYNTAX_ARG_CONNECTOR))
+
+    if (var_node != NO_LINK)
     {
-        VECTOR_ERASE;
-        arg_connector = ARG_CON;
-        CONNECT_LEXES(arg_connector, GetInitVar(context), var_node);
+        ssize_t arg_connector = ARG_CON;
+        CONNECT_LEXES(arg_connector, NO_LINK, var_node); 
         var_node = arg_connector;
+
+        ssize_t last_arg_connector = arg_connector;
+        token_s token = {};
         VECTOR_VIEW(token);
+        while ((token.lex_type == LEX_TYPE_SYNTAX)
+                    && (token.value.syntax == SYNTAX_ARG_CONNECTOR))
+        {
+            VECTOR_ERASE;
+            arg_connector = ARG_CON;
+            CONNECT_LEXES(arg_connector, NO_LINK, GetInitVar(context));
+            CONNECT_LEXES(last_arg_connector, arg_connector, NO_LINK);
+            last_arg_connector = arg_connector;
+            VECTOR_VIEW(token);
+        }
+
+        CONNECT_LEXES(id_node, var_node, NO_LINK);
     }
-    CONNECT_LEXES(id_node, var_node, NO_LINK);
 
     VECTOR_VIEW(syntax_token);
     if ((syntax_token.lex_type != LEX_TYPE_SYNTAX)
@@ -622,17 +642,21 @@ GetStatement(read_context_t context)
                 && (token.value.syntax == SYNTAX_START_BODY))
     {
         VECTOR_ERASE;
-        return_node = GetStatement(context);
-        ssize_t statement_connector = NO_LINK;
+        ssize_t statement_connector = STMT_CON;
+        CONNECT_LEXES(statement_connector, NO_LINK, GetStatement(context));
+        return_node = statement_connector;
+        ssize_t last_stmt_connector = statement_connector;
+
         VECTOR_VIEW(token);
-        
         while ((token.lex_type != LEX_TYPE_SYNTAX) 
                     ||   (token.value.syntax != SYNTAX_END_BODY))
         {
             statement_connector = STMT_CON;
-            CONNECT_LEXES(statement_connector, GetStatement(context), 
-                            return_node);
-            return_node = statement_connector;
+            CONNECT_LEXES(statement_connector, NO_LINK, 
+                                GetStatement(context));
+            CONNECT_LEXES(last_stmt_connector, statement_connector, 
+                            NO_LINK);
+            last_stmt_connector = statement_connector;
             VECTOR_VIEW(token);
         }
 
@@ -656,7 +680,34 @@ GetStatement(read_context_t context)
     return return_node;
 }
 
-static 
+static ssize_t 
+GetGlobal(read_context_t context)
+{
+    ASSERT(context != NULL);
+
+    token_s token = {};
+    VECTOR_VIEW(token);
+    ssize_t connector_node = G_CON;
+    CONNECT_LEXES(connector_node, NO_LINK, 
+                        GetStatement(context));
+
+    ssize_t return_node = connector_node;
+    ssize_t last_connector_node = connector_node;
+
+    VECTOR_VIEW(token);
+    while(token.lex_type != LEX_TYPE_UNDEFINED)
+    {
+        connector_node = G_CON;
+        CONNECT_LEXES(connector_node, NO_LINK, 
+                            GetStatement(context));
+        CONNECT_LEXES(last_connector_node, connector_node, 
+                        NO_LINK);
+        last_connector_node = connector_node;
+        VECTOR_VIEW(token);
+    }
+
+    return return_node;
+}
 
 // =============================== UNDEFINITION ===============================
 

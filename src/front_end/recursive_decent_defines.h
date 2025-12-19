@@ -14,6 +14,7 @@
 #define ADD__(_T0KEN_)  AddLexem(&_T0KEN_, context); 
 #define ARG_CON  AddArgConnector(context)
 #define STMT_CON AddStatementConnector(context)
+#define G_CON AddGlobalConnector(context)
 
 // ============================== FUNCTIONS_HELPERS ===========================
 
@@ -28,6 +29,9 @@ AddArgConnector(read_context_t context);
 
 ssize_t 
 AddStatementConnector(read_context_t context);
+
+ssize_t 
+AddGlobalConnector(read_context_t context);
     
 // ============================================================================
 

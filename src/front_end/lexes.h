@@ -75,7 +75,8 @@ enum syntax_type_e
     SYNTAX_END_BODY,
     SYNTAX_START_BRACKET,
     SYNTAX_END_BRACKET,
-    SYNTAX_ARG_CONNECTOR
+    SYNTAX_ARG_CONNECTOR,
+    SYNTAX_GLOBAL_CONNECTOR
 };
 
 const char* const SYNTAX_NAMINGS[] = 
@@ -86,7 +87,8 @@ const char* const SYNTAX_NAMINGS[] =
     "}",
     "(",
     ")",
-    ","
+    ",",
+    "global_connector"
 };
 
 // ============================= STRUCT_AND_UNIONS ============================

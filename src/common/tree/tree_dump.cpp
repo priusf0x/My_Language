@@ -203,8 +203,8 @@ TreeDot(const tree_t tree,
     const ssize_t max_command_size = 200;
     char command[max_command_size] = {};
 
-    snprintf(command, max_command_size - 1, "dot -Tpng logs/%s.gv -o"
-             "logs/%s.png", current_time,
+    snprintf(command, max_command_size - 1, "dot -Tpng logs/%s.gv -o "
+             "logs/%s.png 2>/dev/null", current_time,
              current_time);
 
     system(command);
@@ -270,6 +270,14 @@ DrawNode(const node_s* node,
 
         case LEX_TYPE_UNDEFINED:
         default: break;
+    }
+
+    if ((node->left_index != NO_LINK) && (node->right_index != NO_LINK))
+    {
+        fprintf(dot_file, "\n{ rank = same; %ld, %ld }\n", 
+                        node->left_index, node->right_index);
+        fprintf(dot_file, "%ld -- %ld [style = invis] \n", 
+                        node->left_index, node->right_index);
     }
 
     if (node->left_index != NO_LINK)

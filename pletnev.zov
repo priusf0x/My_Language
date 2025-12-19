@@ -13,3 +13,10 @@ function sosal(var count, var amount, var meow)
 
     return 0;
 }
+
+function main()
+{
+    sosal (meow, bar, foo);
+
+    return 0;
+}
