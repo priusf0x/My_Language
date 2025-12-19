@@ -656,6 +656,7 @@ GetStatement(read_context_t context)
     return return_node;
 }
 
+static 
 
 // =============================== UNDEFINITION ===============================
 
