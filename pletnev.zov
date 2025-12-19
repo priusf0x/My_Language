@@ -1,1 +1,15 @@
-3242 - yey( 12, x(2) + 3) * (234 / (32 - y()))
+function sosal(var count, var amount, var meow)
+{
+    while (count > 0)
+    {
+        count = count - amount;
+    }
+
+    while (amount == 0)
+    {
+        amount = amount + 1;
+        count = count - 1;
+    }
+
+    return 0;
+}

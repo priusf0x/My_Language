@@ -112,7 +112,7 @@ PrintElementInString(const token_s* token,
             break;
 
         case LEX_TYPE_OPERATOR:
-            snprintf(address, string_length, "operator %s", 
+            snprintf(address, string_length, "operator \\%s", 
                         OP_NAMINGS[token->value.op]); 
             break;
         

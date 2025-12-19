@@ -33,10 +33,11 @@ main()
 
     StateMachineInit(&key_word_machine, 10); 
 
-    AddKeyWord("if"   , KW_END_SYMBOLS, KEY_WORD_IF      , key_word_machine);
-    AddKeyWord("var"  , KW_END_SYMBOLS, KEY_WORD_VAR     , key_word_machine);
-    AddKeyWord("while", KW_END_SYMBOLS, KEY_WORD_WHILE   , key_word_machine);
-    AddKeyWord("func",  KW_END_SYMBOLS, KEY_WORD_FUNCTION, key_word_machine);
+    AddKeyWord("if"      , KW_END_SYMBOLS, KEY_WORD_IF      , key_word_machine);
+    AddKeyWord("var"     , KW_END_SYMBOLS, KEY_WORD_VAR     , key_word_machine);
+    AddKeyWord("while"   , KW_END_SYMBOLS, KEY_WORD_WHILE   , key_word_machine);
+    AddKeyWord("function", KW_END_SYMBOLS, KEY_WORD_FUNCTION, key_word_machine);
+    AddKeyWord("return"  , KW_END_SYMBOLS, KEY_WORD_RETURN  , key_word_machine);
 
     WriteInFileStateMachine(key_word_machine, KW_FILE_NAME);
     StateMachineDestroy(&key_word_machine);
@@ -68,12 +69,12 @@ main()
 
     StateMachineInit(&syntax_machine, 10); 
 
-    AddKeyWord(";" , OP_END_SYMBOLS, SYNTAX_END_STRING   , syntax_machine);
-    AddKeyWord("{" , OP_END_SYMBOLS, SYNTAX_START_BODY   , syntax_machine);
-    AddKeyWord("}" , OP_END_SYMBOLS, SYNTAX_END_BODY     , syntax_machine);
-    AddKeyWord("(" , OP_END_SYMBOLS, SYNTAX_START_BRACKET, syntax_machine);
-    AddKeyWord(")" , OP_END_SYMBOLS, SYNTAX_END_BRACKET  , syntax_machine);
-    AddKeyWord("," , OP_END_SYMBOLS, SYNTAX_ARG_CONNECTOR, syntax_machine);
+    AddKeyWord(";" , OP_END_SYMBOLS, SYNTAX_STATEMENT_CONNECTOR, syntax_machine);
+    AddKeyWord("{" , OP_END_SYMBOLS, SYNTAX_START_BODY         , syntax_machine);
+    AddKeyWord("}" , OP_END_SYMBOLS, SYNTAX_END_BODY           , syntax_machine);
+    AddKeyWord("(" , OP_END_SYMBOLS, SYNTAX_START_BRACKET      , syntax_machine);
+    AddKeyWord(")" , OP_END_SYMBOLS, SYNTAX_END_BRACKET        , syntax_machine);
+    AddKeyWord("," , OP_END_SYMBOLS, SYNTAX_ARG_CONNECTOR      , syntax_machine);
 
     WriteInFileStateMachine(syntax_machine, SYNT_FILE_NAME);
     StateMachineDestroy(&syntax_machine);

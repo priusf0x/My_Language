@@ -1,5 +1,6 @@
 #include "recursive_decent.h"
 
+#include <cstdio>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -57,8 +58,8 @@ InitMachine(const char*      file_name,
 }
 
 // ================================ INITIALIZATION ============================ 
-    
-static ssize_t GetExpression(read_context_t context);
+
+static ssize_t GetStatement(read_context_t context);
 
 recursive_return_e 
 InitReadContext(read_context_t* context)
@@ -107,7 +108,7 @@ InitReadContext(read_context_t* context)
 
     TreeInit(&(*context)->lex_tree, 10);
 
-    ssize_t meow =  GetExpression(*context);
+    ssize_t meow =  GetStatement(*context);
     (*context)->lex_tree->nodes_array[0].left_index = meow; 
     
     fprintf(stderr, "%zu", (*context)->last_read_pos);
@@ -153,11 +154,17 @@ DestroyReadContext(read_context_t* context)
                           return NO_LINK;}\
                         } while (0)
 
-// static ssize_t GetExpression(read_context_t context);
+static ssize_t GetAssigmentExpression(read_context_t);
+static ssize_t GetExpression(read_context_t context);
 static ssize_t GetTerm(read_context_t context);
 static ssize_t GetBool(read_context_t context);
 static ssize_t GetPrimary(read_context_t context);
 static ssize_t GetFunctionArg(read_context_t context);
+static ssize_t GetReturn(read_context_t context);
+static ssize_t GetInitVar(read_context_t context);
+static ssize_t GetFuncDefinition(read_context_t context);
+static ssize_t GetIfWhile(read_context_t context);
+// static ssize_t GetStatement(read_context_t context);
 
 static ssize_t 
 GetFunctionArg(read_context_t context)
@@ -204,7 +211,7 @@ GetPrimary(read_context_t context)
                 || (token.value.syntax!= SYNTAX_END_BRACKET))
         {
             context->status = RECURSIVE_RETURN_READ_ERROR;
-
+            
             return NO_LINK;
         }
         
@@ -229,7 +236,7 @@ GetPrimary(read_context_t context)
                     || (token.value.syntax != SYNTAX_END_BRACKET))
             {
                 context->status = RECURSIVE_RETURN_READ_ERROR;
-        
+                
                 return NO_LINK;
             }
 
@@ -261,9 +268,8 @@ CheckIfBoolOp(const token_s* token)
     operator_type_e op = token->value.op;
 
     if (   (op == OPERATOR_EQUALITY)     || (op == OPERATOR_N_EQUALITY)
-        || (op == OPERATOR_ASSIGNMENT)   || (op == OPERATOR_MORE) 
-        || (op == OPERATOR_MORE_OR_EQ)   || (op == OPERATOR_LESS) 
-        || (op == OPERATOR_LESS_OR_EQUAL))
+        || (op == OPERATOR_MORE)         || (op == OPERATOR_MORE_OR_EQ)   
+        || (op == OPERATOR_LESS)         || (op == OPERATOR_LESS_OR_EQUAL))
     {
         return true;
     }
@@ -358,16 +364,39 @@ CheckIfPlusMinusOp(const token_s* token)
 }
 
 static ssize_t 
+GetAssigmentExpression(read_context_t context)
+{
+    ASSERT(context != NULL);
+    
+    token_s assigment_token = {};
+    VECTOR_VIEW(assigment_token);
+    ssize_t assigment_node = ADD__(assigment_token);
+    VECTOR_ERASE;
+
+    CONNECT_LEXES(assigment_node, NO_LINK, GetExpression(context));
+
+    return assigment_node;
+}
+
+static ssize_t 
 GetExpression(read_context_t context)
 {
     ASSERT(context != NULL);
     RETURN_IF_ERROR;
 
-    TreeDump(context->lex_tree);
+    token_s token = {};
     ssize_t return_node = GetTerm(context); 
     ssize_t plus_minus_op = NO_LINK; 
-    token_s token = {};
     VECTOR_VIEW(token);
+
+    if ((token.lex_type == LEX_TYPE_OPERATOR)
+            && (token.value.op == OPERATOR_ASSIGNMENT))
+    {
+        ssize_t assigment_node = GetAssigmentExpression(context); 
+        CONNECT_LEXES(assigment_node, return_node, NO_LINK);  
+        
+        return assigment_node;
+    }
 
     while (CheckIfPlusMinusOp(&token))
     {
@@ -376,6 +405,252 @@ GetExpression(read_context_t context)
         CONNECT_LEXES(plus_minus_op, return_node, GetTerm(context));
         return_node = plus_minus_op;
         VECTOR_VIEW(token);
+    }
+
+    return return_node;
+}
+
+static ssize_t 
+GetReturn(read_context_t context)
+{
+    ASSERT(context != NULL);
+
+    token_s return_token = {};
+    VECTOR_VIEW(return_token);
+    VECTOR_ERASE;
+    ssize_t return_node = ADD__(return_token);
+    CONNECT_LEXES(return_node, GetExpression(context), NO_LINK);
+
+    return return_node;
+}
+
+static ssize_t 
+GetInitVar(read_context_t context)
+{
+    ASSERT(context != NULL);
+
+    token_s var_kw_token = {};
+    VECTOR_VIEW(var_kw_token);
+    VECTOR_ERASE;
+    ssize_t var_kw_node = ADD__(var_kw_token);
+    
+    token_s id_token = {};
+    VECTOR_VIEW(id_token);
+    if (id_token.lex_type != LEX_TYPE_ID)
+    {   
+        context->status = RECURSIVE_RETURN_READ_ERROR;
+        
+        return NO_LINK;
+    }
+    VECTOR_ERASE;
+    ssize_t var_node = ADD__(id_token);
+
+
+    token_s a_token = {};             
+    VECTOR_VIEW(a_token);
+    if ((a_token.lex_type == LEX_TYPE_OPERATOR)
+            && (a_token.value.op == OPERATOR_ASSIGNMENT))
+    {
+        VECTOR_ERASE;
+        CONNECT_LEXES(var_kw_node, NO_LINK, GetExpression(context));
+    }
+    
+    CONNECT_LEXES(var_kw_node, var_node, NO_LINK);
+    
+    return var_kw_node;
+}
+
+static ssize_t 
+GetFuncDefinition(read_context_t context)
+{
+    ASSERT(context != NULL);
+
+    token_s function_kw_token = {};
+    VECTOR_VIEW(function_kw_token);
+    VECTOR_ERASE;
+    ssize_t function_kw_node = ADD__(function_kw_token);
+    
+    token_s id_token = {};
+    VECTOR_VIEW(id_token);
+    ssize_t id_node = ADD__(id_token);
+    if (id_token.lex_type != LEX_TYPE_ID)
+    {
+        context->status = RECURSIVE_RETURN_READ_ERROR;
+        
+        return NO_LINK;
+    } 
+    VECTOR_ERASE;
+
+    token_s syntax_token = {};
+    VECTOR_VIEW(syntax_token);
+    if ((syntax_token.lex_type != LEX_TYPE_SYNTAX)
+            || (syntax_token.value.syntax != SYNTAX_START_BRACKET))
+    {
+        context->status = RECURSIVE_RETURN_READ_ERROR;
+        
+        return NO_LINK;
+    }
+    VECTOR_ERASE;
+
+    ssize_t var_node = GetInitVar(context);
+    ssize_t arg_connector = NO_LINK; 
+    token_s token = {};
+    VECTOR_VIEW(token);
+    while ((token.lex_type == LEX_TYPE_SYNTAX)
+                && (token.value.syntax == SYNTAX_ARG_CONNECTOR))
+    {
+        VECTOR_ERASE;
+        arg_connector = ARG_CON;
+        CONNECT_LEXES(arg_connector, GetInitVar(context), var_node);
+        var_node = arg_connector;
+        VECTOR_VIEW(token);
+    }
+    CONNECT_LEXES(id_node, var_node, NO_LINK);
+
+    VECTOR_VIEW(syntax_token);
+    if ((syntax_token.lex_type != LEX_TYPE_SYNTAX)
+            || (syntax_token.value.syntax != SYNTAX_END_BRACKET))
+    {
+        context->status = RECURSIVE_RETURN_READ_ERROR;
+        
+        return NO_LINK;
+    }
+    VECTOR_ERASE;
+
+    CONNECT_LEXES(function_kw_node, id_node, GetStatement(context));
+
+    return function_kw_node;
+}
+
+static ssize_t 
+GetIfWhile(read_context_t context)
+{
+    ASSERT(context != NULL);
+
+    token_s function_kw_token = {};
+    VECTOR_VIEW(function_kw_token);
+    VECTOR_ERASE;
+    ssize_t whileif_kw_node = ADD__(function_kw_token);
+
+    token_s syntax_token = {};
+    VECTOR_VIEW(syntax_token);
+    if ((syntax_token.lex_type != LEX_TYPE_SYNTAX)
+            || (syntax_token.value.syntax != SYNTAX_START_BRACKET))
+    {
+        context->status = RECURSIVE_RETURN_READ_ERROR;
+        
+        return NO_LINK;
+    }
+    VECTOR_ERASE;
+
+    ssize_t condition_node = GetExpression(context);
+
+    VECTOR_VIEW(syntax_token);
+    if ((syntax_token.lex_type != LEX_TYPE_SYNTAX)
+            || (syntax_token.value.syntax != SYNTAX_END_BRACKET))
+    {
+        context->status = RECURSIVE_RETURN_READ_ERROR;
+        
+        return NO_LINK;
+    }
+    VECTOR_ERASE;
+
+    CONNECT_LEXES(whileif_kw_node, condition_node, GetStatement(context));
+
+    return whileif_kw_node;
+}
+
+static ssize_t 
+GetStatement(read_context_t context)
+{
+    ASSERT(context != NULL);
+
+    token_s token = {};
+    ssize_t return_node = NO_LINK;
+    VECTOR_VIEW(token);
+
+    if (token.lex_type == LEX_TYPE_KEY_WORD)
+    {
+        if ((token.value.key_word == KEY_WORD_IF)
+                || (token.value.key_word == KEY_WORD_WHILE))
+        {
+            return_node = GetIfWhile(context);
+        }
+        else if (token.value.key_word == KEY_WORD_VAR)
+        {
+            return_node = GetInitVar(context);
+
+            VECTOR_VIEW(token);
+            if ((token.lex_type != LEX_TYPE_SYNTAX)
+                 && (token.value.syntax != SYNTAX_STATEMENT_CONNECTOR))
+            { 
+                context->status = RECURSIVE_RETURN_READ_ERROR;
+                
+                return NO_LINK;
+            }
+            VECTOR_ERASE;
+        }
+        else if (token.value.key_word == KEY_WORD_FUNCTION)
+        {
+            return_node = GetFuncDefinition(context);         
+            
+            VECTOR_VIEW(token);
+        }
+        else if (token.value.key_word == KEY_WORD_RETURN)
+        {
+            return_node = GetReturn(context);
+                
+            VECTOR_VIEW(token);
+            if ((token.lex_type != LEX_TYPE_SYNTAX)
+                 && (token.value.syntax != SYNTAX_STATEMENT_CONNECTOR))
+            {
+                context->status = RECURSIVE_RETURN_READ_ERROR;
+
+                return NO_LINK;
+            }
+            VECTOR_ERASE;
+            
+        }
+        else
+        {
+            context->status = RECURSIVE_RETURN_READ_ERROR;
+        
+            return NO_LINK;
+        }
+    }
+    else if ((token.lex_type == LEX_TYPE_SYNTAX)
+                && (token.value.syntax == SYNTAX_START_BODY))
+    {
+        VECTOR_ERASE;
+        return_node = GetStatement(context);
+        ssize_t statement_connector = NO_LINK;
+        VECTOR_VIEW(token);
+        
+        while ((token.lex_type != LEX_TYPE_SYNTAX) 
+                    ||   (token.value.syntax != SYNTAX_END_BODY))
+        {
+            statement_connector = STMT_CON;
+            CONNECT_LEXES(statement_connector, GetStatement(context), 
+                            return_node);
+            return_node = statement_connector;
+            VECTOR_VIEW(token);
+        }
+
+        VECTOR_ERASE;
+    }
+    else
+    {
+        return_node = GetExpression(context);
+
+        VECTOR_VIEW(token); 
+        if ((token.lex_type != LEX_TYPE_SYNTAX)
+             || (token.value.syntax != SYNTAX_STATEMENT_CONNECTOR))
+        {
+            context->status = RECURSIVE_RETURN_READ_ERROR;
+            
+            return NO_LINK;
+        }
+        VECTOR_ERASE;
     }
 
     return return_node;

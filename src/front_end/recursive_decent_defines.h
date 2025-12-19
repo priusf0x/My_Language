@@ -11,8 +11,9 @@
 #define CONNECT_LEXES(_PARENT_, _LEFT_NODE_, _RIGHT_NODE_)\
     ConnectLexes(_PARENT_, _LEFT_NODE_, _RIGHT_NODE_, context)
 
-#define ADD__(_T0KEN_) AddLexem(&_T0KEN_, context)
-#define ARG_CON AddArgConnector(context)
+#define ADD__(_T0KEN_)  AddLexem(&_T0KEN_, context); 
+#define ARG_CON  AddArgConnector(context)
+#define STMT_CON AddStatementConnector(context)
 
 // ============================== FUNCTIONS_HELPERS ===========================
 
@@ -24,6 +25,9 @@ AddLexem(const token_s* token, read_context_t context);
 
 ssize_t 
 AddArgConnector(read_context_t context);
+
+ssize_t 
+AddStatementConnector(read_context_t context);
     
 // ============================================================================
 

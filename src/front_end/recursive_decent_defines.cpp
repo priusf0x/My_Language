@@ -75,6 +75,17 @@ AddArgConnector(read_context_t context)
     return AddLexem(&token, context);
 }
 
+ssize_t 
+AddStatementConnector(read_context_t context)
+{
+    ASSERT(context != NULL);
+
+    token_s token = {.lex_type = LEX_TYPE_SYNTAX,
+                     .value    = {.syntax = SYNTAX_STATEMENT_CONNECTOR}};
+
+    return AddLexem(&token, context);
+}
+
 // ============================= UNDEFINITION =================================
 
 #undef RETURN_NO_LINK_IF_ERROR

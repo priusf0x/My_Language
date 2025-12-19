@@ -21,7 +21,8 @@ enum key_word_type_e
     KEY_WORD_IF,
     KEY_WORD_VAR,
     KEY_WORD_WHILE,
-    KEY_WORD_FUNCTION
+    KEY_WORD_FUNCTION,
+    KEY_WORD_RETURN
 };
 
 const char* const KEY_WORD_NAMINGS[] = 
@@ -30,7 +31,8 @@ const char* const KEY_WORD_NAMINGS[] =
     "if",
     "var",
     "while",
-    "function"
+    "function",
+    "return"
 };
 
 enum operator_type_e 
@@ -68,7 +70,7 @@ const char* const OP_NAMINGS[] =
 enum syntax_type_e
 {
     SYNTAX_UNDEFINED,
-    SYNTAX_END_STRING,
+    SYNTAX_STATEMENT_CONNECTOR,
     SYNTAX_START_BODY,
     SYNTAX_END_BODY,
     SYNTAX_START_BRACKET,
