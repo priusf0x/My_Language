@@ -1,4 +1,5 @@
-SOURCES = common/tools.cpp\
+SOURCES = \
+		  common/tools.cpp\
 	  	  common/my_string.cpp\
 	  	  common/murmurhash.cpp\
 	  	  front_end/state_machine_generator/state_machine_functions.cpp\
@@ -9,7 +10,8 @@ SOURCES = common/tools.cpp\
 		  common/stack/stack.cpp \
 		  common/tree/tree.cpp\
 		  common/tree/tree_dump.cpp\
-		  front_end/recursive_decent_defines.cpp
+		  front_end/recursive_decent_defines.cpp\
+		  front_end/name_space/name_space.cpp
 		  
 SOURCE_MAIN_AST := front_end/ast_main.cpp
 SOURCE_MAIN_GEN := front_end/state_machine_generator/state_machine_main.cpp

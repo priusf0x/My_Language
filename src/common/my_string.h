@@ -33,7 +33,7 @@ bool StrCmpWithEnding(const char* string, const char* example,
 bool CheckIfSymbVar(char symbol);
 void ReadVarString(char* src, string_s* string_dst);
 
-unsigned int MurmurHash2 (char * key, unsigned int len);
+unsigned int HashString(const string_s* string);
 
 // ============================================================================
 

@@ -1,11 +1,12 @@
+#include "Assert.h"
 #include "my_string.h"
 
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #pragma GCC diagnostic ignored "-Wswitch-default"
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 
+static 
 // =========== https://ru.wikipedia.org/wiki/MurmurHash2 ==========
-
 unsigned int MurmurHash2 (char * key, unsigned int len)
 {
   const unsigned int m = 0x5bd1e995;
@@ -52,9 +53,15 @@ unsigned int MurmurHash2 (char * key, unsigned int len)
 
   return h;
 }
-
 // ============================================================================
 
 #pragma GCC diagnostic warning "-Wsign-conversion"
 #pragma GCC diagnostic warning "-Wswitch-default"
 #pragma GCC diagnostic warning "-Wimplicit-fallthrough"
+
+unsigned int 
+HashString(const string_s* string)
+{
+    return MurmurHash2(string->string_source, 
+                          (unsigned int) string->string_size);
+}
