@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 
+#include "name_space.h"
 #include "state_machine_functions.h" 
 #include "buffer.h"
 #include "vector.h"
@@ -21,7 +22,6 @@ enum recursive_return_e
     RECURSIVE_RETURN_READ_ERROR
 };
 
-
 struct read_context_s 
 {
     buffer_t           input_buffer;
@@ -30,6 +30,7 @@ struct read_context_s
     state_machine_t    syntax_machine;
     vector_t           lex_vector;
     tree_t             lex_tree;
+    name_table_t       name_table;
     recursive_return_e status;
     size_t             last_read_pos;
 };

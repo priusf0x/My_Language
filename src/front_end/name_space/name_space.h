@@ -15,6 +15,7 @@ typedef double const_type;
 struct name_s 
 {
     unsigned int hash;
+    ssize_t      declaration;
     ssize_t      prev_element;
 };
 

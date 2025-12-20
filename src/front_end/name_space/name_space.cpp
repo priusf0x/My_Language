@@ -90,7 +90,7 @@ GetLastElement(string_s*    string,
     unsigned int hash = HashString(string);
     name_s* array = name_table->name_array;
 
-    while (true)
+    while (previous_node != NO_LINK)
     {
         if (array[previous_node].hash == hash)
         {
@@ -105,6 +105,7 @@ GetLastElement(string_s*    string,
 name_table_return_e 
 AddNameInTable(string_s*    string,
                ssize_t*     current_name,
+               ssize_t      declaration,
                name_table_t name_table)
 {
     ASSERT(string != NULL);
@@ -126,7 +127,9 @@ AddNameInTable(string_s*    string,
 
     new_name.hash = HashString(string);
     new_name.prev_element = *current_name;
-    name_table->name_array[*current_name] = new_name;
+    new_name.declaration = declaration; 
+    name_table->name_array[name_table->name_count] = new_name;
+    *current_name = (ssize_t) name_table->name_count;
 
     name_table->name_count++;
 

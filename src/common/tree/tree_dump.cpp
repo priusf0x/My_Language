@@ -1,5 +1,4 @@
 #ifndef NDEBUG
-
 #include "tree.h"
 
 #include <stdio.h>
@@ -51,7 +50,92 @@ TreeDump(const tree_t tree)
     TreeDot(tree, current_time);
 }
 
+// ======================== READING/WRITING TREE IN FILE ======================
+
+static void 
+PrintNode(tree_t  tree, 
+          ssize_t current_node,
+          FILE*   file_output)
+{
+    ASSERT(tree != NULL);
+    ASSERT(file_output != NULL);
+
+    const char* node_tmp = "%d %d %d %s"; 
+    
+    node_s node = tree->nodes_array[current_node];
+    
+    if (node.node_value.lex_type == LEX_TYPE_ID)
+    {
+        // ... 
+        fprintf(file_output, "meow");
+    }
+    else 
+    {
+        // ... 
+        
+        fprintf(file_output, "bar");
+    }
+}
+
+static void
+TreeBaseDumpRecursive(tree_t  tree,
+                      ssize_t current_node,
+                      FILE*   file_output)
+{
+    ASSERT(tree != NULL);
+    ASSERT(file_output != NULL);
+
+    if (current_node == NO_LINK)
+    {
+        const char* empty_node = "nil";
+        fprintf(file_output, " %s ", empty_node);
+        return;
+    }
+
+    node_s* array = tree->nodes_array;
+    node_s node = array[current_node]; 
+
+    PrintNode(tree, current_node, file_output);
+
+    fprintf(file_output, "(");
+    TreeBaseDumpRecursive(tree, node.left_index, file_output);
+    TreeBaseDumpRecursive(tree, node.right_index, file_output);
+    fprintf(file_output, ")");
+
+}
+
+static const char* default_dump_file = "und3f1n3d_base.txt";
+
+tree_return_e 
+TreeBaseDump(tree_t      tree, 
+             const char* file_name)
+{
+    ASSERT(tree != NULL);
+
+    if (file_name == NULL)
+    {
+        file_name = default_dump_file;
+    }
+
+    FILE* file = fopen(file_name, "w+");
+    if (file == NULL)
+    {
+        return TREE_RETURN_OPEN_FILE_ERROR;
+    }
+    
+    TreeBaseDumpRecursive(tree, 
+                tree->nodes_array[0].left_index, file);
+
+    if (fclose(file))
+    {
+        return TREE_RETURN_CLOSE_FILE_ERROR;
+    }
+
+    return TREE_RETURN_SUCCESS;
+}
+
 // ============================== DUMP_HELPERS ================================
+
 static void
 PrintHTMLHeader(FILE*       log_file,
                 const char* current_time)
@@ -96,9 +180,10 @@ PrintElementInString(const token_s* token,
     switch(token->lex_type)
     {   
         case LEX_TYPE_ID:
-            snprintf(address, string_length, "id %.*s", 
+            snprintf(address, string_length, "id %.*s %ld", 
                         (int) token->value.id.id.string_size,
-                        token->value.id.id.string_source);
+                        token->value.id.id.string_source, 
+                        token->value.id.table_index);
             break;
 
         case LEX_TYPE_CONST:
@@ -241,7 +326,7 @@ DrawNode(const node_s* node,
     const char* syntax_color = "#acacacff"; 
     const char* constant_color = "#ff01f7ff";
 
-    switch(node->node_value.lex_type) // coloring node 
+    switch(node->node_value.lex_type) 
     {
         case LEX_TYPE_ID:
             fprintf(dot_file, "%ld[fillcolor = \"%s\"]", node->index_in_tree, 

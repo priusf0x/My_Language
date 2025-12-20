@@ -1,7 +1,5 @@
 #include "recursive_decent.h"
 
-
-#include <cstdio>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -115,6 +113,7 @@ InitReadContext(read_context_t* context)
     fprintf(stderr, "%zu", (*context)->last_read_pos);
 
     TreeDump((*context)->lex_tree);
+    TreeBaseDump((*context)->lex_tree);
     
     return RECURSIVE_RETURN_SUCCESS;
 } 
@@ -155,26 +154,27 @@ DestroyReadContext(read_context_t* context)
                           return NO_LINK;}\
                         } while (0)
 
-static ssize_t GetAssigmentExpression(read_context_t);
-static ssize_t GetExpression(read_context_t context);
-static ssize_t GetTerm(read_context_t context);
-static ssize_t GetBool(read_context_t context);
-static ssize_t GetPrimary(read_context_t context);
-static ssize_t GetFunctionArg(read_context_t context);
-static ssize_t GetReturn(read_context_t context);
-static ssize_t GetInitVar(read_context_t context);
-static ssize_t GetFuncDefinition(read_context_t context);
-static ssize_t GetIfWhile(read_context_t context);
-static ssize_t GetStatement(read_context_t context);
+static ssize_t GetAssigmentExpression(read_context_t context, ssize_t scope);
+static ssize_t GetExpression(read_context_t context, ssize_t scope);
+static ssize_t GetTerm(read_context_t context, ssize_t scope);
+static ssize_t GetBool(read_context_t context, ssize_t scope);
+static ssize_t GetPrimary(read_context_t context, ssize_t scope);
+static ssize_t GetFunctionArg(read_context_t context, ssize_t scope);
+static ssize_t GetReturn(read_context_t context, ssize_t scope);
+static ssize_t GetInitVar(read_context_t context, ssize_t* scope);
+static ssize_t GetFuncDefinition(read_context_t context, ssize_t* scope);
+static ssize_t GetIfWhile(read_context_t context, ssize_t scope);
+static ssize_t GetStatement(read_context_t context, ssize_t* scope);
 
 static ssize_t 
-GetFunctionArg(read_context_t context)
+GetFunctionArg(read_context_t context,
+               ssize_t        scope)
 {
     ASSERT(context != NULL);
     RETURN_IF_ERROR;
 
     ssize_t arg_connector = ARG_CON;
-    CONNECT_LEXES(arg_connector, NO_LINK, GetExpression(context)); 
+    CONNECT_LEXES(arg_connector, NO_LINK, GetExpression(context, scope)); 
     ssize_t return_node = arg_connector; 
     ssize_t last_connector = arg_connector;
     token_s token = {};
@@ -185,7 +185,7 @@ GetFunctionArg(read_context_t context)
     {
         VECTOR_ERASE;
         arg_connector = ARG_CON;
-        CONNECT_LEXES(arg_connector, NO_LINK, GetExpression(context));
+        CONNECT_LEXES(arg_connector, NO_LINK, GetExpression(context, scope));
         CONNECT_LEXES(last_connector, arg_connector, NO_LINK);
         last_connector = arg_connector;
         VECTOR_VIEW(token);
@@ -195,7 +195,8 @@ GetFunctionArg(read_context_t context)
 }
 
 static ssize_t
-GetPrimary(read_context_t context)
+GetPrimary(read_context_t context,
+           ssize_t        scope)
 {
     ASSERT(context != NULL);
     RETURN_IF_ERROR;
@@ -208,7 +209,7 @@ GetPrimary(read_context_t context)
     {
         VECTOR_ERASE;
 
-        ssize_t new_node = GetExpression(context);
+        ssize_t new_node = GetExpression(context, scope);
 
         VECTOR_VIEW(token);
         if ((token.lex_type != LEX_TYPE_SYNTAX) 
@@ -232,7 +233,7 @@ GetPrimary(read_context_t context)
                 && (token.value.syntax == SYNTAX_START_BRACKET))
         {
             VECTOR_ERASE;
-            ssize_t new_node = GetFunctionArg(context);
+            ssize_t new_node = GetFunctionArg(context, scope);
             CONNECT_LEXES(id_node, new_node, NO_LINK);
             VECTOR_VIEW(token);
 
@@ -282,12 +283,13 @@ CheckIfBoolOp(const token_s* token)
 }
 
 static ssize_t 
-GetBool(read_context_t context)
+GetBool(read_context_t context,
+        ssize_t        scope)
 {
     ASSERT(context != NULL);
     RETURN_IF_ERROR;
     
-    ssize_t return_node = GetPrimary(context); 
+    ssize_t return_node = GetPrimary(context, scope); 
     ssize_t bool_op = NO_LINK; 
     token_s token = {};
     VectorViewValue(&token, context->lex_vector);
@@ -296,7 +298,7 @@ GetBool(read_context_t context)
     {
         VECTOR_ERASE;
         bool_op = ADD__(token);
-        CONNECT_LEXES(bool_op, GetPrimary(context), return_node);
+        CONNECT_LEXES(bool_op, GetPrimary(context, scope), return_node);
         return_node = bool_op;
         VECTOR_VIEW(token);
     }
@@ -325,12 +327,13 @@ CheckIfMulDivOp(const token_s* token)
 }
 
 static ssize_t 
-GetTerm(read_context_t context)
+GetTerm(read_context_t context,
+        ssize_t        scope)
 {
     ASSERT(context != NULL);
     RETURN_IF_ERROR;
 
-    ssize_t return_node = GetBool(context); 
+    ssize_t return_node = GetBool(context, scope); 
     ssize_t mul_div_op = NO_LINK; 
     token_s token = {};
     VECTOR_VIEW(token);
@@ -339,7 +342,7 @@ GetTerm(read_context_t context)
     {
         VECTOR_ERASE;
         mul_div_op = ADD__(token);
-        CONNECT_LEXES(mul_div_op, return_node, GetBool(context));
+        CONNECT_LEXES(mul_div_op, return_node, GetBool(context, scope));
         return_node = mul_div_op;
         VECTOR_VIEW(token);
     }
@@ -368,7 +371,8 @@ CheckIfPlusMinusOp(const token_s* token)
 }
 
 static ssize_t 
-GetAssigmentExpression(read_context_t context)
+GetAssigmentExpression(read_context_t context,
+                       ssize_t        scope)
 {
     ASSERT(context != NULL);
     
@@ -377,26 +381,27 @@ GetAssigmentExpression(read_context_t context)
     ssize_t assigment_node = ADD__(assigment_token);
     VECTOR_ERASE;
 
-    CONNECT_LEXES(assigment_node, NO_LINK, GetExpression(context));
+    CONNECT_LEXES(assigment_node, NO_LINK, GetExpression(context, scope));
 
     return assigment_node;
 }
 
 static ssize_t 
-GetExpression(read_context_t context)
+GetExpression(read_context_t context,
+              ssize_t        scope)
 {
     ASSERT(context != NULL);
     RETURN_IF_ERROR;
 
     token_s token = {};
-    ssize_t return_node = GetTerm(context); 
+    ssize_t return_node = GetTerm(context, scope); 
     ssize_t plus_minus_op = NO_LINK; 
     VECTOR_VIEW(token);
 
     if ((token.lex_type == LEX_TYPE_OPERATOR)
             && (token.value.op == OPERATOR_ASSIGNMENT))
     {
-        ssize_t assigment_node = GetAssigmentExpression(context); 
+        ssize_t assigment_node = GetAssigmentExpression(context, scope); 
         CONNECT_LEXES(assigment_node, return_node, NO_LINK);  
         
         return assigment_node;
@@ -406,7 +411,7 @@ GetExpression(read_context_t context)
     {
         VECTOR_ERASE;
         plus_minus_op = ADD__(token);
-        CONNECT_LEXES(plus_minus_op, return_node, GetTerm(context));
+        CONNECT_LEXES(plus_minus_op, return_node, GetTerm(context, scope));
         return_node = plus_minus_op;
         VECTOR_VIEW(token);
     }
@@ -415,7 +420,8 @@ GetExpression(read_context_t context)
 }
 
 static ssize_t 
-GetReturn(read_context_t context)
+GetReturn(read_context_t context,
+          ssize_t        scope)
 {
     ASSERT(context != NULL);
 
@@ -423,13 +429,14 @@ GetReturn(read_context_t context)
     VECTOR_VIEW(return_token);
     VECTOR_ERASE;
     ssize_t return_node = ADD__(return_token);
-    CONNECT_LEXES(return_node, GetExpression(context), NO_LINK);
+    CONNECT_LEXES(return_node, GetExpression(context, scope), NO_LINK);
 
     return return_node;
 }
 
 static ssize_t 
-GetInitVar(read_context_t context)
+GetInitVar(read_context_t context,
+           ssize_t*       scope)
 {
     ASSERT(context != NULL);
 
@@ -462,7 +469,7 @@ GetInitVar(read_context_t context)
             && (a_token.value.op == OPERATOR_ASSIGNMENT))
     {
         VECTOR_ERASE;
-        CONNECT_LEXES(var_kw_node, NO_LINK, GetExpression(context));
+        CONNECT_LEXES(var_kw_node, NO_LINK, GetExpression(context, *scope));
     }
     
     CONNECT_LEXES(var_kw_node, var_node, NO_LINK);
@@ -471,7 +478,8 @@ GetInitVar(read_context_t context)
 }
 
 static ssize_t 
-GetFuncDefinition(read_context_t context)
+GetFuncDefinition(read_context_t context,
+                  ssize_t*       scope)
 {
     ASSERT(context != NULL);
 
@@ -483,6 +491,9 @@ GetFuncDefinition(read_context_t context)
     token_s id_token = {};
     VECTOR_VIEW(id_token);
     ssize_t id_node = ADD__(id_token);
+
+    // add name_to_nametable 
+
     if (id_token.lex_type != LEX_TYPE_ID)
     {
         context->status = RECURSIVE_RETURN_READ_ERROR;
@@ -502,7 +513,7 @@ GetFuncDefinition(read_context_t context)
     }
     VECTOR_ERASE;
 
-    ssize_t var_node = GetInitVar(context);
+    ssize_t var_node = GetInitVar(context, scope);
 
     if (var_node != NO_LINK)
     {
@@ -518,7 +529,7 @@ GetFuncDefinition(read_context_t context)
         {
             VECTOR_ERASE;
             arg_connector = ARG_CON;
-            CONNECT_LEXES(arg_connector, NO_LINK, GetInitVar(context));
+            CONNECT_LEXES(arg_connector, NO_LINK, GetInitVar(context, scope));
             CONNECT_LEXES(last_arg_connector, arg_connector, NO_LINK);
             last_arg_connector = arg_connector;
             VECTOR_VIEW(token);
@@ -537,13 +548,14 @@ GetFuncDefinition(read_context_t context)
     }
     VECTOR_ERASE;
 
-    CONNECT_LEXES(function_kw_node, id_node, GetStatement(context));
+    CONNECT_LEXES(function_kw_node, id_node, GetStatement(context, scope));
 
     return function_kw_node;
 }
 
 static ssize_t 
-GetIfWhile(read_context_t context)
+GetIfWhile(read_context_t context,
+           ssize_t        scope)
 {
     ASSERT(context != NULL);
 
@@ -563,7 +575,7 @@ GetIfWhile(read_context_t context)
     }
     VECTOR_ERASE;
 
-    ssize_t condition_node = GetExpression(context);
+    ssize_t condition_node = GetExpression(context, scope);
 
     VECTOR_VIEW(syntax_token);
     if ((syntax_token.lex_type != LEX_TYPE_SYNTAX)
@@ -575,13 +587,14 @@ GetIfWhile(read_context_t context)
     }
     VECTOR_ERASE;
 
-    CONNECT_LEXES(whileif_kw_node, condition_node, GetStatement(context));
+    CONNECT_LEXES(whileif_kw_node, condition_node, GetStatement(context, &scope));
 
     return whileif_kw_node;
 }
 
 static ssize_t 
-GetStatement(read_context_t context)
+GetStatement(read_context_t context,
+             ssize_t*       scope)
 {
     ASSERT(context != NULL);
 
@@ -594,11 +607,11 @@ GetStatement(read_context_t context)
         if ((token.value.key_word == KEY_WORD_IF)
                 || (token.value.key_word == KEY_WORD_WHILE))
         {
-            return_node = GetIfWhile(context);
+            return_node = GetIfWhile(context, *scope);
         }
         else if (token.value.key_word == KEY_WORD_VAR)
         {
-            return_node = GetInitVar(context);
+            return_node = GetInitVar(context, scope);
 
             VECTOR_VIEW(token);
             if ((token.lex_type != LEX_TYPE_SYNTAX)
@@ -612,13 +625,11 @@ GetStatement(read_context_t context)
         }
         else if (token.value.key_word == KEY_WORD_FUNCTION)
         {
-            return_node = GetFuncDefinition(context);         
-            
-            VECTOR_VIEW(token);
+            return_node = GetFuncDefinition(context, scope);
         }
         else if (token.value.key_word == KEY_WORD_RETURN)
         {
-            return_node = GetReturn(context);
+            return_node = GetReturn(context, *scope);
                 
             VECTOR_VIEW(token);
             if ((token.lex_type != LEX_TYPE_SYNTAX)
@@ -629,7 +640,6 @@ GetStatement(read_context_t context)
                 return NO_LINK;
             }
             VECTOR_ERASE;
-            
         }
         else
         {
@@ -642,8 +652,9 @@ GetStatement(read_context_t context)
                 && (token.value.syntax == SYNTAX_START_BODY))
     {
         VECTOR_ERASE;
+        ssize_t local_scope = *scope;
         ssize_t statement_connector = STMT_CON;
-        CONNECT_LEXES(statement_connector, NO_LINK, GetStatement(context));
+        CONNECT_LEXES(statement_connector, NO_LINK, GetStatement(context, &local_scope));
         return_node = statement_connector;
         ssize_t last_stmt_connector = statement_connector;
 
@@ -653,7 +664,7 @@ GetStatement(read_context_t context)
         {
             statement_connector = STMT_CON;
             CONNECT_LEXES(statement_connector, NO_LINK, 
-                                GetStatement(context));
+                                GetStatement(context, &local_scope));
             CONNECT_LEXES(last_stmt_connector, statement_connector, 
                             NO_LINK);
             last_stmt_connector = statement_connector;
@@ -664,7 +675,7 @@ GetStatement(read_context_t context)
     }
     else
     {
-        return_node = GetExpression(context);
+        return_node = GetExpression(context, *scope);
 
         VECTOR_VIEW(token); 
         if ((token.lex_type != LEX_TYPE_SYNTAX)
@@ -688,8 +699,9 @@ GetGlobal(read_context_t context)
     token_s token = {};
     VECTOR_VIEW(token);
     ssize_t connector_node = G_CON;
+    ssize_t global_scope = NO_LINK;
     CONNECT_LEXES(connector_node, NO_LINK, 
-                        GetStatement(context));
+                        GetStatement(context, &global_scope));
 
     ssize_t return_node = connector_node;
     ssize_t last_connector_node = connector_node;
@@ -699,7 +711,7 @@ GetGlobal(read_context_t context)
     {
         connector_node = G_CON;
         CONNECT_LEXES(connector_node, NO_LINK, 
-                            GetStatement(context));
+                            GetStatement(context, &global_scope));
         CONNECT_LEXES(last_connector_node, connector_node, 
                         NO_LINK);
         last_connector_node = connector_node;

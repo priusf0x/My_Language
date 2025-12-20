@@ -5,6 +5,7 @@
 
 #include "lexes.h"
 #include "recursive_decent.h"
+#include "name_space.h"
 
 // ================================ DEFINES ===================================
 
@@ -15,6 +16,7 @@
 #define ARG_CON  AddArgConnector(context)
 #define STMT_CON AddStatementConnector(context)
 #define G_CON AddGlobalConnector(context)
+#define ADD_ID() AddNameInTable()
 
 // ============================== FUNCTIONS_HELPERS ===========================
 
