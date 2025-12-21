@@ -107,14 +107,16 @@ InitNewId(ssize_t        declaration,
     ASSERT(context != NULL);
     ASSERT(scope != NULL);
 
-    string_s string = context->lex_tree->nodes_array[declaration]
-                                            .node_value.value.id.id;
+    node_s* node = &context->lex_tree->nodes_array[declaration];
+    string_s string = node->node_value.value.id.id;
 
     if (AddNameInTable(&string, scope,
              declaration, context->name_table) != 0)
     {
         context->status = RECURSIVE_RETURN_NAME_SPACE_ERROR;
     }
+ 
+    node->node_value.value.id.table_index = *scope;
 }
 
 // ============================= UNDEFINITION =================================

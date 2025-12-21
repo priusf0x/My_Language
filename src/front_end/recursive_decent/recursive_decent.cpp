@@ -242,6 +242,9 @@ GetPrimary(read_context_t context,
     }
     else if (token.lex_type == LEX_TYPE_ID)
     {
+        token.value.id.table_index = GetLastElement(&token.value.id.id, scope, 
+                                                        context->name_table);
+
         ssize_t id_node = ADD__(token);
         VECTOR_ERASE;
         VECTOR_VIEW(token);
@@ -604,7 +607,8 @@ GetIfWhile(read_context_t context,
     }
     VECTOR_ERASE;
 
-    CONNECT_LEXES(whileif_kw_node, condition_node, GetStatement(context, &scope));
+    CONNECT_LEXES(whileif_kw_node, condition_node, 
+                        GetStatement(context, &scope));
 
     return whileif_kw_node;
 }

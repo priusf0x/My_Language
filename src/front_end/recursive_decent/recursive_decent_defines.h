@@ -5,7 +5,6 @@
 
 #include "lexes.h"
 #include "recursive_decent.h"
-#include "name_space.h"
 
 // ================================ DEFINES ===================================
 
