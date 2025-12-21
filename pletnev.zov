@@ -5,6 +5,12 @@ function sosal(var count, var amount, var meow)
         count = count - amount;
     }
 
+
+
+    function lizal(var count, var amount)
+    {
+        return nelizal;
+    }
     while (amount == 0)
     {
         amount = amount + 1;

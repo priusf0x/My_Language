@@ -6,6 +6,7 @@
 #include "Assert.h"
 #include "buffer.h"
 #include "lexes.h"
+#include "name_space.h"
 #include "recursive_decent_defines.h"
 #include "tools.h"
 #include "state_machine_functions.h"
@@ -91,12 +92,24 @@ InitReadContext(read_context_t* context)
         return RECURSIVE_RETURN_BUFFER_ERROR;
     }
 
+    const size_t name_table_size = 10;
+    if (InitNameTable(&(*context)->name_table, name_table_size) != 0)
+    {
+        BufferDestroy(&(*context)->input_buffer);
+        VectorDestroy(&(*context)->lex_vector);
+        free(*context);
+        *context = NULL;
+        
+        return RECURSIVE_RETURN_NAME_SPACE_ERROR;
+    }
+
     if (InitMachine(KW_FILE_NAME, &(*context)->key_word_machine) 
         || InitMachine(OP_FILE_NAME, &(*context)->operator_machine)
         || InitMachine(SYNT_FILE_NAME, &(*context)->syntax_machine))
     {
         BufferDestroy(&(*context)->input_buffer);
         VectorDestroy(&(*context)->lex_vector);
+        DestroyNameTable(&(*context)->name_table);
         free(*context);
         *context = NULL;
 
@@ -110,6 +123,8 @@ InitReadContext(read_context_t* context)
     ssize_t meow =  GetGlobal(*context);
     (*context)->lex_tree->nodes_array[0].left_index = meow; 
     
+    NameTableDump((*context)->name_table);
+
     fprintf(stderr, "%zu", (*context)->last_read_pos);
 
     TreeDump((*context)->lex_tree);
@@ -132,6 +147,8 @@ DestroyReadContext(read_context_t* context)
     BufferDestroy(&(*context)->input_buffer);
     VectorDestroy(&(*context)->lex_vector);
     TreeDestroy(&(*context)->lex_tree);
+    DestroyNameTable(&(*context)->name_table);
+    
     free(*context);
     *context = NULL;
 
@@ -462,6 +479,7 @@ GetInitVar(read_context_t context,
     }
     VECTOR_ERASE;
     ssize_t var_node = ADD__(id_token);
+    InitNewId(var_node, scope, context);
 
     token_s a_token = {};             
     VECTOR_VIEW(a_token);
@@ -491,8 +509,7 @@ GetFuncDefinition(read_context_t context,
     token_s id_token = {};
     VECTOR_VIEW(id_token);
     ssize_t id_node = ADD__(id_token);
-
-    // add name_to_nametable 
+    InitNewId(id_node, scope, context);
 
     if (id_token.lex_type != LEX_TYPE_ID)
     {
@@ -513,8 +530,8 @@ GetFuncDefinition(read_context_t context,
     }
     VECTOR_ERASE;
 
-    ssize_t var_node = GetInitVar(context, scope);
-
+    ssize_t local_scope = *scope;
+    ssize_t var_node = GetInitVar(context, &local_scope);
     if (var_node != NO_LINK)
     {
         ssize_t arg_connector = ARG_CON;
@@ -529,7 +546,7 @@ GetFuncDefinition(read_context_t context,
         {
             VECTOR_ERASE;
             arg_connector = ARG_CON;
-            CONNECT_LEXES(arg_connector, NO_LINK, GetInitVar(context, scope));
+            CONNECT_LEXES(arg_connector, NO_LINK, GetInitVar(context, &local_scope));
             CONNECT_LEXES(last_arg_connector, arg_connector, NO_LINK);
             last_arg_connector = arg_connector;
             VECTOR_VIEW(token);
@@ -548,7 +565,7 @@ GetFuncDefinition(read_context_t context,
     }
     VECTOR_ERASE;
 
-    CONNECT_LEXES(function_kw_node, id_node, GetStatement(context, scope));
+    CONNECT_LEXES(function_kw_node, id_node, GetStatement(context, &local_scope));
 
     return function_kw_node;
 }

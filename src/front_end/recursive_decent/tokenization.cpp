@@ -5,6 +5,7 @@
 #include "my_string.h"
 #include "lexes.h"
 #include "tools.h"
+#include "tree.h"
 
 #define CURRENT_POSITION (buffer->buffer + buffer->current_position)
 
@@ -163,6 +164,7 @@ IdentifyLex(token_s*       token,
     {  
         token->lex_type = LEX_TYPE_ID;
         ReadIdFromBuffer(buffer, &token->value.id.id);
+        token->value.id.table_index = NO_LINK;
     }
     else
     {
