@@ -1,0 +1,5 @@
+*.txt 
+.cache/
+.vscode/
+*.json
+pletnev.zov

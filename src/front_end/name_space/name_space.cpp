@@ -78,6 +78,46 @@ SetNameTableSize(name_table_t name_table,
     return NAME_TABLE_RETURN_SUCCESS;
 }
 
+// =============================== ELEMENT_DUMP ===============================
+
+static void  
+PrintNameInfo(const name_s* name, 
+              size_t        current_index)
+{
+    const int no_width = 3;
+    const int hash_width = 8;
+    const int prev_width = 6;
+    const int decl_width = 6;
+
+    fprintf(stderr, "│%.*zu",   no_width,   current_index);
+    fprintf(stderr, "│%.*x",    hash_width, name->hash);
+    fprintf(stderr, "│%*ld",    decl_width, name->declaration);
+    fprintf(stderr, "│%*ld│\n", prev_width, name->prev_element);
+}
+
+void 
+NameTableDump(name_table_t name_table)
+{
+    ASSERT(name_table);
+
+    size_t current_index = 0;
+    name_s current_name = {};
+
+    const char* table_heading = "┏━━━┳━━━━━━━━┳━━━━━━┳━━━━━━┓\n"\
+                                "┃No ┃  HASH  ┃ DECL ┃ PREV ┃\n"\
+                                "┡━━━┻━━━━━━━━┻━━━━━━┻━━━━━━┩\n";
+    const char* table_ending =  "└───┴────────┴──────┴──────┘\n";
+
+    fprintf(stderr, "%s", table_heading);
+    while (current_index < name_table->name_table_capacity)
+    {
+        current_name = name_table->name_array[current_index];
+        PrintNameInfo(&current_name, current_index);
+        current_index++;
+    }
+    fprintf(stderr, "%s", table_ending);
+}
+
 // ============================ ELEMENT_ADD_DELETE ============================
 
 ssize_t 
@@ -90,7 +130,7 @@ GetLastElement(string_s*    string,
     unsigned int hash = HashString(string);
     name_s* array = name_table->name_array;
 
-    while (true)
+    while (previous_node != NO_LINK)
     {
         if (array[previous_node].hash == hash)
         {
@@ -105,6 +145,7 @@ GetLastElement(string_s*    string,
 name_table_return_e 
 AddNameInTable(string_s*    string,
                ssize_t*     current_name,
+               ssize_t      declaration,
                name_table_t name_table)
 {
     ASSERT(string != NULL);
@@ -126,7 +167,9 @@ AddNameInTable(string_s*    string,
 
     new_name.hash = HashString(string);
     new_name.prev_element = *current_name;
-    name_table->name_array[*current_name] = new_name;
+    new_name.declaration = declaration; 
+    name_table->name_array[name_table->name_count] = new_name;
+    *current_name = (ssize_t) name_table->name_count;
 
     name_table->name_count++;
 

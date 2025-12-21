@@ -15,6 +15,7 @@ typedef double const_type;
 struct name_s 
 {
     unsigned int hash;
+    ssize_t      declaration;
     ssize_t      prev_element;
 };
 
@@ -31,11 +32,18 @@ typedef name_table_s* name_table_t;
 name_table_return_e InitNameTable(name_table_t* name_table, size_t start_size);
 name_table_return_e DestroyNameTable(name_table_t* name_table);\
 
+// ============================= NAME_TABLE_DUMP ==============================
+
+void 
+NameTableDump(name_table_t name_table);
+
 // ============================ ELEMENT_ADD_DELETE ============================
 
 name_table_return_e 
-AddNameInTable(string_s* string, ssize_t* current_name,
-                name_table_t name_table);
+AddNameInTable(string_s*    string,
+               ssize_t*     current_name,
+               ssize_t      declaration,
+               name_table_t name_table);
 
 ssize_t 
 GetLastElement(string_s* string, ssize_t previous_node,

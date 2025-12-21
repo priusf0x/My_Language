@@ -2,9 +2,11 @@
 
 #include "Assert.h"
 #include "lexes.h"
+#include "name_space.h"
 #include "recursive_decent.h"
 #include "tree.h"
 #include "tools.h"
+
 
 #define RETURN_NO_LINK_IF_ERROR (void)0
 
@@ -95,6 +97,26 @@ AddGlobalConnector(read_context_t context)
                      .value    = {.syntax = SYNTAX_GLOBAL_CONNECTOR}};
 
     return AddLexem(&token, context);
+}
+
+void 
+InitNewId(ssize_t        declaration,
+          ssize_t*       scope,
+          read_context_t context)
+{
+    ASSERT(context != NULL);
+    ASSERT(scope != NULL);
+
+    node_s* node = &context->lex_tree->nodes_array[declaration];
+    string_s string = node->node_value.value.id.id;
+
+    if (AddNameInTable(&string, scope,
+             declaration, context->name_table) != 0)
+    {
+        context->status = RECURSIVE_RETURN_NAME_SPACE_ERROR;
+    }
+ 
+    node->node_value.value.id.table_index = *scope;
 }
 
 // ============================= UNDEFINITION =================================

@@ -95,7 +95,7 @@ const char* const SYNTAX_NAMINGS[] =
 
 struct id_s 
 {
-    size_t   table_index;
+    ssize_t  table_index;
     string_s id;
 };
 

@@ -61,7 +61,7 @@ tree_return_e TreeAddNode(tree_t tree, node_s* node);
 #ifndef NDEBUG
 FILE* GetLogFile();
 void TreeDump(const tree_t tree);
-tree_return_e TreeBaseDump(const tree_t tree, FILE* file_output);
+tree_return_e TreeBaseDump(tree_t tree, const char* file_name = NULL);
 #endif 
 
 // ============================== BYPASS_FUNCTIONS ============================
