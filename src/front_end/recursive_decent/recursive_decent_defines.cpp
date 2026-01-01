@@ -101,7 +101,7 @@ AddGlobalConnector(read_context_t context)
 
 void 
 InitNewId(ssize_t        declaration,
-          ssize_t*       scope,
+          scope_t        scope,
           read_context_t context)
 {
     ASSERT(context != NULL);

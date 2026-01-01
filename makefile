@@ -28,7 +28,7 @@ INCLUDES_DIR =\
 SOURCE_MAIN_AST := front_end/ast_main.cpp
 SOURCE_MAIN_GEN := front_end/state_machine_generator/state_machine_main.cpp
 
-OBJ_DIR = build
+OBJ_DIR = obj
 SOURCE_DIR = src
 
 INCLUDES = $(addprefix -I$(SOURCE_DIR)/, $(INCLUDES_DIR))
@@ -73,7 +73,7 @@ gen: $(TARGET_GEN)
 test:
 	@./list_sester.out
 
-all: $(TARGET) 
+all: $(TARGET) build_asm
 
 logclean:
 	@rm -rf logs/*
@@ -85,3 +85,7 @@ clean:
 	@rm -f $(TARGET_GEN)
 	@rm -rf logs
 	@echo "Cleaned Successfully"
+
+
+
+# include Assembly/processor.mk

@@ -36,6 +36,13 @@ struct read_context_s
     size_t             last_read_pos;
 };
 
+struct scope_s
+{
+    ssize_t scope;
+    size_t  variable_count;
+    bool    is_global;
+};
+
 typedef read_context_s* read_context_t;
 
 recursive_return_e 

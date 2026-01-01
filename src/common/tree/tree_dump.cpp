@@ -66,7 +66,6 @@ PrintNode(tree_t  tree,
     
     if (node.node_value.lex_type == LEX_TYPE_ID)
     {
-        // ... 
         fprintf(file_output, "meow");
     }
     else 
@@ -133,6 +132,83 @@ TreeBaseDump(tree_t      tree,
 
     return TREE_RETURN_SUCCESS;
 }
+
+// static recursion_return_e
+// RecursiveParser(akinator_t akinator,
+//                 size_t*    current_position,
+//                 size_t     root_position)
+// {
+//     ASSERT(akinator != NULL);
+//     ASSERT(current_position);
+
+//     if (!CheckIfSymbol(akinator->input_buffer, current_position, '('))
+//     {
+//         return RECURSION_RETURN_MISSING_SYMBOL_ERROR;
+//     }
+
+//     recursion_return_e output = RECURSION_RETURN_SUCCESS;
+
+//     output = ReadNode(akinator, current_position, root_position, EDGE_DIR_LEFT);
+
+//     if (output != RECURSION_RETURN_SUCCESS)
+//     {
+//         return output;
+//     }
+    
+//     output = ReadNode(akinator, current_position, root_position, EDGE_DIR_RIGHT);
+
+//     if (output != RECURSION_RETURN_SUCCESS)
+//     {
+//         return output;
+//     }
+
+//     if (!CheckIfSymbol(akinator->input_buffer, current_position, ')'))
+//     {
+//         return RECURSION_RETURN_MISSING_SYMBOL_ERROR;
+//     }
+
+//     return RECURSION_RETURN_SUCCESS;
+// }
+
+// static recursion_return_e 
+// ReadNode(akinator_t akinator,
+//          size_t*    current_position,
+//          size_t     root_position,
+//          edge_dir_e node_position)
+// {
+//     ASSERT(akinator != NULL);
+//     ASSERT(current_position != NULL);
+
+//     node_s node = {.parent_index = (ssize_t) root_position, 
+//                    .parent_connection = node_position, .right_index = -1,
+//                    .left_index = -1};
+
+//     recursion_return_e output = ReadName(&(node.node_value), 
+//                                          akinator->input_buffer, 
+//                                          current_position);
+    
+//     if (output == RECURSION_RETURN_SUCCESS)
+//     {
+//         if (TreeAddNode(akinator->object_tree, &node) != 0)
+//         {
+//             return RECURSION_RETURN_TREE_ERROR;
+//         }
+
+//         output = RecursiveParser(akinator, current_position,
+//                                  node.index_in_tree); 
+
+//         if (output != RECURSION_RETURN_SUCCESS)
+//         {
+//             return output;
+//         }
+//     }
+//     else if (output != RECURSION_RETURN_NIL_SYMBOL)
+//     {
+//         return output;
+//     }
+    
+//     return RECURSION_RETURN_SUCCESS;
+// }
 
 // ============================== DUMP_HELPERS ================================
 

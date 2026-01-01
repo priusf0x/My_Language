@@ -1,5 +1,6 @@
 #include "recursive_decent.h"
 
+#include <cstddef>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -14,6 +15,14 @@
 #include "tree.h"
 
 const char* INPUT_FILE_NAME = "pletnev.zov";
+
+struct scope_context_s
+{
+    ssize_t scope;
+    size_t  id_num;
+};
+typedef scope_context_s* scope_t;
+
 
 #define RETURN_IF_RECURSIVE_ERROR(___X___) \
 do\
@@ -171,24 +180,24 @@ DestroyReadContext(read_context_t* context)
                           return NO_LINK;}\
                         } while (0)
 
-static ssize_t GetAssigmentExpression(read_context_t context, ssize_t scope);
-static ssize_t GetExpression(read_context_t context, ssize_t scope);
-static ssize_t GetTerm(read_context_t context, ssize_t scope);
-static ssize_t GetBool(read_context_t context, ssize_t scope);
-static ssize_t GetPrimary(read_context_t context, ssize_t scope);
-static ssize_t GetFunctionArg(read_context_t context, ssize_t scope);
-static ssize_t GetReturn(read_context_t context, ssize_t scope);
-static ssize_t GetInitVar(read_context_t context, ssize_t* scope);
-static ssize_t GetFuncDefinition(read_context_t context, ssize_t* scope);
-static ssize_t GetIfWhile(read_context_t context, ssize_t scope);
-static ssize_t GetStatement(read_context_t context, ssize_t* scope);
+static ssize_t GetAssigmentExpression(read_context_t context, scope_s* scope);
+static ssize_t GetExpression         (read_context_t context, scope_s* scope);
+static ssize_t GetTerm               (read_context_t context, scope_s* scope);
+static ssize_t GetBool               (read_context_t context, scope_s* scope);
+static ssize_t GetPrimary            (read_context_t context, scope_s* scope);
+static ssize_t GetFunctionArg        (read_context_t context, scope_s* scope);
+static ssize_t GetReturn             (read_context_t context, scope_s* scope);
+static ssize_t GetInitVar            (read_context_t context, scope_s* scope);
+static ssize_t GetFuncDefinition     (read_context_t context, scope_s* scope);
+static ssize_t GetIfWhile            (read_context_t context, scope_s* scope);
+static ssize_t GetStatement          (read_context_t context, scope_s* scope);
 
 static ssize_t 
 GetFunctionArg(read_context_t context,
-               ssize_t        scope)
+               scope_s*       scope)
 {
     ASSERT(context != NULL);
-    RETURN_IF_ERROR;
+    ASSERT(scope != NULL);
 
     ssize_t arg_connector = ARG_CON;
     CONNECT_LEXES(arg_connector, NO_LINK, GetExpression(context, scope)); 
@@ -213,10 +222,10 @@ GetFunctionArg(read_context_t context,
 
 static ssize_t
 GetPrimary(read_context_t context,
-           ssize_t        scope)
+           scope_s*       scope)
 {
     ASSERT(context != NULL);
-    RETURN_IF_ERROR;
+    ASSERT(scope != NULL);
 
     token_s token = {};
     VECTOR_VIEW(token);
@@ -304,10 +313,10 @@ CheckIfBoolOp(const token_s* token)
 
 static ssize_t 
 GetBool(read_context_t context,
-        ssize_t        scope)
+        scope_s*       scope)
 {
     ASSERT(context != NULL);
-    RETURN_IF_ERROR;
+    ASSERT(scope != NULL);
     
     ssize_t return_node = GetPrimary(context, scope); 
     ssize_t bool_op = NO_LINK; 
@@ -348,10 +357,10 @@ CheckIfMulDivOp(const token_s* token)
 
 static ssize_t 
 GetTerm(read_context_t context,
-        ssize_t        scope)
+        scope_s*       scope)
 {
     ASSERT(context != NULL);
-    RETURN_IF_ERROR;
+    ASSERT(scope != NULL);
 
     ssize_t return_node = GetBool(context, scope); 
     ssize_t mul_div_op = NO_LINK; 
@@ -392,9 +401,10 @@ CheckIfPlusMinusOp(const token_s* token)
 
 static ssize_t 
 GetAssigmentExpression(read_context_t context,
-                       ssize_t        scope)
+                       scope_s*       scope)
 {
     ASSERT(context != NULL);
+    ASSERT(scope != NULL);
     
     token_s assigment_token = {};
     VECTOR_VIEW(assigment_token);
@@ -408,10 +418,10 @@ GetAssigmentExpression(read_context_t context,
 
 static ssize_t 
 GetExpression(read_context_t context,
-              ssize_t        scope)
+              scope_s*       scope)
 {
     ASSERT(context != NULL);
-    RETURN_IF_ERROR;
+    ASSERT(scope != NULL);
 
     token_s token = {};
     ssize_t return_node = GetTerm(context, scope); 
@@ -441,9 +451,10 @@ GetExpression(read_context_t context,
 
 static ssize_t 
 GetReturn(read_context_t context,
-          ssize_t        scope)
+          scope_s*       scope)
 {
     ASSERT(context != NULL);
+    ASSERT(scope != NULL);
 
     token_s return_token = {};
     VECTOR_VIEW(return_token);
@@ -456,9 +467,10 @@ GetReturn(read_context_t context,
 
 static ssize_t 
 GetInitVar(read_context_t context,
-           ssize_t*       scope)
+           scope_s*       scope)
 {
     ASSERT(context != NULL);
+    ASSERT(scope != NULL);
 
     token_s var_kw_token = {};
     VECTOR_VIEW(var_kw_token);
@@ -500,9 +512,10 @@ GetInitVar(read_context_t context,
 
 static ssize_t 
 GetFuncDefinition(read_context_t context,
-                  ssize_t*       scope)
+                  scope_s*       scope)
 {
     ASSERT(context != NULL);
+    ASSERT(scope != NULL);
 
     token_s function_kw_token = {};
     VECTOR_VIEW(function_kw_token);
@@ -512,7 +525,7 @@ GetFuncDefinition(read_context_t context,
     token_s id_token = {};
     VECTOR_VIEW(id_token);
     ssize_t id_node = ADD__(id_token);
-    InitNewId(id_node, scope, context);
+    InitNewId(id_node, context);
 
     if (id_token.lex_type != LEX_TYPE_ID)
     {
@@ -575,9 +588,10 @@ GetFuncDefinition(read_context_t context,
 
 static ssize_t 
 GetIfWhile(read_context_t context,
-           ssize_t        scope)
+           scope_s*       scope)
 {
     ASSERT(context != NULL);
+    ASSERT(scope != NULL);
 
     token_s function_kw_token = {};
     VECTOR_VIEW(function_kw_token);
@@ -606,19 +620,23 @@ GetIfWhile(read_context_t context,
         return NO_LINK;
     }
     VECTOR_ERASE;
+    
+    scope_s local_scope = *scope;
+    local_scope.is_global = false;
 
     CONNECT_LEXES(whileif_kw_node, condition_node, 
-                        GetStatement(context, &scope));
+                        GetStatement(context, &local_scope));
 
     return whileif_kw_node;
 }
 
 static ssize_t 
 GetStatement(read_context_t context,
-             ssize_t*       scope)
+             scope_s*       scope)
 {
     ASSERT(context != NULL);
-
+    ASSERT(scope != NULL);
+    
     token_s token = {};
     ssize_t return_node = NO_LINK;
     VECTOR_VIEW(token);
@@ -628,7 +646,7 @@ GetStatement(read_context_t context,
         if ((token.value.key_word == KEY_WORD_IF)
                 || (token.value.key_word == KEY_WORD_WHILE))
         {
-            return_node = GetIfWhile(context, *scope);
+            return_node = GetIfWhile(context, scope);
         }
         else if (token.value.key_word == KEY_WORD_VAR)
         {
@@ -650,7 +668,7 @@ GetStatement(read_context_t context,
         }
         else if (token.value.key_word == KEY_WORD_RETURN)
         {
-            return_node = GetReturn(context, *scope);
+            return_node = GetReturn(context, scope);
                 
             VECTOR_VIEW(token);
             if ((token.lex_type != LEX_TYPE_SYNTAX)
@@ -673,9 +691,12 @@ GetStatement(read_context_t context,
                 && (token.value.syntax == SYNTAX_START_BODY))
     {
         VECTOR_ERASE;
-        ssize_t local_scope = *scope;
+        scope_s local_scope = *scope;
+        local_scope.is_global = false;
+
         ssize_t statement_connector = STMT_CON;
-        CONNECT_LEXES(statement_connector, NO_LINK, GetStatement(context, &local_scope));
+        CONNECT_LEXES(statement_connector, NO_LINK, 
+                            GetStatement(context, &local_scope));
         return_node = statement_connector;
         ssize_t last_stmt_connector = statement_connector;
 
@@ -696,7 +717,7 @@ GetStatement(read_context_t context,
     }
     else
     {
-        return_node = GetExpression(context, *scope);
+        return_node = GetExpression(context, scope);
 
         VECTOR_VIEW(token); 
         if ((token.lex_type != LEX_TYPE_SYNTAX)
@@ -720,7 +741,9 @@ GetGlobal(read_context_t context)
     token_s token = {};
     VECTOR_VIEW(token);
     ssize_t connector_node = G_CON;
-    ssize_t global_scope = NO_LINK;
+
+    scope_s global_scope = {.scope = NO_LINK, .variable_count = 0, 
+                                .is_global = false};
     CONNECT_LEXES(connector_node, NO_LINK, 
                         GetStatement(context, &global_scope));
 
