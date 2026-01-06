@@ -4,6 +4,8 @@
 #include "tools.h"
 #include "recursive_decent.h"
 
+//TODO : make error check
+
 int
 main()
 {

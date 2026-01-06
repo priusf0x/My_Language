@@ -6,6 +6,7 @@
 enum name_table_return_e
 {
     NAME_TABLE_RETURN_SUCCESS,
+    NAME_TABLE_RETURN_BAD_ID,
     NAME_TABLE_RETURN_ALLOCATION_ERROR,
     NAME_TABLE_RETURN_INCORRECT_VALUE
 };
@@ -14,8 +15,11 @@ typedef double const_type;
 
 struct name_s 
 {
+    string_s     string;
     unsigned int hash;
-    ssize_t      declaration;
+    bool         is_function;
+    bool         is_global;
+    ssize_t      info_num;
     ssize_t      prev_element;
 };
 
@@ -40,13 +44,12 @@ NameTableDump(name_table_t name_table);
 // ============================ ELEMENT_ADD_DELETE ============================
 
 name_table_return_e 
-AddNameInTable(string_s*    string,
+AddNameInTable(name_s*      name,
                ssize_t*     current_name,
-               ssize_t      declaration,
                name_table_t name_table);
 
 ssize_t 
-GetLastElement(string_s* string, ssize_t previous_node,
+GetNameNum(string_s* string, ssize_t previous_node,
                     name_table_t name_table);
 
 #endif // NAME_SPACE_H

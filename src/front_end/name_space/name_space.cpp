@@ -1,5 +1,6 @@
 #include "name_space.h"
 
+#include <cstddef>
 #include <stdlib.h>
 
 #include "Assert.h"
@@ -84,15 +85,17 @@ static void
 PrintNameInfo(const name_s* name, 
               size_t        current_index)
 {
-    const int no_width = 3;
+    const int no_width = 4;
     const int hash_width = 8;
     const int prev_width = 6;
-    const int decl_width = 6;
+    const int global_width = 6;
+    const int number_in_scope_width = 6;
 
     fprintf(stderr, "│%.*zu",   no_width,   current_index);
     fprintf(stderr, "│%.*x",    hash_width, name->hash);
-    fprintf(stderr, "│%*ld",    decl_width, name->declaration);
-    fprintf(stderr, "│%*ld│\n", prev_width, name->prev_element);
+    fprintf(stderr, "│%*ld",    number_in_scope_width, name->info_num);
+    fprintf(stderr, "│%*ld",    prev_width, name->prev_element);
+    fprintf(stderr, "│%*d│\n", global_width, name->is_global);
 }
 
 void 
@@ -103,10 +106,10 @@ NameTableDump(name_table_t name_table)
     size_t current_index = 0;
     name_s current_name = {};
 
-    const char* table_heading = "┏━━━┳━━━━━━━━┳━━━━━━┳━━━━━━┓\n"\
-                                "┃No ┃  HASH  ┃ DECL ┃ PREV ┃\n"\
-                                "┡━━━┻━━━━━━━━┻━━━━━━┻━━━━━━┩\n";
-    const char* table_ending =  "└───┴────────┴──────┴──────┘\n";
+    const char* table_heading = "┏━━━━┳━━━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━┓ \n"\
+                                "┃ No ┃  HASH  ┃ NoSc ┃ PREV ┃ INFO ┃  \n"\
+                                "┡━━━━┻━━━━━━━━┻━━━━━━┻━━━━━━┻━━━━━━┩\n";
+    const char* table_ending =  "└────┴────────┴──────┴──────┴──────┘\n";
 
     fprintf(stderr, "%s", table_heading);
     while (current_index < name_table->name_table_capacity)
@@ -121,9 +124,9 @@ NameTableDump(name_table_t name_table)
 // ============================ ELEMENT_ADD_DELETE ============================
 
 ssize_t 
-GetLastElement(string_s*    string,
-               ssize_t      previous_node,
-               name_table_t name_table)
+GetNameNum(string_s*    string,
+           ssize_t      previous_node,
+           name_table_t name_table)
 {
     ASSERT(name_table != NULL);
 
@@ -143,15 +146,21 @@ GetLastElement(string_s*    string,
 }
 
 name_table_return_e 
-AddNameInTable(string_s*    string,
+AddNameInTable(name_s*      name,
                ssize_t*     current_name,
-               ssize_t      declaration,
                name_table_t name_table)
 {
-    ASSERT(string != NULL);
+    ASSERT(name != NULL);
     ASSERT(current_name != NULL);
+    ASSERT(name_table != NULL);
 
     name_table_return_e output = NAME_TABLE_RETURN_SUCCESS;
+
+    if ((name->string.string_source == NULL) 
+            || (name->string.string_size == 0))
+    {
+        return NAME_TABLE_RETURN_BAD_ID;
+    }
 
     if (name_table->name_count 
             == name_table->name_table_capacity)
@@ -163,12 +172,8 @@ AddNameInTable(string_s*    string,
         }
     }
 
-    name_s new_name = {};
-
-    new_name.hash = HashString(string);
-    new_name.prev_element = *current_name;
-    new_name.declaration = declaration; 
-    name_table->name_array[name_table->name_count] = new_name;
+    name->hash = HashString(&name->string);
+    name_table->name_array[name_table->name_count] = *name;
     *current_name = (ssize_t) name_table->name_count;
 
     name_table->name_count++;

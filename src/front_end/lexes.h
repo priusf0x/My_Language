@@ -76,27 +76,28 @@ enum syntax_type_e
     SYNTAX_START_BRACKET,
     SYNTAX_END_BRACKET,
     SYNTAX_ARG_CONNECTOR,
-    SYNTAX_GLOBAL_CONNECTOR
+
 };
 
 const char* const SYNTAX_NAMINGS[] = 
 {
     "UNDEFINED",
-    ";",
-    "{",
-    "}",
-    "(",
-    ")",
-    ",",
-    "global_connector"
+    "stmt_connector",
+    "start_body",
+    "end_body",
+    "start_bracket",
+    "end_bracket",
+    "arg_connector",
 };
 
 // ============================= STRUCT_AND_UNIONS ============================
 
 struct id_s 
 {
-    ssize_t  table_index;
     string_s id;
+    ssize_t  number_in_scope;
+    bool     is_function;
+    bool     is_global;
 };
 
 union token_value_u 

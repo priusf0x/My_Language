@@ -256,10 +256,13 @@ PrintElementInString(const token_s* token,
     switch(token->lex_type)
     {   
         case LEX_TYPE_ID:
-            snprintf(address, string_length, "id %.*s %ld", 
+            snprintf(address, string_length, "id %.*s %d %d %ld", 
                         (int) token->value.id.id.string_size,
                         token->value.id.id.string_source, 
-                        token->value.id.table_index);
+                        token->value.id.is_function,
+                        token->value.id.is_global,
+                        token->value.id.number_in_scope);
+            
             break;
 
         case LEX_TYPE_CONST:
@@ -381,7 +384,7 @@ DrawNode(const node_s* node,
     ASSERT(dot_file != NULL);
 
     const char* node_template  = "%ld[label = \"{parent index = %ld| phys index = %ld"
-                                 "| value = %s |{left index = %ld | right index = %ld}}\"];\n";
+                                 "| %s |{left index = %ld | right index = %ld}}\"];\n";
     const size_t string_size = 250;
     char graphviz_node[string_size] = {};
 

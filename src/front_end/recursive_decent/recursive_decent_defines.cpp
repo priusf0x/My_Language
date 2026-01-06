@@ -6,6 +6,7 @@
 #include "recursive_decent.h"
 #include "tree.h"
 #include "tools.h"
+#include <sys/types.h>
 
 
 #define RETURN_NO_LINK_IF_ERROR (void)0
@@ -88,21 +89,10 @@ AddStatementConnector(read_context_t context)
     return AddLexem(&token, context);
 }
 
-ssize_t 
-AddGlobalConnector(read_context_t context)
-{
-    ASSERT(context != NULL);
-
-    token_s token = {.lex_type = LEX_TYPE_SYNTAX,
-                     .value    = {.syntax = SYNTAX_GLOBAL_CONNECTOR}};
-
-    return AddLexem(&token, context);
-}
-
 void 
-InitNewId(ssize_t        declaration,
-          scope_t        scope,
-          read_context_t context)
+InitNewVar(ssize_t        declaration,
+           scope_s*       scope,
+           read_context_t context)
 {
     ASSERT(context != NULL);
     ASSERT(scope != NULL);
@@ -110,13 +100,40 @@ InitNewId(ssize_t        declaration,
     node_s* node = &context->lex_tree->nodes_array[declaration];
     string_s string = node->node_value.value.id.id;
 
-    if (AddNameInTable(&string, scope,
-             declaration, context->name_table) != 0)
+    name_s name = {.string = string, .is_function = false,
+                   .is_global = scope->scope, 
+                   .info_num = (ssize_t) scope->variable_count,
+                   .prev_element = scope->scope};
+
+    if (AddNameInTable(&name, &scope->scope, context->name_table) != 0)
     {
         context->status = RECURSIVE_RETURN_NAME_SPACE_ERROR;
     }
- 
-    node->node_value.value.id.table_index = *scope;
+
+    scope->variable_count++;
+}
+
+void
+InitNewFunction(ssize_t        declaration,
+                size_t         variable_amount,
+                scope_s*       scope,
+                read_context_t context)
+{
+    ASSERT(context != NULL);
+    ASSERT(scope != NULL);
+
+    node_s* node = &context->lex_tree->nodes_array[declaration];
+    string_s string = node->node_value.value.id.id;
+    
+    name_s name = {.string = string, .is_function = true,
+                   .is_global = scope->is_global, 
+                   .info_num = (ssize_t) variable_amount,
+                   .prev_element = scope->scope};
+
+    if (AddNameInTable(&name, &scope->scope, context->name_table) != 0)
+    {
+        context->status = RECURSIVE_RETURN_NAME_SPACE_ERROR;
+    }
 }
 
 // ============================= UNDEFINITION =================================

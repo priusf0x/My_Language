@@ -14,7 +14,6 @@
 #define ADD__(_T0KEN_)  AddLexem(&_T0KEN_, context)
 #define ARG_CON  AddArgConnector(context)
 #define STMT_CON AddStatementConnector(context)
-#define G_CON AddGlobalConnector(context)
 
 // ============================== FUNCTIONS_HELPERS ===========================
 
@@ -30,12 +29,16 @@ AddArgConnector(read_context_t context);
 ssize_t 
 AddStatementConnector(read_context_t context);
 
-ssize_t 
-AddGlobalConnector(read_context_t context);
-
 void 
-InitNewId(ssize_t declaration, ssize_t* scope,
+InitNewVar(ssize_t declaration, scope_s* scope,
           read_context_t context);
+
+void
+InitNewFunction(ssize_t        declaration,
+                size_t         variable_amount,
+                scope_s*       scope,
+                read_context_t context);
+          
     
 // ============================================================================
 

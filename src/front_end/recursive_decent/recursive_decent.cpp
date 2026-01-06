@@ -251,17 +251,31 @@ GetPrimary(read_context_t context,
     }
     else if (token.lex_type == LEX_TYPE_ID)
     {
-        token.value.id.table_index = GetLastElement(&token.value.id.id, scope, 
+        ssize_t name_table_number = GetNameNum(&token.value.id.id, scope->scope, 
                                                         context->name_table);
+        if (name_table_number == NO_LINK)
+        {
+            // TODO: error system;
+            return NO_LINK;
+        }
+                                        
+        name_s name = context->name_table->name_array[name_table_number];
+        token.value.id.number_in_scope = (ssize_t) name.info_num;
+        token.value.id.is_global = name.is_global;
 
         ssize_t id_node = ADD__(token);
+        
         VECTOR_ERASE;
         VECTOR_VIEW(token);
         
         if ((token.lex_type == LEX_TYPE_SYNTAX) 
                 && (token.value.syntax == SYNTAX_START_BRACKET))
-        {
+        { 
             VECTOR_ERASE;
+
+            node_s* array = context->lex_tree->nodes_array; 
+            array[id_node].node_value.value.id.is_function = true;
+            
             ssize_t new_node = GetFunctionArg(context, scope);
             CONNECT_LEXES(id_node, new_node, NO_LINK);
             VECTOR_VIEW(token);
@@ -494,7 +508,12 @@ GetInitVar(read_context_t context,
     }
     VECTOR_ERASE;
     ssize_t var_node = ADD__(id_token);
-    InitNewId(var_node, scope, context);
+
+    node_s* node_array = context->lex_tree->nodes_array;
+    node_array[var_node].node_value.value.id.is_global = scope->is_global;
+    node_array[var_node].node_value.value.id.number_in_scope 
+                                                = (ssize_t)scope->variable_count;
+    InitNewVar(var_node, scope, context);
 
     token_s a_token = {};             
     VECTOR_VIEW(a_token);
@@ -502,7 +521,7 @@ GetInitVar(read_context_t context,
             && (a_token.value.op == OPERATOR_ASSIGNMENT))
     {
         VECTOR_ERASE;
-        CONNECT_LEXES(var_kw_node, NO_LINK, GetExpression(context, *scope));
+        CONNECT_LEXES(var_kw_node, NO_LINK, GetExpression(context, scope));
     }
     
     CONNECT_LEXES(var_kw_node, var_node, NO_LINK);
@@ -525,7 +544,8 @@ GetFuncDefinition(read_context_t context,
     token_s id_token = {};
     VECTOR_VIEW(id_token);
     ssize_t id_node = ADD__(id_token);
-    InitNewId(id_node, context);
+    node_s* node_array = context->lex_tree->nodes_array;
+    node_array[id_node].node_value.value.id.is_function = true;
 
     if (id_token.lex_type != LEX_TYPE_ID)
     {
@@ -545,8 +565,11 @@ GetFuncDefinition(read_context_t context,
         return NO_LINK;
     }
     VECTOR_ERASE;
+    
+    scope_s local_scope = *scope;
+    local_scope.is_global = false;
+    local_scope.variable_count = 0;
 
-    ssize_t local_scope = *scope;
     ssize_t var_node = GetInitVar(context, &local_scope);
     if (var_node != NO_LINK)
     {
@@ -570,6 +593,11 @@ GetFuncDefinition(read_context_t context,
 
         CONNECT_LEXES(id_node, var_node, NO_LINK);
     }
+
+    InitNewFunction(id_node, local_scope.variable_count, scope, context);
+    node_array = context->lex_tree->nodes_array;
+    node_array[id_node].node_value.value
+        .id.number_in_scope = (ssize_t) local_scope.variable_count;
 
     VECTOR_VIEW(syntax_token);
     if ((syntax_token.lex_type != LEX_TYPE_SYNTAX)
@@ -692,8 +720,12 @@ GetStatement(read_context_t context,
     {
         VECTOR_ERASE;
         scope_s local_scope = *scope;
-        local_scope.is_global = false;
-
+        if (scope->is_global)
+        {
+            local_scope.variable_count = 0;
+            local_scope.is_global = false;
+        }
+        
         ssize_t statement_connector = STMT_CON;
         CONNECT_LEXES(statement_connector, NO_LINK, 
                             GetStatement(context, &local_scope));
@@ -740,10 +772,10 @@ GetGlobal(read_context_t context)
 
     token_s token = {};
     VECTOR_VIEW(token);
-    ssize_t connector_node = G_CON;
+    ssize_t connector_node = STMT_CON;
 
     scope_s global_scope = {.scope = NO_LINK, .variable_count = 0, 
-                                .is_global = false};
+                                .is_global = true};
     CONNECT_LEXES(connector_node, NO_LINK, 
                         GetStatement(context, &global_scope));
 
@@ -753,7 +785,7 @@ GetGlobal(read_context_t context)
     VECTOR_VIEW(token);
     while(token.lex_type != LEX_TYPE_UNDEFINED)
     {
-        connector_node = G_CON;
+        connector_node = STMT_CON;
         CONNECT_LEXES(connector_node, NO_LINK, 
                             GetStatement(context, &global_scope));
         CONNECT_LEXES(last_connector_node, connector_node, 
