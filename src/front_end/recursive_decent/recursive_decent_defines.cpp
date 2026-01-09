@@ -8,7 +8,6 @@
 #include "tools.h"
 #include <sys/types.h>
 
-
 #define RETURN_NO_LINK_IF_ERROR (void)0
 
 void 

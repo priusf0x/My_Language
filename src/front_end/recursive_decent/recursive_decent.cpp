@@ -566,6 +566,9 @@ GetFuncDefinition(read_context_t context,
     }
     VECTOR_ERASE;
     
+    InitNewFunction(id_node, 0, scope, context);
+    ssize_t function_name = scope->scope;
+
     scope_s local_scope = *scope;
     local_scope.is_global = false;
     local_scope.variable_count = 0;
@@ -593,8 +596,10 @@ GetFuncDefinition(read_context_t context,
 
         CONNECT_LEXES(id_node, var_node, NO_LINK);
     }
+    
+    context->name_table->name_array[function_name].info_num 
+        = local_scope.variable_count;
 
-    InitNewFunction(id_node, local_scope.variable_count, scope, context);
     node_array = context->lex_tree->nodes_array;
     node_array[id_node].node_value.value
         .id.number_in_scope = (ssize_t) local_scope.variable_count;
@@ -681,12 +686,11 @@ GetStatement(read_context_t context,
             return_node = GetInitVar(context, scope);
 
             VECTOR_VIEW(token);
-            if ((token.lex_type != LEX_TYPE_SYNTAX)
-                 && (token.value.syntax != SYNTAX_STATEMENT_CONNECTOR))
-            { 
-                context->status = RECURSIVE_RETURN_READ_ERROR;
-                
-                return NO_LINK;
+            if ((token.value.syntax != SYNTAX_STATEMENT_CONNECTOR) 
+                    || (token.lex_type != LEX_TYPE_SYNTAX)) {
+              context->status = RECURSIVE_RETURN_READ_ERROR;
+
+              return NO_LINK;
             }
             VECTOR_ERASE;
         }
@@ -700,7 +704,7 @@ GetStatement(read_context_t context,
                 
             VECTOR_VIEW(token);
             if ((token.lex_type != LEX_TYPE_SYNTAX)
-                 && (token.value.syntax != SYNTAX_STATEMENT_CONNECTOR))
+                 || (token.value.syntax != SYNTAX_STATEMENT_CONNECTOR))
             {
                 context->status = RECURSIVE_RETURN_READ_ERROR;
 

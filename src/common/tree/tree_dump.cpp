@@ -60,13 +60,11 @@ PrintNode(tree_t  tree,
     ASSERT(tree != NULL);
     ASSERT(file_output != NULL);
 
-    const char* node_tmp = "%d %d %d %s"; 
-    
     node_s node = tree->nodes_array[current_node];
     
     if (node.node_value.lex_type == LEX_TYPE_ID)
     {
-        fprintf(file_output, "meow");
+        fprintf(file_output, "%d %d %*s %d %d %ld " )
     }
     else 
     {

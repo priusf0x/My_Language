@@ -4,8 +4,7 @@
 #include "Assert.h"
 #include "my_string.h"
 #include "lexes.h"
-#include "tools.h"
-#include "tree.h"
+#include "tools.h" #include "tree.h"
 
 #define CURRENT_POSITION (buffer->buffer + buffer->current_position)
 
