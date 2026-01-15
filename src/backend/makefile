@@ -3,21 +3,10 @@ SOURCES = \
 		  common/etc/tools.cpp\
 	  	  common/string/my_string.cpp\
 	  	  common/string/murmurhash.cpp\
-		  common/vector/vector.cpp\
 		  common/stack/stack.cpp \
 		  common/tree/tree.cpp\
 		  common/tree/tree_dump.cpp\
-	  	  front_end/state_machine_generator/state_machine_functions.cpp\
- 		  front_end/recursive_decent/recursive_decent.cpp\
-		  front_end/recursive_decent/tokenization.cpp\
-		  front_end/recursive_decent/recursive_decent_defines.cpp\
-		  front_end/name_space/name_space.cpp
 INCLUDES_DIR =\
-			front_end/name_space\
-			front_end/recursive_decent\
-			front_end/state_machine_generator\
-			front_end\
-			front_end\
 			common/buffer\
 			common/etc\
 			common/stack\
@@ -97,7 +86,3 @@ clean:
 	@rm -f $(TARGET_GEN)
 	@rm -rf logs
 	@echo "Cleaned Successfully"
-
-
-
-# include Assembly/processor.mk

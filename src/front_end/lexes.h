@@ -105,7 +105,7 @@ union token_value_u
     key_word_type_e key_word;
     operator_type_e op;
     syntax_type_e   syntax;
-    long int        constant;
+    int             constant;
     id_s            id;
 };
 

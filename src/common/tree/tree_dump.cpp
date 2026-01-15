@@ -33,7 +33,6 @@ TreeDump(const tree_t tree)
     ASSERT(tree != NULL);
 
     FILE* log_file = GetLogFile();
-
     if (log_file == NULL)
     {
         return;
@@ -64,13 +63,19 @@ PrintNode(tree_t  tree,
     
     if (node.node_value.lex_type == LEX_TYPE_ID)
     {
-        fprintf(file_output, "%d %d %*s %d %d %ld " )
+
+        id_s value = node.node_value.value.id;
+        
+        fprintf(file_output, "%d %d %.*s %d %d %ld ",
+                    LEX_TYPE_ID, (int) value.id.string_size,
+                    (int) value.id.string_size, value.id.string_source,
+                    value.is_function, value.is_global,
+                    value.number_in_scope);
     }
     else 
     {
-        // ... 
-        
-        fprintf(file_output, "bar");
+        fprintf(file_output, "%d %d", node.node_value.lex_type, 
+                                      node.node_value.value.constant);
     }
 }
 
@@ -131,7 +136,7 @@ TreeBaseDump(tree_t      tree,
     return TREE_RETURN_SUCCESS;
 }
 
-// static recursion_return_e
+// static recursion_return_
 // RecursiveParser(akinator_t akinator,
 //                 size_t*    current_position,
 //                 size_t     root_position)

@@ -42,4 +42,5 @@ InitNewFunction(ssize_t        declaration,
     
 // ============================================================================
 
+
 #endif //RECURSIVE_DECENT_DEFINES_H

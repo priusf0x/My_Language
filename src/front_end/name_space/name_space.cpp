@@ -106,8 +106,8 @@ NameTableDump(name_table_t name_table)
     size_t current_index = 0;
     name_s current_name = {};
 
-    const char* table_heading = "┏━━━━┳━━━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━┓ \n"\
-                                "┃ No ┃  HASH  ┃ NoSc ┃ PREV ┃ INFO ┃  \n"\
+    const char* table_heading = "┏━━━━┳━━━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━┓\n"\
+                                "┃ No ┃  HASH  ┃ NoSc ┃ PREV ┃ INFO ┃\n"\
                                 "┡━━━━┻━━━━━━━━┻━━━━━━┻━━━━━━┻━━━━━━┩\n";
     const char* table_ending =  "└────┴────────┴──────┴──────┴──────┘\n";
 

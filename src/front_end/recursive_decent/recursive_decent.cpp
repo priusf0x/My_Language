@@ -256,6 +256,7 @@ GetPrimary(read_context_t context,
         if (name_table_number == NO_LINK)
         {
             // TODO: error system;
+            // TODO: check if function or variable 
             return NO_LINK;
         }
                                         
@@ -341,7 +342,7 @@ GetBool(read_context_t context,
     {
         VECTOR_ERASE;
         bool_op = ADD__(token);
-        CONNECT_LEXES(bool_op, GetPrimary(context, scope), return_node);
+        CONNECT_LEXES(bool_op, GetPrimary(context, scope), return_node); // check if variable 
         return_node = bool_op;
         VECTOR_VIEW(token);
     }
@@ -569,7 +570,7 @@ GetFuncDefinition(read_context_t context,
     InitNewFunction(id_node, 0, scope, context);
     ssize_t function_name = scope->scope;
 
-    scope_s local_scope = *scope;
+    scope_s local_scope = *scope; //  need to make error if defined in local scope 
     local_scope.is_global = false;
     local_scope.variable_count = 0;
 
@@ -598,11 +599,7 @@ GetFuncDefinition(read_context_t context,
     }
     
     context->name_table->name_array[function_name].info_num 
-        = local_scope.variable_count;
-
-    node_array = context->lex_tree->nodes_array;
-    node_array[id_node].node_value.value
-        .id.number_in_scope = (ssize_t) local_scope.variable_count;
+        = local_scope.variable_count; // setting amount of functions args 
 
     VECTOR_VIEW(syntax_token);
     if ((syntax_token.lex_type != LEX_TYPE_SYNTAX)
@@ -615,6 +612,9 @@ GetFuncDefinition(read_context_t context,
     VECTOR_ERASE;
 
     CONNECT_LEXES(function_kw_node, id_node, GetStatement(context, &local_scope));
+    node_array = context->lex_tree->nodes_array;
+    node_array[id_node].node_value.value
+        .id.number_in_scope = (ssize_t) local_scope.variable_count;
 
     return function_kw_node;
 }
@@ -653,12 +653,9 @@ GetIfWhile(read_context_t context,
         return NO_LINK;
     }
     VECTOR_ERASE;
-    
-    scope_s local_scope = *scope;
-    local_scope.is_global = false;
 
     CONNECT_LEXES(whileif_kw_node, condition_node, 
-                        GetStatement(context, &local_scope));
+                        GetStatement(context, scope));
 
     return whileif_kw_node;
 }
@@ -738,7 +735,7 @@ GetStatement(read_context_t context,
 
         VECTOR_VIEW(token);
         while ((token.lex_type != LEX_TYPE_SYNTAX) 
-                    ||   (token.value.syntax != SYNTAX_END_BODY))
+                    || (token.value.syntax != SYNTAX_END_BODY))
         {
             statement_connector = STMT_CON;
             CONNECT_LEXES(statement_connector, NO_LINK, 
@@ -747,6 +744,11 @@ GetStatement(read_context_t context,
                             NO_LINK);
             last_stmt_connector = statement_connector;
             VECTOR_VIEW(token);
+        }
+
+        if (!scope->is_global) // for correct stack frames work
+        {
+            scope->variable_count = local_scope.variable_count;
         }
 
         VECTOR_ERASE;
