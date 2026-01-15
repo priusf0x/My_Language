@@ -1,4 +1,6 @@
-SOURCES = \
+
+
+COMMON_SOURCES = \
 		  common/buffer/buffer.cpp\
 		  common/etc/tools.cpp\
 	  	  common/string/my_string.cpp\
@@ -7,16 +9,31 @@ SOURCES = \
 		  common/stack/stack.cpp \
 		  common/tree/tree.cpp\
 		  common/tree/tree_dump.cpp\
-	  	  front_end/state_machine_generator/state_machine_functions.cpp\
+
+AST_SOURCES_ALT = \
  		  front_end/recursive_decent/recursive_decent.cpp\
+		  front_end/state_machine_generator/state_machine_functions.cpp\
 		  front_end/recursive_decent/tokenization.cpp\
 		  front_end/recursive_decent/recursive_decent_defines.cpp\
-		  front_end/name_space/name_space.cpp
+		  front_end/name_space/name_space.cpp\
+		  front_end/ast_main.cpp
+
+GEN_SOURCES_ALT = \
+	  	  front_end/state_machine_generator/state_machine_functions.cpp\
+		  front_end/state_machine_generator/state_machine_main.cpp
+
+
+COMP_SOURCES_ALT = \
+		  back_end/compiler.cpp\
+		  back_end/compiler_main.cpp\
+
+
+
 INCLUDES_DIR =\
+			backend/\
 			front_end/name_space\
 			front_end/recursive_decent\
 			front_end/state_machine_generator\
-			front_end\
 			front_end\
 			common/buffer\
 			common/etc\
@@ -24,28 +41,33 @@ INCLUDES_DIR =\
 			common/string\
 			common/tree\
 			common/vector\
-		  
-SOURCE_MAIN_AST := front_end/ast_main.cpp
-SOURCE_MAIN_GEN := front_end/state_machine_generator/state_machine_main.cpp
 
 OBJ_DIR = obj
 SOURCE_DIR = src
 
+AST_SOURCES = $(COMMON_SOURCES) $(AST_SOURCES_ALT)
+GEN_SOURCES = $(COMMON_SOURCES) $(GEN_SOURCES_ALT)
+COMP_SOURCES = $(COMMON_SOURCES) $(COMP_SOURCES_ALT)
+
 INCLUDES = $(addprefix -I$(SOURCE_DIR)/, $(INCLUDES_DIR))
-OBJECTS := $(addprefix $(OBJ_DIR)/, $(SOURCES:.cpp=.o))
-OBJECT_MAIN_AST := $(addprefix $(OBJ_DIR)/, $(SOURCE_MAIN_AST:.cpp=.o))
-OBJECT_MAIN_GEN := $(addprefix $(OBJ_DIR)/, $(SOURCE_MAIN_GEN:.cpp=.o))
-SOURCES := $(addprefix $(SOURCE_DIR)/, $(SOURCES))
-SOURCE_MAIN_AST := $(addprefix $(SOURCE_DIR)/, $(SOURCE_MAIN_AST))
-SOURCE_MAIN_GEN := $(addprefix $(SOURCE_DIR)/, $(SOURCE_MAIN_GEN))
 
-HEADERS = $(wildcard $(SOURCE_DIR)/*.h)
+#front_end part 
+AST_OBJECTS := $(addprefix $(OBJ_DIR)/, $(AST_SOURCES:.cpp=.o))
+AST_SOURCES := $(addprefix $(SOURCE_DIR)/, $(AST_SOURCES))
+TARGET_AST = $(OBJ_DIR)/ast.out
 
-TARGET_AST = ast.out
-TARGET_GEN = gen.out
+#key words generator
+GEN_OBJECTS := $(addprefix $(OBJ_DIR)/, $(GEN_SOURCES:.cpp=.o))
+GEN_SOURCES := $(addprefix $(SOURCE_DIR)/, $(GEN_SOURCES))
+TARGET_GEN = $(OBJ_DIR)/gen.out
 
+#compiler part 
+COMP_OBJECTS := $(addprefix $(OBJ_DIR)/, $(COMP_SOURCES:.cpp=.o))
+COMP_SOURCES := $(addprefix $(SOURCE_DIR)/, $(COMP_SOURCES))
+TARGET_COMP = $(OBJ_DIR)/compiler.out
+
+# c++/c compiler options
 CC = g++ 
-
 CFLAGS =  -D _DEBUG -ggdb3 -std=c++17 -O2 -Wall -Wextra -Weffc++ -Waggressive-loop-optimizations\
 		 -Wc++14-compat -Wmissing-declarations -Wcast-align -Wcast-qual -Wchar-subscripts\
 		 -Wconditionally-supported -Wconversion -Wctor-dtor-privacy -Wempty-body -Wfloat-equal\
@@ -63,41 +85,40 @@ CFLAGS += -lm
 CFLAGS += $(INCLUDES)
 
 $(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.cpp
-		@mkdir -p $(dir $@)
-		@mkdir -p logs
-		@echo "Compiling" $<
-		@$(CC) $(CFLAGS) -c $< -o $@ 	
-		@echo "Compiled Successfully" $<
+	@mkdir -p $(dir $@)
+	@mkdir -p logs
+	@echo "Compiling" $<
+	@$(CC) $(CFLAGS) -c $< -o $@ 	
+	@echo "Compiled Successfully" $<
 
-$(TARGET_AST): $(OBJECTS) $(OBJECT_MAIN_AST)
+$(TARGET_AST): $(AST_OBJECTS)
 	@echo "Linking..."
 	@$(CC) $(CFLAGS) $^ -o $@
 	@echo "Linked Successfully"
 
-$(TARGET_GEN): $(OBJECTS) $(OBJECT_MAIN_GEN)
+$(TARGET_GEN): $(GEN_OBJECTS)
+	@echo "Linking..."
+	@$(CC) $(CFLAGS) $^ -o $@
+	@echo "Linked Successfully"
+	
+$(TARGET_COMP): $(COMP_OBJECTS)
 	@echo "Linking..."
 	@$(CC) $(CFLAGS) $^ -o $@
 	@echo "Linked Successfully"
 
 ast: $(TARGET_AST)
+	@$(OBJ_DIR)/./ast.out
 gen: $(TARGET_GEN)
-
-test:
-	@./list_sester.out
-
-all: $(TARGET) build_asm
-
-logclean:
-	@rm -rf logs/*
-	@echo "Cleaned Logs Successfully"
-
+	@$(OBJ_DIR)/./gen.out
+comp: $(TARGET_COMP)
+	@$(OBJ_DIR)/compiler.out
+	
+all : $(TARGET_AST) $(TARGET_GEN) $(TARGET_COMP)
+	
 clean:
+	@rm -rf logs/*
 	@rm -rf $(OBJ_DIR)
 	@rm -f $(TARGET_AST)
 	@rm -f $(TARGET_GEN)
-	@rm -rf logs
+	@rm -f $(TARGET_COMP)
 	@echo "Cleaned Successfully"
-
-
-
-# include Assembly/processor.mk

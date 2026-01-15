@@ -4,7 +4,8 @@
 #include "Assert.h"
 #include "my_string.h"
 #include "lexes.h"
-#include "tools.h" #include "tree.h"
+#include "tools.h" 
+#include "tree.h"
 
 #define CURRENT_POSITION (buffer->buffer + buffer->current_position)
 
@@ -58,14 +59,14 @@ CheckIfAlNum(const char* string)
 
 static void
 ReadConstFromBuffer(buffer_t  buffer,
-                    long int* constant)
+                    int* constant)
 {
     ASSERT(buffer != NULL);
     ASSERT(constant != NULL);
 
     char* end_ptr = NULL;
 
-    *constant = strtol(CURRENT_POSITION, &end_ptr, 0);
+    *constant = (int) strtol(CURRENT_POSITION, &end_ptr, 0);
 
     buffer->current_position += (size_t) (end_ptr - CURRENT_POSITION);
 }
