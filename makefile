@@ -26,7 +26,8 @@ GEN_SOURCES_ALT = \
 
 COMP_SOURCES_ALT = \
 		  back_end/compiler_ctor.cpp\
-		  back_end/compiler_main.cpp\
+		  back_end/compiler.cpp\
+		  back_end/compiler_main.cpp
 
 
 

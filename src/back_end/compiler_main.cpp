@@ -2,17 +2,14 @@
 #include "compiler.h"
 #include "tree.h"
 
-const char* ast_file = "und3f1n3d_base.txt";
+static const char* AST_FILE =    "und3f1n3d_base.txt";
+static const char* OUTPUT_NAME = "meow_name.asm";
 
 int main(void)
 {
     compiler_t compiler = {};
     
-    CompilerCtor(ast_file, &compiler);
-    
-    ReadTree(0, compiler->compiler_tree, compiler->buffer);
-    
-    TreeDump(compiler->compiler_tree);
+    CompilerCtor(AST_FILE, OUTPUT_NAME, &(compiler));
     
     CompilerDtor(&compiler);
 

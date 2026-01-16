@@ -33,13 +33,11 @@ ReadNode(ssize_t*   return_node,
         if (StrNCmpB(nil_str, nil_size, buffer) == 0)
         {
             SkipNSymbolsB(buffer, nil_size);
-            SkipSpacesB(buffer);
-            *return_node = NO_LINK;
-            
-            return TREE_RETURN_SUCCESS;
+            SkipSpacesB(buffer);    
         }
+        *return_node = NO_LINK;
         
-        return TREE_RETURN_AST_STANDARD_ERROR; // if undefined element detected 
+        return TREE_RETURN_SUCCESS;
     }
     else if (lex_type == LEX_TYPE_ID)
     {
@@ -60,10 +58,10 @@ ReadNode(ssize_t*   return_node,
         token.node_value.value.constant = (int) ReadLongB(buffer);
         SkipSpacesB(buffer);
     }  
-    
+
     tree_return_e output = TREE_RETURN_SUCCESS;
     if ((output = TreeAddNode(tree, &token)) != 0) 
-    {
+    { 
         return output;
     } 
     
@@ -87,6 +85,7 @@ ReadTree(ssize_t    parent,
 
     if (parent == NO_LINK)
     {
+
         return TREE_RETURN_AST_STANDARD_ERROR;
     }
 

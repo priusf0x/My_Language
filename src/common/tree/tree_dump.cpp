@@ -24,6 +24,7 @@ GetLogFile()
 // ============================== DUMP_FUNCTIONS ==============================
 
 static void PrintTreeInfo(const tree_t tree, const char* current_time, 
+
                             FILE* file_output);
 static void PrintHTMLHeader(FILE* log_file, const char* current_time);
 static void PrintElementsInfo(const tree_t tree, FILE* file_output);
@@ -131,6 +132,8 @@ TreeBaseDump(tree_t      tree,
     fprintf(file, "(");
     TreeBaseDumpRecursive(tree, 
                 tree->nodes_array[0].left_index, file);
+    
+    fprintf(file, ")");
     
     if (fclose(file))
     {

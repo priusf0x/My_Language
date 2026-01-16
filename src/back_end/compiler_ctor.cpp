@@ -1,5 +1,6 @@
 #include "compiler.h"
 
+#include <cstddef>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -13,10 +14,12 @@
 // ============================= INITIALIZATION ===============================
 
 compiler_return_e
-CompilerCtor(const char* file_name,
+CompilerCtor(const char* input_name,
+             const char* output_name,
              compiler_t* compiler)
 {   
-    ASSERT(file_name != NULL);
+    ASSERT(input_name != NULL);
+    ASSERT(output_name != NULL);
     ASSERT(compiler != NULL);
 
     *compiler = (compiler_t) calloc(1, sizeof(compiler_s));
@@ -26,9 +29,10 @@ CompilerCtor(const char* file_name,
         return COMPILER_RETURN_SUCCESS;
     }
 
-    if (BufferCtor(&(*compiler)->buffer, file_name) != 0)
+    if (BufferCtor(&(*compiler)->buffer, input_name) != 0)
     {
         free(*compiler);
+        *compiler = NULL;
 
         return COMPILER_RETURN_BUFFER_ERROR;
     }
@@ -38,11 +42,32 @@ CompilerCtor(const char* file_name,
     {
         BufferDestroy(&(*compiler)->buffer);
         free(*compiler);
+        *compiler = NULL;
 
         return COMPILER_RETURN_BUFFER_ERROR;
     }
 
-    // read tree here 
+    if (ReadTree(0, (*compiler)->compiler_tree, (*compiler)->buffer) != 0)
+    {
+        BufferDestroy(&(*compiler)->buffer);
+        TreeDtor(&(*compiler)->compiler_tree);
+        free(*compiler);
+        *compiler = NULL;
+        
+        return COMPILER_RETURN_AST_STANDARD_ERROR;
+    }
+
+    (*compiler)->file_output = fopen(output_name, "w+");
+    
+    if ((*compiler)->file_output == NULL)
+    {
+        BufferDestroy(&(*compiler)->buffer);
+        TreeDtor(&(*compiler)->compiler_tree);
+        free(*compiler);
+        *compiler = NULL;
+        
+        return COMPILER_RETURN_FILE_OPEN_ERROR;
+    }
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -54,11 +79,11 @@ CompilerDtor(compiler_t* compiler)
     {
         TreeDtor(&(*compiler)->compiler_tree);
         BufferDestroy(&(*compiler)->buffer);
+        fclose((*compiler)->file_output);
         free(*compiler);
 
         *compiler = NULL;
     }
-
 
     return COMPILER_RETURN_SUCCESS;
 }
