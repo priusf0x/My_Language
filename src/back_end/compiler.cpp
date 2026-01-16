@@ -1,9 +1,8 @@
 #include "compiler.h"
 
 #include "Assert.h"
-
-static compiler_return_e 
-CompileTree(ssize_t lex, compiler_t compiler);
+#include "lexes.h"
+#include "tree.h"
 
 // =============================== MAIN_CYCLE =================================
 
@@ -20,38 +19,31 @@ SetASMHeader(compiler_t compiler)
     return COMPILER_RETURN_SUCCESS;
 }
 
+static compiler_return_e 
+CompileStatement(ssize_t lex, compiler_t compiler);
+
 compiler_return_e
 CompileAST(compiler_t compiler)
 {
     ASSERT(compiler != NULL);
-//   add verificator 
 
-    SetASMHeader(compiler);
+    SetASMHeader(compiler); // calling main function 
 
-    ssize_t first_element = compiler->compiler_tree
+    ssize_t lex = compiler->compiler_tree
                                 ->nodes_array->left_index;
     compiler_return_e output = COMPILER_RETURN_SUCCESS;
+    node_s* array = compiler->compiler_tree->nodes_array;
 
-    if ((output = CompileTree(first_element, compiler)) != 0)
+    while (lex != NO_LINK)
     {
-        return output;
-    }
+        output = CompileStatement(array[lex].right_index,
+                                                    compiler);  
+        if (output != 0)
+        {
+            return output;
+        }
 
-    return COMPILER_RETURN_SUCCESS;
-}
-
-static compiler_return_e 
-CompileStatement(ssize_t lex, compiler_t compiler);
-
-static compiler_return_e 
-CompileTree(ssize_t    lex,
-            compiler_t compiler)
-{
-    ASSERT(compiler != NULL);
-
-    while ()// )
-    {
-        // compile stirng 
+        lex = array[lex].left_index; // switching to next stmt
     }
 
     return COMPILER_RETURN_SUCCESS;
@@ -59,17 +51,27 @@ CompileTree(ssize_t    lex,
 
 // ========================= COMPILING_STATEMENT ==============================
 
-// LEX_TYPE_ID
-// LEX_TYPE_CONST
-// LEX_TYPE_KEY_WORD
-// LEX_TYPE_OPERATOR
-// LEX_TYPE_SYNTAX
-
 static compiler_return_e 
 CompileStatement(ssize_t    lex, 
                  compiler_t compiler)
 {
-    // the idea is identifiing lex and seperate it into functions 
+    node_s* array = compiler->compiler_tree->nodes_array;
+
+    switch (array[lex].node_value.lex_type)
+    {   
+        case LEX_TYPE_ID:
+            break;
+        case LEX_TYPE_CONST:
+            break;
+        case LEX_TYPE_KEY_WORD:
+            break;
+        case LEX_TYPE_OPERATOR:
+            break;
+
+        case LEX_TYPE_SYNTAX: return COMPILER_RETURN_SEMANTIC_ERROR;
+        case LEX_TYPE_UNDEFINED:
+        default: return COMPILER_RETURN_UNDEFINED_ELEMENT;
+    }
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -90,8 +92,10 @@ CompileStatement(ssize_t    lex,
 // OPERATOR_LESS_OR_EQUAL
 
 static compiler_return_e 
-CompileOp(ssize_t node)
+CompileOp(ssize_t    node,
+          compiler_t compiler)
 {
+    ASSERT(compiler != NULL);
     // here op separations is made
 
 

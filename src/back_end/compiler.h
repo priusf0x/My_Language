@@ -22,7 +22,9 @@ enum compiler_return_e
     COMPILER_RETURN_BUFFER_ERROR,
     COMPILER_RETURN_AST_STANDARD_ERROR,
     COMPILER_RETURN_FILE_OPEN_ERROR,
-    COMPILER_RETURN_FILE_CLOSE_ERROR
+    COMPILER_RETURN_FILE_CLOSE_ERROR,
+    COMPILER_RETURN_UNDEFINED_ELEMENT,
+    COMPILER_RETURN_SEMANTIC_ERROR
 };
 
 // =========================== MEMORY_CONTROLLING =============================
@@ -34,5 +36,10 @@ CompilerCtor(const char* input_name,
 
 compiler_return_e
 CompilerDtor(compiler_t* compiler);
+
+// =============================== COMPILE_AST ================================
+
+compiler_return_e
+CompileAST(compiler_t compiler);
 
 #endif // COMPILER_H
