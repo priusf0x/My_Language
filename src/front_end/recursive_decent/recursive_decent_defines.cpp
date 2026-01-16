@@ -1,12 +1,13 @@
 #include "recursive_decent_defines.h"
 
+#include <sys/types.h>
+
 #include "Assert.h"
 #include "lexes.h"
 #include "name_space.h"
 #include "recursive_decent.h"
 #include "tree.h"
 #include "tools.h"
-#include <sys/types.h>
 
 #define RETURN_NO_LINK_IF_ERROR (void)0
 

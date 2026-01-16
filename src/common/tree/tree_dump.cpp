@@ -23,7 +23,8 @@ GetLogFile()
 
 // ============================== DUMP_FUNCTIONS ==============================
 
-static void PrintTreeInfo(const tree_t tree, const char* current_time, FILE* file_output);
+static void PrintTreeInfo(const tree_t tree, const char* current_time, 
+                            FILE* file_output);
 static void PrintHTMLHeader(FILE* log_file, const char* current_time);
 static void PrintElementsInfo(const tree_t tree, FILE* file_output);
 
@@ -93,15 +94,17 @@ TreeBaseDumpRecursive(tree_t  tree,
         fprintf(file_output, " %s ", empty_node);
         return;
     }
-
+    
     node_s* array = tree->nodes_array;
     node_s node = array[current_node]; 
-
+    
     PrintNode(tree, current_node, file_output);
 
     fprintf(file_output, "(");
+    
     TreeBaseDumpRecursive(tree, node.left_index, file_output);
     TreeBaseDumpRecursive(tree, node.right_index, file_output);
+
     fprintf(file_output, ")");
 
 }
@@ -125,9 +128,10 @@ TreeBaseDump(tree_t      tree,
         return TREE_RETURN_OPEN_FILE_ERROR;
     }
     
+    fprintf(file, "(");
     TreeBaseDumpRecursive(tree, 
                 tree->nodes_array[0].left_index, file);
-
+    
     if (fclose(file))
     {
         return TREE_RETURN_CLOSE_FILE_ERROR;

@@ -50,7 +50,7 @@ InitMachine(const char*      file_name,
     state_t state_amount = 0;
     fread(&state_amount, sizeof(state_t), 1, vector_file);
     
-    if (StateMachineInit(state_machine, state_amount) != 0)
+    if (StateMachineCtor(state_machine, state_amount) != 0)
     {
         return RECURSIVE_RETURN_ALLOCATION_ERROR;
     }
@@ -71,7 +71,7 @@ InitMachine(const char*      file_name,
 static ssize_t GetGlobal(read_context_t context);
 
 recursive_return_e 
-InitReadContext(read_context_t* context)
+ReadContextCtor(read_context_t* context)
 {
     ASSERT(context != NULL);
 
@@ -92,7 +92,7 @@ InitReadContext(read_context_t* context)
         return RECURSIVE_RETURN_VECTOR_ERROR;
     }
 
-    if(BufferInit(&(*context)->input_buffer, INPUT_FILE_NAME) != 0)
+    if(BufferCtor(&(*context)->input_buffer, INPUT_FILE_NAME) != 0)
     {
         VectorDestroy(&(*context)->lex_vector);
         free(*context);
@@ -127,7 +127,7 @@ InitReadContext(read_context_t* context)
 
     DivideInLexems(*context);
 
-    TreeInit(&(*context)->lex_tree, 10);
+    TreeCtor(&(*context)->lex_tree, 10);
 
     ssize_t meow =  GetGlobal(*context);
     (*context)->lex_tree->nodes_array[0].left_index = meow; 
@@ -143,19 +143,19 @@ InitReadContext(read_context_t* context)
 } 
 
 recursive_return_e
-DestroyReadContext(read_context_t* context)
+ReadContextDtor(read_context_t* context)
 {
     if ((context == NULL) || (*context == NULL))
     {
         return RECURSIVE_RETURN_SUCCESS;
     }
 
-    StateMachineDestroy(&(*context)->key_word_machine);
-    StateMachineDestroy(&(*context)->operator_machine);
-    StateMachineDestroy(&(*context)->syntax_machine);
+    StateMachineDtor(&(*context)->key_word_machine);
+    StateMachineDtor(&(*context)->operator_machine);
+    StateMachineDtor(&(*context)->syntax_machine);
     BufferDestroy(&(*context)->input_buffer);
     VectorDestroy(&(*context)->lex_vector);
-    TreeDestroy(&(*context)->lex_tree);
+    TreeDtor(&(*context)->lex_tree);
     DestroyNameTable(&(*context)->name_table);
     
     free(*context);

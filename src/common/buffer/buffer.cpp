@@ -1,5 +1,6 @@
 #include "buffer.h"
 
+#include <string.h>
 #include <sys/stat.h>
 #include <stdio.h>
 
@@ -11,7 +12,7 @@
 // ============================ MEMORY_CONTROLLING ============================
 
 buffer_return_e
-BufferInit(buffer_t*    buffer,
+BufferCtor(buffer_t*    buffer,
            const char*  file_name)
 {
     ASSERT(buffer != NULL);
@@ -95,18 +96,58 @@ BufferDestroy(buffer_t* buffer)
 // ================================ METHODS ===================================
 
 void 
-SkipSpacesInBuffer(buffer_t buffer)
+SkipSpacesB(buffer_t buffer)
 {
+    ASSERT(buffer != NULL);
+
     buffer->current_position = SkipSpaces(buffer->buffer, 
                                             buffer->current_position);
 }
 
 void 
-SkipNSymbols(buffer_t buffer,
-             size_t   n)
+SkipNSymbolsB(buffer_t buffer,
+              size_t   n)
 {
+    ASSERT(buffer != NULL);
+
     buffer->current_position += n;
 }
+
+bool 
+CheckIfSymbolB(char     character,
+               buffer_t buffer)
+{   
+    ASSERT(buffer != NULL);
+
+    if (buffer->buffer[buffer->current_position] == character)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+long int 
+ReadLongB(buffer_t buffer)
+{
+    ASSERT(buffer);
+
+    char* end_ptr = NULL; 
+    char* current_string = buffer->buffer + buffer->current_position;
+
+    long int number = strtol(current_string, &end_ptr, 0);
+    SkipNSymbolsB(buffer, (size_t) (end_ptr - current_string));
+
+    return number;
+}
+
+int
+StrNCmpB(const char* string,
+         size_t      number,
+         buffer_t    buffer)
+{
+    return strncmp(string, buffer->buffer + buffer->current_position, number);  
+}   
 
 // =============================== BUFFER_DUMP ================================
 

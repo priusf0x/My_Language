@@ -24,7 +24,7 @@ SetMatrixSize(state_machine_t state_machine,
               state_t         new_node_amount);
 
 state_machine_return_e 
-StateMachineInit(state_machine_t* state_machine,
+StateMachineCtor(state_machine_t* state_machine,
                  state_t          expected_size)
 {
     ASSERT(state_machine != NULL);
@@ -44,7 +44,7 @@ StateMachineInit(state_machine_t* state_machine,
 }
 
 state_machine_return_e 
-StateMachineDestroy(state_machine_t* state_machine)
+StateMachineDtor(state_machine_t* state_machine)
 {
     if ((state_machine == NULL) || (*state_machine == NULL))
     {

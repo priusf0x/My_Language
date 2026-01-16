@@ -15,7 +15,7 @@ static tree_return_e NumerizeElements(tree_t tree, size_t start_index);
 // =========================== MEMORY_CONTROLLING ===============================
 
 tree_return_e
-TreeInit(tree_t* tree,
+TreeCtor(tree_t* tree,
          size_t  start_tree_size)
 {
     ASSERT(tree != NULL);
@@ -43,7 +43,7 @@ TreeInit(tree_t* tree,
 }
 
 tree_return_e
-TreeDestroy(tree_t* tree)
+TreeDtor(tree_t* tree)
 {
     if ((tree != NULL) && (*tree != NULL))
     {
@@ -342,14 +342,14 @@ ForceConnect(tree_t     tree,
 }
 
 tree_return_e
-DeleteSubgraph(tree_t tree,
+DeleteSubgraph(tree_t  tree,
                ssize_t node_index)
 {
     ASSERT(tree != NULL);
 
     if (node_index == NO_LINK)
     {
-        return TREE_RETURN_OPEN_FILE_ERROR;
+        return TREE_RETURN_INVALID_NODE;
     }
 
     swag_t bypass_stack = NULL;

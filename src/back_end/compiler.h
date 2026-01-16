@@ -17,16 +17,18 @@ enum compiler_return_e
     COMPILER_RETURN_SUCCESS,
     COMPILER_RETURN_ALLOCATION_ERROR,
     COMPILER_RETURN_BUFFER_ERROR,
-    //... 
+    COMPILER_RETURN_AST_STANDARD_ERROR,
+    COMPILER_RETURN_FILE_OPEN_ERROR,
+    COMPILER_RETURN_FILE_CLOSE_ERROR
 };
 
 // =========================== MEMORY_CONTROLLING =============================
 
 compiler_return_e
-CompilerInit(const char* file_name,
+CompilerCtor(const char* file_name,
              compiler_t* compiler);
 
 compiler_return_e
-CompilerDestroy(compiler_t* compiler);
+CompilerDtor(compiler_t* compiler);
 
 #endif // COMPILER_H

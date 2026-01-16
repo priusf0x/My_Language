@@ -85,7 +85,7 @@ ReadIdFromBuffer(buffer_t  buffer,
     do 
     {
         check_output = CheckIfAlNum(CURRENT_POSITION);
-        SkipNSymbols(buffer, check_output);
+        SkipNSymbolsB(buffer, check_output);
         string_length += check_output;
     }
     while (check_output);
@@ -123,7 +123,7 @@ CheckIfType(buffer_t        buffer,
     
     if (current_state & (~END_STATE_FLAG))
     {
-        SkipNSymbols(buffer, read_amount);
+        SkipNSymbolsB(buffer, read_amount);
     }
     
     return current_state & (~END_STATE_FLAG);
@@ -179,7 +179,7 @@ DivideInLexems(read_context_t context)
 
     token_s token = {};
     buffer_t buffer = context->input_buffer;
-    SkipSpacesInBuffer(context->input_buffer);
+    SkipSpacesB(context->input_buffer);
 
     do 
     {
@@ -189,7 +189,7 @@ DivideInLexems(read_context_t context)
         {
             return RECURSIVE_RETURN_VECTOR_ERROR;
         }
-        SkipSpacesInBuffer(buffer);
+        SkipSpacesB(buffer);
     } 
     while ((*CURRENT_POSITION != 0) && (token.lex_type != LEX_TYPE_UNDEFINED));
 

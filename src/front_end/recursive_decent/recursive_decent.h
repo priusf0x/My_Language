@@ -46,10 +46,10 @@ struct scope_s
 typedef read_context_s* read_context_t;
 
 recursive_return_e 
-InitReadContext(read_context_t* context);
+ReadContextCtor(read_context_t* context);
 
 recursive_return_e
-DestroyReadContext(read_context_t* context);
+ReadContextDtor(read_context_t* context);
 
 recursive_return_e 
 DivideInLexems(read_context_t context);

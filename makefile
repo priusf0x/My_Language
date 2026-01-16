@@ -9,6 +9,7 @@ COMMON_SOURCES = \
 		  common/stack/stack.cpp \
 		  common/tree/tree.cpp\
 		  common/tree/tree_dump.cpp\
+		  common/tree/tree_reader.cpp
 
 AST_SOURCES_ALT = \
  		  front_end/recursive_decent/recursive_decent.cpp\
@@ -24,7 +25,7 @@ GEN_SOURCES_ALT = \
 
 
 COMP_SOURCES_ALT = \
-		  back_end/compiler.cpp\
+		  back_end/compiler_ctor.cpp\
 		  back_end/compiler_main.cpp\
 
 
@@ -54,17 +55,17 @@ INCLUDES = $(addprefix -I$(SOURCE_DIR)/, $(INCLUDES_DIR))
 #front_end part 
 AST_OBJECTS := $(addprefix $(OBJ_DIR)/, $(AST_SOURCES:.cpp=.o))
 AST_SOURCES := $(addprefix $(SOURCE_DIR)/, $(AST_SOURCES))
-TARGET_AST = $(OBJ_DIR)/ast.out
+TARGET_AST = ast.out
 
 #key words generator
 GEN_OBJECTS := $(addprefix $(OBJ_DIR)/, $(GEN_SOURCES:.cpp=.o))
 GEN_SOURCES := $(addprefix $(SOURCE_DIR)/, $(GEN_SOURCES))
-TARGET_GEN = $(OBJ_DIR)/gen.out
+TARGET_GEN = gen.out
 
 #compiler part 
 COMP_OBJECTS := $(addprefix $(OBJ_DIR)/, $(COMP_SOURCES:.cpp=.o))
 COMP_SOURCES := $(addprefix $(SOURCE_DIR)/, $(COMP_SOURCES))
-TARGET_COMP = $(OBJ_DIR)/compiler.out
+TARGET_COMP = compiler.out
 
 # c++/c compiler options
 CC = g++ 
@@ -107,11 +108,11 @@ $(TARGET_COMP): $(COMP_OBJECTS)
 	@echo "Linked Successfully"
 
 ast: $(TARGET_AST)
-	@$(OBJ_DIR)/./ast.out
+	@./ast.out
 gen: $(TARGET_GEN)
-	@$(OBJ_DIR)/./gen.out
+	@./gen.out
 comp: $(TARGET_COMP)
-	@$(OBJ_DIR)/compiler.out
+	@./compiler.out
 	
 all : $(TARGET_AST) $(TARGET_GEN) $(TARGET_COMP)
 	

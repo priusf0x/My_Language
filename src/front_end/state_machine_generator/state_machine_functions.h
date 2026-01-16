@@ -42,11 +42,11 @@ const state_t UNDEFINED_ELEMENT = END_STATE_FLAG;
 // ========================== MEMORY_CONTROLLING_FUNCTIONS ====================
 
 state_machine_return_e 
-StateMachineInit(state_machine_t* state_machine,
+StateMachineCtor(state_machine_t* state_machine,
                  state_t          expected_size);
            
 state_machine_return_e 
-StateMachineDestroy(state_machine_t* state_machine);
+StateMachineDtor(state_machine_t* state_machine);
 
 // =========================== ACTIONS_WITH_GENERATOR =========================
 

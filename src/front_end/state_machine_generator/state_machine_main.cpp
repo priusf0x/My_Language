@@ -31,7 +31,7 @@ main()
 
 // ========================= KEY_WORD_VECTOR_GENERATION =======================
 
-    StateMachineInit(&key_word_machine, 10); 
+    StateMachineCtor(&key_word_machine, 10); 
 
     AddKeyWord("if"      , KW_END_SYMBOLS, KEY_WORD_IF      , key_word_machine);
     AddKeyWord("var"     , KW_END_SYMBOLS, KEY_WORD_VAR     , key_word_machine);
@@ -40,13 +40,13 @@ main()
     AddKeyWord("return"  , KW_END_SYMBOLS, KEY_WORD_RETURN  , key_word_machine);
 
     WriteInFileStateMachine(key_word_machine, KW_FILE_NAME);
-    StateMachineDestroy(&key_word_machine);
+    StateMachineDtor(&key_word_machine);
 
 // =========================== OP_VECTOR_GENERATION ===========================
 
     state_machine_t op_machine = NULL;
 
-    StateMachineInit(&op_machine, 10); 
+    StateMachineCtor(&op_machine, 10); 
 
     AddKeyWord("+" , OP_END_SYMBOLS, OPERATOR_PLUS         , op_machine);
     AddKeyWord("-" , OP_END_SYMBOLS, OPERATOR_MINUS        , op_machine);
@@ -61,13 +61,13 @@ main()
     AddKeyWord("<=", OP_END_SYMBOLS, OPERATOR_LESS_OR_EQUAL, op_machine);
 
     WriteInFileStateMachine(op_machine, OP_FILE_NAME);
-    StateMachineDestroy(&op_machine);
+    StateMachineDtor(&op_machine);
 
 // ======================= SYNTAX_VECTOR_GENERATION ===========================
 
     state_machine_t syntax_machine = NULL;
 
-    StateMachineInit(&syntax_machine, 10); 
+    StateMachineCtor(&syntax_machine, 10); 
 
     AddKeyWord(";" , OP_END_SYMBOLS, SYNTAX_STATEMENT_CONNECTOR, syntax_machine);
     AddKeyWord("{" , OP_END_SYMBOLS, SYNTAX_START_BODY         , syntax_machine);
@@ -77,7 +77,7 @@ main()
     AddKeyWord("," , OP_END_SYMBOLS, SYNTAX_ARG_CONNECTOR      , syntax_machine);
 
     WriteInFileStateMachine(syntax_machine, SYNT_FILE_NAME);
-    StateMachineDestroy(&syntax_machine);
+    StateMachineDtor(&syntax_machine);
 
     return 0;
 }

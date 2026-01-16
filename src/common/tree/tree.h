@@ -2,6 +2,8 @@
 #define TREE_H
 
 #include "lexes.h"
+#include "buffer.h"
+
 #include <stdio.h>
 
 enum edge_dir_e
@@ -22,7 +24,7 @@ enum tree_return_e
     TREE_RETURN_CLOSE_FILE_ERROR,
     TREE_RETURN_NAME_TABLE_ERROR,
     TREE_RETURN_EMPTY_TREE,
-    TREE_RETURN_FILE_READ_ERROR
+    TREE_RETURN_AST_STANDARD_ERROR
 };
 
 typedef token_s node_data_t;
@@ -50,8 +52,8 @@ const ssize_t NO_LINK = -1;
 
 // ============================= MEMORY_CONTROLLING ===========================
 
-tree_return_e TreeInit(tree_t* tree, size_t start_tree_size);
-tree_return_e TreeDestroy(tree_t* tree);
+tree_return_e TreeCtor(tree_t* tree, size_t start_tree_size);
+tree_return_e TreeDtor(tree_t* tree);
 
 //============================= NODES_ACTIONS =================================
 
@@ -73,5 +75,10 @@ tree_return_e CopySubgraph(tree_t tree, ssize_t parent_dest_index, ssize_t src_i
 tree_return_e 
 ForceConnect(tree_t tree, ssize_t current_index, ssize_t new_parent, 
             edge_dir_e new_direction);
+
+// ================================= TREE_READER ==============================
+
+tree_return_e
+ReadTree(ssize_t parent, tree_t tree, buffer_t buffer);
 
 #endif //TREE_H

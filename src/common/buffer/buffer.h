@@ -26,7 +26,7 @@ typedef buffer_s* buffer_t;
 // ========================== MEMORY_CONTROLLING ============================== 
 
 buffer_return_e
-BufferInit(buffer_t*    buffer,
+BufferCtor(buffer_t*    buffer,
            const char*  file_name);
 
 buffer_return_e
@@ -35,11 +35,21 @@ BufferDestroy(buffer_t* buffer);
 // ================================ ACTIONS ===================================
 
 void 
-SkipSpacesInBuffer(buffer_t buffer);
+SkipSpacesB(buffer_t buffer);
 
 void 
-SkipNSymbols(buffer_t buffer,
-             size_t   n);
+SkipNSymbolsB(buffer_t buffer,
+              size_t   n);
+
+bool 
+CheckIfSymbolB(char     character,
+               buffer_t buffer);
+
+long int 
+ReadLongB(buffer_t buffer);
+
+int
+StrNCmpB(const char* string, size_t number, buffer_t buffer);
 
 // ================================= DUMP =====================================
 

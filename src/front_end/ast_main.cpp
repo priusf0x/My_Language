@@ -11,9 +11,9 @@ main()
 {
     read_context_t read_context = NULL;
      
-    InitReadContext(&read_context);
+    ReadContextCtor(&read_context);
 
-    DestroyReadContext(&read_context);
+    ReadContextDtor(&read_context);
  
     return 0;
 }
