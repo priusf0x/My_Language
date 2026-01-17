@@ -1,0 +1,3 @@
+call main
+hlt
+

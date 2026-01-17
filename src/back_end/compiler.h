@@ -42,4 +42,6 @@ CompilerDtor(compiler_t* compiler);
 compiler_return_e
 CompileAST(compiler_t compiler);
 
+// ============================================================================
+
 #endif // COMPILER_H

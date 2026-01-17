@@ -10,6 +10,8 @@ int main(void)
     compiler_t compiler = {};
     
     CompilerCtor(AST_FILE, OUTPUT_NAME, &(compiler));
+        
+    CompileAST(compiler);
     
     CompilerDtor(&compiler);
 
