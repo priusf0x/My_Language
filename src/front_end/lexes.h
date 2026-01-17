@@ -75,8 +75,7 @@ enum syntax_type_e
     SYNTAX_END_BODY,
     SYNTAX_START_BRACKET,
     SYNTAX_END_BRACKET,
-    SYNTAX_ARG_CONNECTOR,
-
+    SYNTAX_ARG_CONNECTOR
 };
 
 const char* const SYNTAX_NAMINGS[] = 

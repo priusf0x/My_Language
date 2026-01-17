@@ -326,30 +326,6 @@ CheckIfBoolOp(const token_s* token)
     return false;
 }
 
-static ssize_t 
-GetBool(read_context_t context,
-        scope_s*       scope)
-{
-    ASSERT(context != NULL);
-    ASSERT(scope != NULL);
-    
-    ssize_t return_node = GetPrimary(context, scope); 
-    ssize_t bool_op = NO_LINK; 
-    token_s token = {};
-    VectorViewValue(&token, context->lex_vector);
-
-    while (CheckIfBoolOp(&token))
-    {
-        VECTOR_ERASE;
-        bool_op = ADD__(token);
-        CONNECT_LEXES(bool_op, GetPrimary(context, scope), return_node); // check if variable 
-        return_node = bool_op;
-        VECTOR_VIEW(token);
-    }
-
-    return return_node;
-}
-
 static bool
 CheckIfMulDivOp(const token_s* token)
 {
@@ -377,7 +353,7 @@ GetTerm(read_context_t context,
     ASSERT(context != NULL);
     ASSERT(scope != NULL);
 
-    ssize_t return_node = GetBool(context, scope); 
+    ssize_t return_node = GetPrimary(context, scope); 
     ssize_t mul_div_op = NO_LINK; 
     token_s token = {};
     VECTOR_VIEW(token);
@@ -386,8 +362,32 @@ GetTerm(read_context_t context,
     {
         VECTOR_ERASE;
         mul_div_op = ADD__(token);
-        CONNECT_LEXES(mul_div_op, return_node, GetBool(context, scope));
+        CONNECT_LEXES(mul_div_op, return_node, GetPrimary(context, scope));
         return_node = mul_div_op;
+        VECTOR_VIEW(token);
+    }
+
+    return return_node;
+}
+
+static ssize_t 
+GetBool(read_context_t context,
+        scope_s*       scope)
+{
+    ASSERT(context != NULL);
+    ASSERT(scope != NULL);
+    
+    ssize_t return_node = GetTerm(context, scope); 
+    ssize_t bool_op = NO_LINK; 
+    token_s token = {};
+    VectorViewValue(&token, context->lex_vector);
+
+    while (CheckIfBoolOp(&token))
+    {
+        VECTOR_ERASE;
+        bool_op = ADD__(token);
+        CONNECT_LEXES(bool_op, GetTerm(context, scope), return_node); // check if variable 
+        return_node = bool_op;
         VECTOR_VIEW(token);
     }
 
@@ -439,7 +439,7 @@ GetExpression(read_context_t context,
     ASSERT(scope != NULL);
 
     token_s token = {};
-    ssize_t return_node = GetTerm(context, scope); 
+    ssize_t return_node = GetBool(context, scope); 
     ssize_t plus_minus_op = NO_LINK; 
     VECTOR_VIEW(token);
 
@@ -456,7 +456,7 @@ GetExpression(read_context_t context,
     {
         VECTOR_ERASE;
         plus_minus_op = ADD__(token);
-        CONNECT_LEXES(plus_minus_op, return_node, GetTerm(context, scope));
+        CONNECT_LEXES(plus_minus_op, return_node, GetBool(context, scope));
         return_node = plus_minus_op;
         VECTOR_VIEW(token);
     }
