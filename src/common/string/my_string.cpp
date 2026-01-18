@@ -1,16 +1,15 @@
 #include "my_string.h"
 
-#include <stdio.h>
+#include <assert.h>
 #include <ctype.h>
+#include <stdio.h>
 #include <string.h>
-
-#include "Assert.h"
 
 size_t
 SkipSpaces(const char* string,  
            size_t      current_position)
 {
-    ASSERT(string != NULL);
+    assert(string != NULL);
 
     char character = *(string + current_position);
 
@@ -27,7 +26,7 @@ size_t
 SkipNotSpaces(const char* string,
               size_t      current_position)
 {
-    ASSERT(string != NULL);
+    assert(string != NULL);
 
     char character = *(string + current_position);
 
@@ -44,8 +43,8 @@ void
 PrintString(const string_s* string,
             FILE*           file_output)
 {
-    ASSERT(string != NULL);
-    ASSERT(file_output != NULL);
+    assert(string != NULL);
+    assert(file_output != NULL);
     
     fwrite(string->string_source,
            sizeof(char),
@@ -79,8 +78,8 @@ void
 ReadVarString(char*       src,
               string_s*   string_dst)
 {
-    ASSERT(src != NULL);
-    ASSERT(string_dst != NULL);
+    assert(src != NULL);
+    assert(string_dst != NULL);
 
     size_t lenght = 0;
     char current_symbol = *src;

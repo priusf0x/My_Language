@@ -1,10 +1,10 @@
 #include "recursive_decent.h"
 
+#include <assert.h>
 #include <cstddef>
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "Assert.h"
 #include "buffer.h"
 #include "lexes.h"
 #include "name_space.h"
@@ -38,8 +38,8 @@ static recursive_return_e
 InitMachine(const char*      file_name,
             state_machine_t* state_machine)
 {   
-    ASSERT(file_name != NULL);
-    ASSERT(state_machine != NULL);
+    assert(file_name != NULL);
+    assert(state_machine != NULL);
 
     FILE* vector_file = fopen(file_name, "r");
     if (vector_file == NULL)
@@ -73,7 +73,7 @@ static ssize_t GetGlobal(read_context_t context);
 recursive_return_e 
 ReadContextCtor(read_context_t* context)
 {
-    ASSERT(context != NULL);
+    assert(context != NULL);
 
     *context = (read_context_t) calloc(1, sizeof(read_context_s));
 
@@ -196,8 +196,8 @@ static ssize_t
 GetFunctionArg(read_context_t context,
                scope_s*       scope)
 {
-    ASSERT(context != NULL);
-    ASSERT(scope != NULL);
+    assert(context != NULL);
+    assert(scope != NULL);
 
     ssize_t arg_connector = ARG_CON;
     CONNECT_LEXES(arg_connector, NO_LINK, GetExpression(context, scope)); 
@@ -224,8 +224,8 @@ static ssize_t
 GetPrimary(read_context_t context,
            scope_s*       scope)
 {
-    ASSERT(context != NULL);
-    ASSERT(scope != NULL);
+    assert(context != NULL);
+    assert(scope != NULL);
 
     token_s token = {};
     VECTOR_VIEW(token);
@@ -307,7 +307,7 @@ GetPrimary(read_context_t context,
 static bool
 CheckIfBoolOp(const token_s* token)
 {
-    ASSERT(token != NULL);
+    assert(token != NULL);
 
     if (token->lex_type != LEX_TYPE_OPERATOR)
     {
@@ -329,7 +329,7 @@ CheckIfBoolOp(const token_s* token)
 static bool
 CheckIfMulDivOp(const token_s* token)
 {
-    ASSERT(token != NULL);
+    assert(token != NULL);
 
     if (token->lex_type != LEX_TYPE_OPERATOR)
     {
@@ -350,8 +350,8 @@ static ssize_t
 GetTerm(read_context_t context,
         scope_s*       scope)
 {
-    ASSERT(context != NULL);
-    ASSERT(scope != NULL);
+    assert(context != NULL);
+    assert(scope != NULL);
 
     ssize_t return_node = GetPrimary(context, scope); 
     ssize_t mul_div_op = NO_LINK; 
@@ -374,8 +374,8 @@ static ssize_t
 GetBool(read_context_t context,
         scope_s*       scope)
 {
-    ASSERT(context != NULL);
-    ASSERT(scope != NULL);
+    assert(context != NULL);
+    assert(scope != NULL);
     
     ssize_t return_node = GetTerm(context, scope); 
     ssize_t bool_op = NO_LINK; 
@@ -397,7 +397,7 @@ GetBool(read_context_t context,
 static bool
 CheckIfPlusMinusOp(const token_s* token)
 {
-    ASSERT(token != NULL);
+    assert(token != NULL);
 
     if (token->lex_type != LEX_TYPE_OPERATOR)
     {
@@ -418,8 +418,8 @@ static ssize_t
 GetAssigmentExpression(read_context_t context,
                        scope_s*       scope)
 {
-    ASSERT(context != NULL);
-    ASSERT(scope != NULL);
+    assert(context != NULL);
+    assert(scope != NULL);
     
     token_s assigment_token = {};
     VECTOR_VIEW(assigment_token);
@@ -435,8 +435,8 @@ static ssize_t
 GetExpression(read_context_t context,
               scope_s*       scope)
 {
-    ASSERT(context != NULL);
-    ASSERT(scope != NULL);
+    assert(context != NULL);
+    assert(scope != NULL);
 
     token_s token = {};
     ssize_t return_node = GetBool(context, scope); 
@@ -468,8 +468,8 @@ static ssize_t
 GetReturn(read_context_t context,
           scope_s*       scope)
 {
-    ASSERT(context != NULL);
-    ASSERT(scope != NULL);
+    assert(context != NULL);
+    assert(scope != NULL);
 
     token_s return_token = {};
     VECTOR_VIEW(return_token);
@@ -484,8 +484,8 @@ static ssize_t
 GetInitVar(read_context_t context,
            scope_s*       scope)
 {
-    ASSERT(context != NULL);
-    ASSERT(scope != NULL);
+    assert(context != NULL);
+    assert(scope != NULL);
 
     token_s var_kw_token = {};
     VECTOR_VIEW(var_kw_token);
@@ -534,8 +534,8 @@ static ssize_t
 GetFuncDefinition(read_context_t context,
                   scope_s*       scope)
 {
-    ASSERT(context != NULL);
-    ASSERT(scope != NULL);
+    assert(context != NULL);
+    assert(scope != NULL);
 
     token_s function_kw_token = {};
     VECTOR_VIEW(function_kw_token);
@@ -623,8 +623,8 @@ static ssize_t
 GetIfWhile(read_context_t context,
            scope_s*       scope)
 {
-    ASSERT(context != NULL);
-    ASSERT(scope != NULL);
+    assert(context != NULL);
+    assert(scope != NULL);
 
     token_s function_kw_token = {};
     VECTOR_VIEW(function_kw_token);
@@ -664,8 +664,8 @@ static ssize_t
 GetStatement(read_context_t context,
              scope_s*       scope)
 {
-    ASSERT(context != NULL);
-    ASSERT(scope != NULL);
+    assert(context != NULL);
+    assert(scope != NULL);
     
     token_s token = {};
     ssize_t return_node = NO_LINK;
@@ -683,8 +683,9 @@ GetStatement(read_context_t context,
             return_node = GetInitVar(context, scope);
 
             VECTOR_VIEW(token);
-            if ((token.value.syntax != SYNTAX_STATEMENT_CONNECTOR) 
-                    || (token.lex_type != LEX_TYPE_SYNTAX)) {
+            if ((token.lex_type != LEX_TYPE_SYNTAX)
+                    || (token.value.syntax != SYNTAX_STATEMENT_CONNECTOR)) 
+            {
               context->status = RECURSIVE_RETURN_READ_ERROR;
 
               return NO_LINK;
@@ -774,7 +775,7 @@ GetStatement(read_context_t context,
 static ssize_t 
 GetGlobal(read_context_t context)
 {
-    ASSERT(context != NULL);
+    assert(context != NULL);
 
     token_s token = {};
     VECTOR_VIEW(token);

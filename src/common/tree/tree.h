@@ -69,6 +69,7 @@ tree_return_e TreeBaseDump(tree_t tree, const char* file_name = NULL);
 
 // ============================== BYPASS_FUNCTIONS ============================
 
+size_t CountTypeNode(int lex_type, int info, ssize_t lex, tree_t tree);
 tree_return_e DeleteSubgraph(tree_t tree, ssize_t node_index);
 tree_return_e CopySubgraph(tree_t tree, ssize_t parent_dest_index, ssize_t src_index,
                            ssize_t* new_index, edge_dir_e direction);

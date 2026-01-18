@@ -1,10 +1,9 @@
 #include "compiler.h"
 
-#include "Assert.h"
+#include <assert.h>
+
 #include "lexes.h"
 #include "tree.h"
-#include <condition_variable>
-#include <cstddef>
 
 // ================================== HELPERS =================================
 
@@ -26,7 +25,7 @@ static compiler_return_e
 GetVarAdress(ssize_t    lex,
              compiler_t compiler)
 {
-    ASSERT(compiler != NULL);
+    assert(compiler != NULL);
 
     node_s node = compiler->compiler_tree->nodes_array[lex];
     id_s value = node.node_value.value.id;
@@ -53,7 +52,7 @@ CompileStatement(ssize_t lex, compiler_t compiler);
 static compiler_return_e 
 SetASMHeader(compiler_t compiler)
 {
-    ASSERT(compiler != NULL);
+    assert(compiler != NULL);
 
     const char* start_code = "call main\n"\
                              "hlt\n\n";
@@ -63,11 +62,11 @@ SetASMHeader(compiler_t compiler)
     return COMPILER_RETURN_SUCCESS;
 }
 
-compiler_return_e 
+static compiler_return_e 
 CompileBranch(ssize_t    lex,
               compiler_t compiler)
 {
-    ASSERT(compiler != NULL);
+    assert(compiler != NULL);
     
     if(lex == NO_LINK)
     {
@@ -101,7 +100,7 @@ CompileBranch(ssize_t    lex,
 compiler_return_e
 CompileAST(compiler_t compiler)
 {
-    ASSERT(compiler != NULL);
+    assert(compiler != NULL);
 
     SetASMHeader(compiler); // calling main function 
     
@@ -137,12 +136,11 @@ CompileStatement(ssize_t    lex,
 
 // ========================= KEY_WORD_COMPILATION =============================
 
-
 static compiler_return_e 
 CompileVarKW(ssize_t    lex,
              compiler_t compiler)
 {
-    ASSERT(compiler != NULL);
+    assert(compiler != NULL);
 
     node_s node = compiler->compiler_tree->nodes_array[lex];
     compiler_return_e output = COMPILER_RETURN_SUCCESS;
@@ -164,7 +162,7 @@ static compiler_return_e
 CompileIfKW(ssize_t    lex,     
             compiler_t compiler)
 {
-    ASSERT(compiler != NULL);
+    assert(compiler != NULL);
 
     node_s node = compiler->compiler_tree->nodes_array[lex];
     compiler_return_e output = COMPILER_RETURN_SUCCESS;
@@ -201,7 +199,7 @@ static compiler_return_e
 CompileWhileKW(ssize_t    lex,
                compiler_t compiler)
 {
-    ASSERT(compiler != NULL);
+    assert(compiler != NULL);
 
     node_s node = compiler->compiler_tree->nodes_array[lex];
     compiler_return_e output = COMPILER_RETURN_SUCCESS;
@@ -243,11 +241,133 @@ CompileWhileKW(ssize_t    lex,
     return COMPILER_RETURN_SUCCESS;
 }
 
+static compiler_return_e
+SetArgsUseRegs(size_t     arg_amount,
+               compiler_t compiler)
+{
+    assert(compiler != NULL);
+
+    #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+
+    switch (arg_amount)
+    {
+        case 3:
+            fprintf(compiler->file_output, "push RGX\n"
+                                           "pop [RBX - 2]\n");
+        case 2:
+            fprintf(compiler->file_output, "push RFX\n"
+                                           "pop [RBX - 1]\n");
+        case 1:
+            fprintf(compiler->file_output, "push REX\n"
+                                           "pop [RBX - 0]\n");
+        
+        case 0:
+        default: break;
+    }
+    
+    #pragma GCC diagnostic warning "-Wimplicit-fallthrough"
+
+    return COMPILER_RETURN_SUCCESS;
+}
+
+static compiler_return_e
+SetArgsUseStack(size_t     arg_amount,
+                ssize_t    lex,
+                compiler_t compiler)
+{
+    assert(compiler != NULL);
+    
+    node_s* array = compiler->compiler_tree->nodes_array;
+    lex = array[lex].left_index; // to funct name
+    lex = array[lex].left_index; // to arg connector
+    ssize_t next_lex = lex;
+
+    while (next_lex != NO_LINK)
+    {
+        lex = next_lex;
+        next_lex = array[lex].left_index; 
+    }
+
+    for (; arg_amount > 0; arg_amount--)
+    {
+        fprintf(compiler->file_output, 
+                    "pop [RBX - %zu]\n", arg_amount - 1);
+    }
+
+    return COMPILER_RETURN_SUCCESS;
+}
+
+static compiler_return_e
+SetArguments(ssize_t    lex,
+             compiler_t compiler)
+{
+    assert(compiler != NULL);
+    
+    size_t arg_amount = CountTypeNode(LEX_TYPE_SYNTAX, SYNTAX_ARG_CONNECTOR, 
+                            lex, compiler->compiler_tree);
+
+    if (arg_amount <= 3)
+    {
+        SetArgsUseRegs(arg_amount, compiler);
+    }
+    else 
+    {
+        SetArgsUseStack(arg_amount, lex, compiler);
+    }
+
+    return COMPILER_RETURN_SUCCESS;
+}
+
+static compiler_return_e
+SetOverhead(ssize_t    lex,
+            compiler_t compiler)
+{
+    assert(compiler != NULL);
+    
+    node_s* array = compiler->compiler_tree->nodes_array;
+    lex = array[lex].left_index; // to funct name
+    id_s id = array[lex].node_value.value.id;
+    
+    fprintf(compiler->file_output, 
+                "%.*s:\n", (int) id.id.string_size, 
+                            id.id.string_source);
+
+    SetArguments(lex, compiler);
+    
+    fprintf(compiler->file_output, 
+                "push RBX\n"
+                "push RCX\n"
+                "push RCX\n"
+                "pop RBX\n"
+                "push RBX\n"
+                "push %ld\n"
+                "sub\n"
+                "pop RCX\n", id.number_in_scope);
+
+    return COMPILER_RETURN_SUCCESS;
+}
+
+static compiler_return_e 
+CompileFunction(ssize_t    lex,
+                compiler_t compiler)
+{
+    assert(compiler != NULL);
+
+    SetOverhead(lex, compiler);
+    
+    fprintf(compiler->file_output, 
+                "pop RCX\n"
+                "pop RBX\n"
+                "ret\n");
+
+    return COMPILER_RETURN_SUCCESS;
+}
+
 static compiler_return_e 
 CompileKeyWord(ssize_t    lex,
                compiler_t compiler)
 {
-    ASSERT(compiler != NULL);
+    assert(compiler != NULL);
     
     struct key_word_compile 
     {
@@ -256,11 +376,11 @@ CompileKeyWord(ssize_t    lex,
     };
     key_word_compile kw_asm[] = 
     {
-        {KEY_WORD_UNDEFINED, NULL          },
-        {KEY_WORD_IF,        CompileIfKW   },
-        {KEY_WORD_VAR,       CompileVarKW  },
-        {KEY_WORD_WHILE,     CompileWhileKW},
-        {KEY_WORD_FUNCTION,  NULL          },
+        {KEY_WORD_UNDEFINED, NULL           },
+        {KEY_WORD_IF,        CompileIfKW    },
+        {KEY_WORD_VAR,       CompileVarKW   },
+        {KEY_WORD_WHILE,     CompileWhileKW },
+        {KEY_WORD_FUNCTION,  CompileFunction},
         {KEY_WORD_RETURN,    NULL          }
     };
 
@@ -277,8 +397,8 @@ CompileAriphmetic(ssize_t     lex,
                   const char* ariphmetic,
                   compiler_t  compiler)
 {
-    ASSERT(compiler != NULL);
-    ASSERT(ariphmetic != NULL);    
+    assert(compiler != NULL);
+    assert(ariphmetic != NULL);    
 
     compiler_return_e output = COMPILER_RETURN_SUCCESS;
     node_s node = compiler->compiler_tree->nodes_array[lex];
@@ -298,8 +418,8 @@ CompileBoolean(ssize_t     lex,
                const char* bool_str, 
                compiler_t  compiler)
 {
-    ASSERT(compiler != NULL);
-    ASSERT(bool_str != NULL);    
+    assert(compiler != NULL);
+    assert(bool_str != NULL);    
 
     compiler_return_e output = COMPILER_RETURN_SUCCESS;
     node_s node = compiler->compiler_tree->nodes_array[lex];
@@ -384,7 +504,7 @@ static compiler_return_e
 CompileAssign(ssize_t    lex,
               compiler_t compiler)
 {
-    ASSERT(compiler != NULL);
+    assert(compiler != NULL);
     
     node_s node = compiler->compiler_tree->nodes_array[lex];
     compiler_return_e output = CompileExpr(node.right_index, compiler);
@@ -405,7 +525,7 @@ static compiler_return_e
 CompileOp(ssize_t    lex, 
           compiler_t compiler)
 {
-    ASSERT(compiler != NULL);
+    assert(compiler != NULL);
 
     struct op_compiler_s 
     {
@@ -428,7 +548,7 @@ CompileOp(ssize_t    lex,
         {OPERATOR_LESS,          CompileBelow    },
         {OPERATOR_LESS_OR_EQUAL, CompileBelowOrEq}
     };
-
+// TODO: error handler
     node_s node = compiler->compiler_tree->nodes_array[lex];
 
     return op_asm[node.node_value.value.op]
@@ -439,7 +559,7 @@ static compiler_return_e
 CompileID(ssize_t    lex,
           compiler_t compiler)
 {
-    ASSERT(compiler != NULL);
+    assert(compiler != NULL);
 
     node_s node = compiler->compiler_tree->nodes_array[lex];
     id_s value = node.node_value.value.id;
@@ -463,7 +583,7 @@ static compiler_return_e
 CompileConst(ssize_t    lex,
              compiler_t compiler)
 {
-    ASSERT(compiler != NULL);
+    assert(compiler != NULL);
     
     node_s node = compiler->compiler_tree->nodes_array[lex];
 
@@ -477,7 +597,7 @@ static compiler_return_e
 CompileExpr(ssize_t    lex,
             compiler_t compiler)
 {
-    ASSERT(compiler != NULL);
+    assert(compiler != NULL);
     
     node_s node = compiler->compiler_tree->nodes_array[lex]; 
 
@@ -503,16 +623,13 @@ static compiler_return_e
 CompileRDX(ssize_t    lex,
            compiler_t compiler)
 {
-    ASSERT(compiler != NULL);
+    assert(compiler != NULL);
     
     compiler_return_e output = CompileExpr(lex, compiler);
     fprintf(compiler->file_output, "pop RDX\n");
 
     return output;
 }
-
-// ============================== ID_COMPILATION ==============================
-
 
 // ==================================== UNDEF ================================
 

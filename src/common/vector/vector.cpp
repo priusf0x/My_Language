@@ -1,11 +1,11 @@
 #include "vector.h"
 
+#include <assert.h>
+#include <stdint.h>
 #include <cstring>
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdint.h>
 
-#include "Assert.h"
 #include "tools.h"
 #include "color.h"
 
@@ -38,7 +38,7 @@ VectorInit(vector_t*   vector,
            size_t      expected_capacity,
            size_t      element_size)
 {
-    ASSERT(vector != NULL);
+    assert(vector != NULL);
 
     if ((expected_capacity == 0) || (element_size == 0))
     {
@@ -87,8 +87,8 @@ vector_function_return_e
 VectorPush(void*    value, 
            vector_t vector)
 {
-    ASSERT(value != NULL);
-    ASSERT(vector != NULL);
+    assert(value != NULL);
+    assert(vector != NULL);
 
     if (VectorNormalizeSize(vector) != 0)
     {
@@ -105,8 +105,8 @@ vector_function_return_e
 VectorPop(void*    value, 
           vector_t vector)
 {
-    ASSERT(value != NULL);
-    ASSERT(vector != NULL);
+    assert(value != NULL);
+    assert(vector != NULL);
 
     vector_function_return_e output = VECTOR_FUNCTION_SUCCESS;
 
@@ -127,8 +127,8 @@ vector_function_return_e
 VectorViewValue(void*    value, 
                 vector_t vector)
 {
-    ASSERT(value != NULL);
-    ASSERT(vector != NULL);
+    assert(value != NULL);
+    assert(vector != NULL);
 
     if (VectorNormalizeSize(vector) != 0)
     {
@@ -149,7 +149,7 @@ VectorViewValue(void*    value,
 vector_function_return_e
 VectorEraseFirst(vector_t vector)
 {
-    ASSERT(vector != NULL);
+    assert(vector != NULL);
     
     if (VectorNormalizeSize(vector) != 0)
     {
@@ -173,7 +173,7 @@ VectorEraseFirst(vector_t vector)
 static vector_function_return_e
 VectorNormalizeSize(vector_t vector)
 {
-    ASSERT(vector != NULL);
+    assert(vector != NULL);
 
     if ((vector->elements_amount + vector->first_element)   
             >= vector->capacity)
@@ -202,7 +202,7 @@ VectorNormalizeSize(vector_t vector)
 void
 VectorDump(const vector_t vector)
 {
-    ASSERT(vector != NULL);
+    assert(vector != NULL);
 
     
     size_t byte_capacity = vector->capacity * vector->element_size;

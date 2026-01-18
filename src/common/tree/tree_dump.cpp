@@ -1,9 +1,9 @@
 #ifndef NDEBUG
 #include "tree.h"
 
+#include <assert.h>
 #include <stdio.h>
 
-#include "Assert.h"
 #include "tools.h"
 #include "lexes.h"
 
@@ -32,7 +32,7 @@ static void PrintElementsInfo(const tree_t tree, FILE* file_output);
 void
 TreeDump(const tree_t tree)
 {
-    ASSERT(tree != NULL);
+    assert(tree != NULL);
 
     FILE* log_file = GetLogFile();
     if (log_file == NULL)
@@ -58,8 +58,8 @@ PrintNode(tree_t  tree,
           ssize_t current_node,
           FILE*   file_output)
 {
-    ASSERT(tree != NULL);
-    ASSERT(file_output != NULL);
+    assert(tree != NULL);
+    assert(file_output != NULL);
 
     node_s node = tree->nodes_array[current_node];
 
@@ -86,8 +86,8 @@ TreeBaseDumpRecursive(tree_t  tree,
                       ssize_t current_node,
                       FILE*   file_output)
 {
-    ASSERT(tree != NULL);
-    ASSERT(file_output != NULL);
+    assert(tree != NULL);
+    assert(file_output != NULL);
 
     if (current_node == NO_LINK)
     {
@@ -116,7 +116,7 @@ tree_return_e
 TreeBaseDump(tree_t      tree, 
              const char* file_name)
 {
-    ASSERT(tree != NULL);
+    assert(tree != NULL);
 
     if (file_name == NULL)
     {
@@ -149,8 +149,8 @@ static void
 PrintHTMLHeader(FILE*       log_file,
                 const char* current_time)
 {
-    ASSERT(log_file != NULL);
-    ASSERT(current_time != NULL);
+    assert(log_file != NULL);
+    assert(current_time != NULL);
 
     fprintf(log_file, "<html>\n"
                       "<style>"
@@ -183,8 +183,8 @@ PrintElementInString(const token_s* token,
                      char*          address,
                      size_t         string_length)
 {
-    ASSERT(token != NULL);
-    ASSERT(address != NULL);
+    assert(token != NULL);
+    assert(address != NULL);
 
     switch(token->lex_type)
     {   
@@ -227,8 +227,8 @@ static void
 PrintElementsInfo(const tree_t tree,
                   FILE*        file_output)
 {
-    ASSERT(tree != NULL);
-    ASSERT(file_output != NULL);
+    assert(tree != NULL);
+    assert(file_output != NULL);
     for(size_t index = 0; index < tree->nodes_capacity; index++) 
     {
         fprintf(file_output, "<p> <h4> <li>index in table: %ld\n <br/>",
@@ -257,8 +257,8 @@ static tree_return_e
 TreeDot(const tree_t tree,
         const char*  current_time)
 {
-    ASSERT(tree != NULL);
-    ASSERT(current_time != NULL);
+    assert(tree != NULL);
+    assert(current_time != NULL);
 
     const size_t max_string_size = 40;
 
@@ -313,8 +313,8 @@ static void
 DrawNode(const node_s* node,
          FILE*         dot_file)
 {
-    ASSERT(node != NULL);
-    ASSERT(dot_file != NULL);
+    assert(node != NULL);
+    assert(dot_file != NULL);
 
     const char* node_template  = "%ld[label = \"{parent index = %ld| phys index = %ld"
                                  "| %s |{left index = %ld | right index = %ld}}\"];\n";

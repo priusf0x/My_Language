@@ -1,10 +1,10 @@
 #include "buffer.h"
 
+#include <assert.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <stdio.h>
 
-#include "Assert.h"
 #include "color.h"
 #include "my_string.h"
 #include "tools.h"
@@ -15,8 +15,8 @@ buffer_return_e
 BufferCtor(buffer_t*    buffer,
            const char*  file_name)
 {
-    ASSERT(buffer != NULL);
-    ASSERT(file_name != NULL);
+    assert(buffer != NULL);
+    assert(file_name != NULL);
 
     *buffer = (buffer_t) calloc (1, sizeof(buffer_s));
 
@@ -98,7 +98,7 @@ BufferDestroy(buffer_t* buffer)
 void 
 SkipSpacesB(buffer_t buffer)
 {
-    ASSERT(buffer != NULL);
+    assert(buffer != NULL);
 
     buffer->current_position = SkipSpaces(buffer->buffer, 
                                             buffer->current_position);
@@ -108,7 +108,7 @@ void
 SkipNSymbolsB(buffer_t buffer,
               size_t   n)
 {
-    ASSERT(buffer != NULL);
+    assert(buffer != NULL);
 
     buffer->current_position += n;
 }
@@ -117,7 +117,7 @@ bool
 CheckIfSymbolB(char     character,
                buffer_t buffer)
 {   
-    ASSERT(buffer != NULL);
+    assert(buffer != NULL);
 
     if (buffer->buffer[buffer->current_position] == character)
     {
@@ -130,7 +130,7 @@ CheckIfSymbolB(char     character,
 long int 
 ReadLongB(buffer_t buffer)
 {
-    ASSERT(buffer);
+    assert(buffer);
 
     char* end_ptr = NULL; 
     char* current_string = buffer->buffer + buffer->current_position;
@@ -154,7 +154,7 @@ StrNCmpB(const char* string,
 void
 BufferDump(const buffer_t buffer)
 {
-    ASSERT(buffer != NULL);
+    assert(buffer != NULL);
 
     size_t current_position = 0;
 

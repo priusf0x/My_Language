@@ -1,13 +1,12 @@
 #include "tools.h"
 
-#include <string.h>
-#include <stdio.h>
+#include <assert.h>
 #include <time.h>
 #include <math.h>
-#include <sys/stat.h>
+#include <string.h>
+#include <stdio.h>
 #include <stdarg.h>
-
-#include "Assert.h"
+#include <sys/stat.h>
 
 void* recalloc(void*  pointer,
                size_t current_size,
@@ -45,7 +44,7 @@ void
 SystemCall(const char* command_tmp, 
            ... )
 {
-    ASSERT(command_tmp != NULL);
+    assert(command_tmp != NULL);
 
     va_list command_args;
     va_start(command_args, command_tmp);
@@ -88,7 +87,7 @@ CheckIfEqual(double number_1, double number_2)
 ssize_t 
 GetFileSize(const char* file_name)
 {
-    ASSERT(file_name != NULL);
+    assert(file_name != NULL);
     
     struct stat file_stat = {};
 

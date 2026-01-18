@@ -1,8 +1,8 @@
 #include "recursive_decent_defines.h"
 
+#include <assert.h>
 #include <sys/types.h>
 
-#include "Assert.h"
 #include "lexes.h"
 #include "name_space.h"
 #include "recursive_decent.h"
@@ -17,7 +17,7 @@ ConnectLexes(ssize_t        parent_node,
              ssize_t        right_node,
              read_context_t context)
 {
-    ASSERT(context != NULL);
+    assert(context != NULL);
 
     if (parent_node == NO_LINK)
     {
@@ -50,8 +50,8 @@ ssize_t
 AddLexem(const token_s* token,
          read_context_t context)
 {
-    ASSERT(token != NULL);
-    ASSERT(context != NULL);
+    assert(token != NULL);
+    assert(context != NULL);
     
     node_s new_node = {.parent_index  = NO_LINK,
                        .right_index   = NO_LINK,
@@ -70,7 +70,7 @@ AddLexem(const token_s* token,
 ssize_t 
 AddArgConnector(read_context_t context)
 {
-    ASSERT(context != NULL);
+    assert(context != NULL);
 
     token_s token = {.lex_type = LEX_TYPE_SYNTAX,
                      .value    = {.syntax = SYNTAX_ARG_CONNECTOR}};
@@ -81,7 +81,7 @@ AddArgConnector(read_context_t context)
 ssize_t 
 AddStatementConnector(read_context_t context)
 {
-    ASSERT(context != NULL);
+    assert(context != NULL);
 
     token_s token = {.lex_type = LEX_TYPE_SYNTAX,
                      .value    = {.syntax = SYNTAX_STATEMENT_CONNECTOR}};
@@ -94,8 +94,8 @@ InitNewVar(ssize_t        declaration,
            scope_s*       scope,
            read_context_t context)
 {
-    ASSERT(context != NULL);
-    ASSERT(scope != NULL);
+    assert(context != NULL);
+    assert(scope != NULL);
 
     node_s* node = &context->lex_tree->nodes_array[declaration];
     string_s string = node->node_value.value.id.id;
@@ -119,8 +119,8 @@ InitNewFunction(ssize_t        declaration,
                 scope_s*       scope,
                 read_context_t context)
 {
-    ASSERT(context != NULL);
-    ASSERT(scope != NULL);
+    assert(context != NULL);
+    assert(scope != NULL);
 
     node_s* node = &context->lex_tree->nodes_array[declaration];
     string_s string = node->node_value.value.id.id;

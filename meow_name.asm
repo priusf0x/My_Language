@@ -1,24 +1,19 @@
 call main
 hlt
 
-push 123
-pop [0]
-push [0]
-pop RDX
-push [0]
-push 31
-ja .L1:
-push 0
-jmp .L2:
-.L1:
-push 1
-.L2:
-push 0
-je .L0:
-push [0]
-push 32
+main:
+push RFX
+pop [RBX - 1]
+push REX
+pop [RBX - 0]
+push RBX
+push RCX
+push RCX
+pop RBX
+push RBX
+push 3
 sub
-pop [0]
-push [0]
-pop RDX
-.L0:
+pop RCX
+pop RCX
+pop RBX
+ret

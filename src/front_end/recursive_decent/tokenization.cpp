@@ -1,10 +1,10 @@
-#include "buffer.h"
 #include "recursive_decent.h"
 
-#include "Assert.h"
+#include <assert.h>
+
+#include "buffer.h"
 #include "my_string.h"
 #include "lexes.h"
-#include "tools.h" 
 #include "tree.h"
 
 #define CURRENT_POSITION (buffer->buffer + buffer->current_position)
@@ -16,7 +16,7 @@
 static size_t  
 CheckIfDigit(const char* string)
 {
-    ASSERT(string != NULL);
+    assert(string != NULL);
 
     char character = *string;
 
@@ -31,7 +31,7 @@ CheckIfDigit(const char* string)
 static size_t
 CheckIfSymb(const char* string)
 {   
-    ASSERT(string != NULL);
+    assert(string != NULL);
 
     char character = *string;
 
@@ -47,7 +47,7 @@ CheckIfSymb(const char* string)
 static size_t 
 CheckIfAlNum(const char* string)
 {
-    ASSERT(string != NULL);
+    assert(string != NULL);
 
     size_t check_num = CheckIfDigit(string);
     size_t check_symb = CheckIfSymb(string);
@@ -61,8 +61,8 @@ static void
 ReadConstFromBuffer(buffer_t  buffer,
                     int* constant)
 {
-    ASSERT(buffer != NULL);
-    ASSERT(constant != NULL);
+    assert(buffer != NULL);
+    assert(constant != NULL);
 
     char* end_ptr = NULL;
 
@@ -75,8 +75,8 @@ static void
 ReadIdFromBuffer(buffer_t  buffer,
                  string_s* id_string)
 {
-    ASSERT(buffer != NULL);
-    ASSERT(id_string != NULL);
+    assert(buffer != NULL);
+    assert(id_string != NULL);
 
     size_t check_output = 0;
     size_t string_length = 0;
@@ -100,8 +100,8 @@ static int
 CheckIfType(buffer_t        buffer,
             state_machine_t state_machine)
 {
-    ASSERT(buffer != NULL);
-    ASSERT(state_machine != NULL);
+    assert(buffer != NULL);
+    assert(state_machine != NULL);
     
     state_t  current_state = 0;
     char*    string = CURRENT_POSITION;
@@ -133,8 +133,8 @@ static void
 IdentifyLex(token_s*       token,
             read_context_t context)
 {
-    ASSERT(token != NULL);
-    ASSERT(context != NULL);
+    assert(token != NULL);
+    assert(context != NULL);
 
     int output = 0;
 
@@ -175,7 +175,7 @@ IdentifyLex(token_s*       token,
 recursive_return_e 
 DivideInLexems(read_context_t context)
 {
-    ASSERT(context != NULL);
+    assert(context != NULL);
 
     token_s token = {};
     buffer_t buffer = context->input_buffer;
@@ -191,7 +191,8 @@ DivideInLexems(read_context_t context)
         }
         SkipSpacesB(buffer);
     } 
-    while ((*CURRENT_POSITION != 0) && (token.lex_type != LEX_TYPE_UNDEFINED));
+    while ((*CURRENT_POSITION != 0) 
+                && (token.lex_type != LEX_TYPE_UNDEFINED));
 
     return RECURSIVE_RETURN_SUCCESS;
 }

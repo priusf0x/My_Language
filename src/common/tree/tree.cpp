@@ -1,13 +1,13 @@
 #include "tree.h"
 
-#include <cstddef>
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <buffer.h>
 
-#include "Assert.h"
+#include "lexes.h"
 #include "stack.h"
 #include "tools.h"
+#include "vector.h"
 
 static tree_return_e SetTreeSize(tree_t tree, size_t  new_size);
 static tree_return_e NumerizeElements(tree_t tree, size_t start_index);
@@ -18,7 +18,7 @@ tree_return_e
 TreeCtor(tree_t* tree,
          size_t  start_tree_size)
 {
-    ASSERT(tree != NULL);
+    assert(tree != NULL);
 
     tree_return_e output = TREE_RETURN_SUCCESS;
 
@@ -29,7 +29,7 @@ TreeCtor(tree_t* tree,
         return TREE_RETURN_ALLOCATION_ERROR;
     }
 
-    if (SetTreeSize(*tree, start_tree_size + 1) != 0)  // for null element
+    if (SetTreeSize(*tree, start_tree_size + 1) != 0)  // for NULL element
     {
         return output;
     }
@@ -73,7 +73,7 @@ static tree_return_e
 SetTreeSize(tree_t tree,
             size_t new_size)
 {
-    ASSERT(tree != NULL);
+    assert(tree != NULL);
 
     if (new_size < tree->nodes_count)
     {
@@ -81,8 +81,8 @@ SetTreeSize(tree_t tree,
     }
 
     if ((tree->nodes_array = (node_s*) recalloc(tree->nodes_array, // FIXME: add bufferization before recalloc
-        sizeof(node_s) * (tree->nodes_count + 1),
-        sizeof(node_s) * new_size)) == NULL)
+            sizeof(node_s) * (tree->nodes_count + 1),
+                sizeof(node_s) * new_size)) == NULL)
     {
         return TREE_RETURN_ALLOCATION_ERROR;
     }
@@ -100,7 +100,7 @@ static tree_return_e
 NumerizeElements(tree_t tree,
                  size_t start_index)
 {
-    ASSERT(tree != NULL);
+    assert(tree != NULL);
 
     for(size_t index = start_index; index < tree->nodes_capacity; index++)
     {
@@ -126,8 +126,8 @@ tree_return_e
 TreeAddNode(tree_t  tree,
             node_s* node)
 {
-    ASSERT(tree != NULL);
-    ASSERT(node != NULL);
+    assert(tree != NULL);
+    assert(node != NULL);
 
     uint8_t children_usage = 0b0000'0000;
     if((children_usage = CheckTreeChildren(node)) == INVALID_NODE)
@@ -155,7 +155,7 @@ TreeAddNode(tree_t  tree,
 static uint8_t
 CheckTreeChildren(node_s* node)
 {
-    ASSERT(node != NULL);
+    assert(node != NULL);
 
     ssize_t child_left = node->left_index;
     ssize_t child_right = node->right_index;
@@ -178,11 +178,12 @@ CheckTreeChildren(node_s* node)
 static tree_return_e
 TreeNormilizeSize(tree_t tree)
 {
-    ASSERT(tree != NULL);
+    assert(tree != NULL);
 
     if (tree->nodes_capacity - 1 == tree->nodes_count)
     {
-        if (SetTreeSize(tree, tree->nodes_capacity * 2) != TREE_RETURN_SUCCESS)
+        if (SetTreeSize(tree, tree->nodes_capacity * 2) 
+                != TREE_RETURN_SUCCESS)
         {
             return TREE_RETURN_ALLOCATION_ERROR;
         }
@@ -201,29 +202,34 @@ ConnectGraphChild(tree_t     tree,
     switch (connection)
     {
         case EDGE_DIR_RIGHT:
-            child_node = tree->nodes_array + node->right_index;
+            child_node = tree->nodes_array 
+                            + node->right_index;
             break;
 
         case EDGE_DIR_LEFT:
-            child_node = tree->nodes_array + node->left_index;
+            child_node = tree->nodes_array 
+                            + node->left_index;
             break;
 
         case EDGE_DIR_NO_DIRECTION:
         default: return;
     }
 
-    if (child_node->parent_connection == EDGE_DIR_RIGHT)
+    if (child_node->parent_connection 
+            == EDGE_DIR_RIGHT)
     {
         tree->nodes_array[child_node->parent_index].
                                         right_index = NO_LINK;
     }
-    else if (child_node->parent_connection == EDGE_DIR_LEFT)
+    else if (child_node->parent_connection 
+                == EDGE_DIR_LEFT)
     {
         tree->nodes_array[child_node->parent_index].
                                         left_index = NO_LINK;
     }
 
-    child_node->parent_index = (ssize_t) node->index_in_tree;
+    child_node->parent_index = 
+                    (ssize_t) node->index_in_tree;
     child_node->parent_connection = EDGE_DIR_RIGHT;
 }
 
@@ -234,25 +240,30 @@ InitNode(tree_t  tree,
 {
     if (children_usage & CHILD_RIGHT_USAGE)
     {  
-        ConnectGraphChild(tree, node, EDGE_DIR_RIGHT);
+        ConnectGraphChild(tree, node,   
+                            EDGE_DIR_RIGHT);
     }
     if (children_usage & CHILD_LEFT_USAGE)
     {   
-        ConnectGraphChild(tree, node, EDGE_DIR_LEFT);
+        ConnectGraphChild(tree, node, 
+                            EDGE_DIR_LEFT);
     }
 
-    if (node->parent_connection == EDGE_DIR_RIGHT)
+    if (node->parent_connection 
+            == EDGE_DIR_RIGHT)
     {
         tree->nodes_array[node->parent_index].right_index 
             = (ssize_t) node->index_in_tree;
     }
-    else if (node->parent_connection == EDGE_DIR_LEFT)
+    else if (node->parent_connection 
+                == EDGE_DIR_LEFT)
     {
         tree->nodes_array[node->parent_index].left_index 
             = (ssize_t) node->index_in_tree;
     }
 
-    memcpy(tree->nodes_array + node->index_in_tree, node, sizeof(node_s));
+    memcpy(tree->nodes_array + node->index_in_tree, 
+                node, sizeof(node_s));
 
     return TREE_RETURN_SUCCESS;
 }
@@ -267,7 +278,8 @@ CheckNode(tree_t  tree,
     {
         return TREE_RETURN_INCORRECT_VALUE;
     }
-    else if ((size_t) current_index > tree->nodes_capacity)
+    else if ((size_t) current_index 
+                > tree->nodes_capacity)
     {
         return TREE_RETURN_INCORRECT_VALUE;
     }
@@ -281,13 +293,45 @@ CheckNode(tree_t  tree,
 
 // ========================== TREE_METHODS/FUNCTIONS ==========================
 
+size_t 
+CountTypeNode(int     lex_type, 
+              int     info,
+              ssize_t lex,
+              tree_t  tree)
+{
+    assert(tree != NULL);
+    
+    if (lex == NO_LINK)
+    {
+        return 0;
+    }
+
+    node_s node = tree->nodes_array[lex];
+    token_s value = node.node_value;
+    size_t amount = 0;
+
+    if (((int) value.lex_type == lex_type)
+           && (value.value.constant == info))
+    {
+        amount++;
+    }
+    
+    amount += CountTypeNode(lex_type, info, 
+                                node.left_index, tree);
+    amount += CountTypeNode(lex_type, info, 
+                                node.right_index, tree);
+
+    return amount;
+}
+
+
 tree_return_e 
 ForceConnect(tree_t     tree, 
              ssize_t    current_index,  
              ssize_t    new_parent,
              edge_dir_e new_direction)
 {
-    ASSERT(tree);
+    assert(tree);
     
     node_s* current_node = &(tree->nodes_array[current_index]);
     node_s* node_array = tree->nodes_array;
@@ -295,16 +339,20 @@ ForceConnect(tree_t     tree,
     RETURN_IF_NODE_BAD(current_index);    
     RETURN_IF_NODE_BAD(new_parent);
 
-    if (new_direction == EDGE_DIR_NO_DIRECTION)
+    if (new_direction   
+            == EDGE_DIR_NO_DIRECTION)
     {   
         return TREE_RETURN_INCORRECT_VALUE;
     }
 
-    if (current_node->parent_connection == EDGE_DIR_LEFT)
+    if (current_node->parent_connection 
+            == EDGE_DIR_LEFT)
     {
-        node_array[current_node->parent_index].left_index = NO_LINK;
+        node_array[current_node->parent_index]
+                            .left_index = NO_LINK;
     }
-    else if (current_node->parent_connection == EDGE_DIR_RIGHT)
+    else if (current_node->parent_connection 
+            == EDGE_DIR_RIGHT)
     {
         node_array[current_node->parent_index].right_index = NO_LINK;
     }
@@ -345,7 +393,7 @@ tree_return_e
 DeleteSubgraph(tree_t  tree,
                ssize_t node_index)
 {
-    ASSERT(tree != NULL);
+    assert(tree != NULL);
 
     if (node_index == NO_LINK)
     {
@@ -356,17 +404,20 @@ DeleteSubgraph(tree_t  tree,
 
     const size_t stack_start_size = 10;
 
-    if (StackInit(&bypass_stack, stack_start_size, "InDepthBypass") != 0)
+    if (StackInit(&bypass_stack, 
+            stack_start_size, "InDepthBypass") != 0)
     {
         return TREE_RETURN_STACK_ERROR;
     }
     
-    if (tree->nodes_array[node_index].parent_connection == EDGE_DIR_RIGHT)
+    if (tree->nodes_array[node_index].parent_connection 
+            == EDGE_DIR_RIGHT)
     {
         tree->nodes_array[tree->nodes_array[node_index].parent_index]
                                                     .right_index = NO_LINK;
     }
-    else if (tree->nodes_array[node_index].parent_connection == EDGE_DIR_LEFT)
+    else if (tree->nodes_array[node_index].parent_connection 
+                == EDGE_DIR_LEFT)
     {
         tree->nodes_array[tree->nodes_array[node_index].parent_index]
                                                     .left_index = NO_LINK;
@@ -431,7 +482,7 @@ CopySubgraph(tree_t     tree,
              ssize_t*   new_index,
              edge_dir_e direction)
 {
-    ASSERT(tree != NULL);
+    assert(tree != NULL);
 
     node_s current_node = tree->nodes_array[src_index];
 
@@ -477,7 +528,7 @@ CopyNode(tree_t     tree,
          ssize_t*   dest_index,
          edge_dir_e direction)
 {
-    ASSERT(tree != NULL);
+    assert(tree != NULL);
 
     if (src_index == NO_LINK)
     {

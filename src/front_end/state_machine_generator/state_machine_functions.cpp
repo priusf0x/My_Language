@@ -1,11 +1,10 @@
 #include "state_machine_functions.h"
 
-#include <cstddef>
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "Assert.h"
 #include "tools.h"
 #include "my_string.h"
 
@@ -27,7 +26,7 @@ state_machine_return_e
 StateMachineCtor(state_machine_t* state_machine,
                  state_t          expected_size)
 {
-    ASSERT(state_machine != NULL);
+    assert(state_machine != NULL);
 
     *state_machine = (state_machine_t) calloc(1, sizeof(state_machine_s));
  
@@ -64,7 +63,7 @@ SetElementsRowValue(state_t  value,
                     size_t   elements_count,
                     state_t* value_array)
 {
-    ASSERT(value_array != NULL);
+    assert(value_array != NULL);
 
     for (size_t element_index = 0; element_index < elements_count; element_index++)
     {
@@ -76,7 +75,7 @@ static state_machine_return_e
 SetMatrixSize(state_machine_t state_machine,
               state_t         new_node_amount)
 {
-    ASSERT(state_machine != NULL);
+    assert(state_machine != NULL);
 
     size_t prev_byte_size = state_machine->state_capacity * MAX_CHAR_AMOUNT 
                                 * sizeof(state_t);
@@ -129,7 +128,7 @@ PutValueInState(state_t         value,
                 state_t         state,
                 state_machine_t state_machine)
 {
-    ASSERT(state_machine != NULL);
+    assert(state_machine != NULL);
 
     state_machine->data[GetMatrixIndex(character, state)] = value;
 }    
@@ -139,8 +138,8 @@ static state_machine_return_e
 CreateNewState(state_t*        new_init_state,
                state_machine_t state_machine)
 {   
-    ASSERT(state_machine);
-    ASSERT(new_init_state);
+    assert(state_machine);
+    assert(new_init_state);
 
     if (state_machine->state_amount == state_machine->state_capacity)
     {
@@ -161,8 +160,8 @@ static state_t
 FindDifference(state_machine_t state_machine,
                string_s*       key_word_string)
 {
-    ASSERT(state_machine != NULL);
-    ASSERT(key_word_string != NULL);
+    assert(state_machine != NULL);
+    assert(key_word_string != NULL);
 
     unsigned char character = (unsigned char) *key_word_string->string_source;
     state_t next_state = GetNextState(character, 0, state_machine);;
@@ -187,8 +186,8 @@ AddWordToDictionary(state_t*        state,
                     string_s*       key_word_string,
                     state_machine_t state_machine)
 {
-    ASSERT(state_machine != NULL);
-    ASSERT(key_word_string != NULL);
+    assert(state_machine != NULL);
+    assert(key_word_string != NULL);
 
     unsigned char character = 0;
     state_t current_state = *state;
@@ -218,8 +217,8 @@ AddEndSymbols(const char*     end_symbols,
               state_t         current_state,
               state_machine_t state_machine)
 {
-    ASSERT(end_symbols != NULL);
-    ASSERT(state_machine != NULL);
+    assert(end_symbols != NULL);
+    assert(state_machine != NULL);
 
     size_t end_symbols_amount = strlen(end_symbols);
     char character = 0;
@@ -241,7 +240,7 @@ AddKeyWord(char*           key_word,
            int             end_state,
            state_machine_t state_machine)
 {
-    ASSERT(state_machine != NULL);
+    assert(state_machine != NULL);
 
     size_t word_lenght = strlen((const char*) key_word);
     if (word_lenght == 0)
@@ -266,8 +265,8 @@ state_machine_return_e
 WriteInFileStateMachine(state_machine_t state_machine,
                         const char*     file_name)
 {
-    ASSERT(state_machine != NULL);
-    ASSERT(file_name != NULL);
+    assert(state_machine != NULL);
+    assert(file_name != NULL);
 
     FILE* opened_file = fopen(file_name, "w+");
 

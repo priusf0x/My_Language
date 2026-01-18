@@ -1,9 +1,9 @@
 #include "tree.h"
 
+#include <assert.h>
 #include <string.h>
 #include <sys/types.h>
 
-#include "Assert.h"
 #include "buffer.h"
 
 // =================================== TREE_READER ============================
@@ -13,9 +13,9 @@ ReadNode(ssize_t*   return_node,
          tree_t     tree,
          buffer_t   buffer)
 {   
-    ASSERT(buffer != NULL);
-    ASSERT(tree != NULL);
-    ASSERT(return_node != NULL);
+    assert(buffer != NULL);
+    assert(tree != NULL);
+    assert(return_node != NULL);
     
     int lex_type = (int) ReadLongB(buffer);
     SkipSpacesB(buffer);
@@ -80,8 +80,8 @@ ReadTree(ssize_t    parent,
          tree_t     tree,
          buffer_t   buffer)
 {
-    ASSERT(tree != NULL);
-    ASSERT(buffer != NULL);
+    assert(tree != NULL);
+    assert(buffer != NULL);
 
     if (parent == NO_LINK)
     {

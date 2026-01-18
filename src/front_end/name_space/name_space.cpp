@@ -1,9 +1,8 @@
 #include "name_space.h"
 
-#include <cstddef>
 #include <stdlib.h>
+#include <assert.h>
 
-#include "Assert.h"
 #include "tools.h"
 #include "my_string.h"
 #include "string.h"
@@ -18,7 +17,7 @@ name_table_return_e
 InitNameTable(name_table_t* name_table, 
               size_t        start_size)
 {
-    ASSERT(name_table != NULL);
+    assert(name_table != NULL);
 
     name_table_return_e output = NAME_TABLE_RETURN_SUCCESS;
 
@@ -56,7 +55,7 @@ static name_table_return_e
 SetNameTableSize(name_table_t name_table,
                  size_t       new_size)
 {
-    ASSERT(name_table != NULL);    
+    assert(name_table != NULL);    
 
     if (new_size < name_table->name_table_capacity)
     {
@@ -101,7 +100,7 @@ PrintNameInfo(const name_s* name,
 void 
 NameTableDump(name_table_t name_table)
 {
-    ASSERT(name_table);
+    assert(name_table);
 
     size_t current_index = 0;
     name_s current_name = {};
@@ -128,7 +127,7 @@ GetNameNum(string_s*    string,
            ssize_t      previous_node,
            name_table_t name_table)
 {
-    ASSERT(name_table != NULL);
+    assert(name_table != NULL);
 
     unsigned int hash = HashString(string);
     name_s* array = name_table->name_array;
@@ -150,9 +149,9 @@ AddNameInTable(name_s*      name,
                ssize_t*     current_name,
                name_table_t name_table)
 {
-    ASSERT(name != NULL);
-    ASSERT(current_name != NULL);
-    ASSERT(name_table != NULL);
+    assert(name != NULL);
+    assert(current_name != NULL);
+    assert(name_table != NULL);
 
     name_table_return_e output = NAME_TABLE_RETURN_SUCCESS;
 

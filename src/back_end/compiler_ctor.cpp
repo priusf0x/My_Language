@@ -1,11 +1,10 @@
 #include "compiler.h"
 
-#include <cstddef>
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "Assert.h"
 #include "tree.h"
 #include "buffer.h"
 #include "tools.h"
@@ -18,9 +17,9 @@ CompilerCtor(const char* input_name,
              const char* output_name,
              compiler_t* compiler)
 {   
-    ASSERT(input_name != NULL);
-    ASSERT(output_name != NULL);
-    ASSERT(compiler != NULL);
+    assert(input_name != NULL);
+    assert(output_name != NULL);
+    assert(compiler != NULL);
 
     *compiler = (compiler_t) calloc(1, sizeof(compiler_s));
 
