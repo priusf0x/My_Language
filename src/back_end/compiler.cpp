@@ -3,6 +3,8 @@
 #include "Assert.h"
 #include "lexes.h"
 #include "tree.h"
+#include <condition_variable>
+#include <cstddef>
 
 // ================================== HELPERS =================================
 
@@ -11,8 +13,14 @@
     if (___output != 0) return ___output;} while (0)
 
 static compiler_return_e 
-CompileExpr(ssize_t    lex,
-            compiler_t compiler);
+CompileExpr(ssize_t lex, compiler_t compiler);
+
+static compiler_return_e
+CompileRDX(ssize_t lex, compiler_t compiler);
+
+static compiler_return_e 
+CompileKeyWord(ssize_t lex, compiler_t compiler);
+
 
 static compiler_return_e
 GetVarAdress(ssize_t    lex,
@@ -37,6 +45,9 @@ GetVarAdress(ssize_t    lex,
     return COMPILER_RETURN_SUCCESS;  
 }
 
+static compiler_return_e 
+CompileStatement(ssize_t lex, compiler_t compiler);
+
 // =============================== MAIN_CYCLE =================================
 
 static compiler_return_e 
@@ -52,8 +63,40 @@ SetASMHeader(compiler_t compiler)
     return COMPILER_RETURN_SUCCESS;
 }
 
-static compiler_return_e 
-CompileStatement(ssize_t lex, compiler_t compiler);
+compiler_return_e 
+CompileBranch(ssize_t    lex,
+              compiler_t compiler)
+{
+    ASSERT(compiler != NULL);
+    
+    if(lex == NO_LINK)
+    {
+        return COMPILER_RETURN_SUCCESS;
+    }
+    
+    node_s* array = compiler->compiler_tree->nodes_array;
+    node_s node = array[lex];
+    compiler_return_e output = COMPILER_RETURN_SUCCESS;
+
+    if ((node.node_value.lex_type == LEX_TYPE_SYNTAX)
+            && (node.node_value.value.syntax == SYNTAX_STATEMENT_CONNECTOR))
+    {
+        while (lex != NO_LINK)
+        {
+            output = CompileStatement(array[lex].right_index,
+                                                        compiler);  
+            CHECK_OUTPUT(output);
+
+            lex = array[lex].left_index; // switching to next stmt
+        }    
+    }
+    else
+    {
+        return CompileStatement(lex, compiler);
+    }
+
+    return COMPILER_RETURN_SUCCESS;
+}
 
 compiler_return_e
 CompileAST(compiler_t compiler)
@@ -61,22 +104,11 @@ CompileAST(compiler_t compiler)
     ASSERT(compiler != NULL);
 
     SetASMHeader(compiler); // calling main function 
-
-    ssize_t lex = compiler->compiler_tree
-                                ->nodes_array->left_index;
-    compiler_return_e output = COMPILER_RETURN_SUCCESS;
+    
     node_s* array = compiler->compiler_tree->nodes_array;
+    ssize_t start_node= array[0].left_index;
 
-    while (lex != NO_LINK)
-    {
-        output = CompileStatement(array[lex].right_index,
-                                                    compiler);  
-        CHECK_OUTPUT(output);
-
-        lex = array[lex].left_index; // switching to next stmt
-    }
-
-    return COMPILER_RETURN_SUCCESS;
+    return CompileBranch(start_node, compiler);
 }
 
 // ========================= COMPILING_STATEMENT ==============================
@@ -90,12 +122,12 @@ CompileStatement(ssize_t    lex,
     switch (array[lex].node_value.lex_type)
     {   
         case LEX_TYPE_KEY_WORD:
-            return COMPILER_RETURN_SUCCESS;
+            return CompileKeyWord(lex, compiler);
 
         case LEX_TYPE_ID:
         case LEX_TYPE_OPERATOR:
         case LEX_TYPE_CONST: 
-            return CompileExpr(lex, compiler);
+            return CompileRDX(lex, compiler);
         
         case LEX_TYPE_SYNTAX: return COMPILER_RETURN_SEMANTIC_ERROR;
         case LEX_TYPE_UNDEFINED:
@@ -120,7 +152,6 @@ CompileVarKW(ssize_t    lex,
         output = CompileExpr(node.right_index, compiler);
         CHECK_OUTPUT(output);
         fprintf(compiler->file_output, 
-                    "push RDX\n"
                     "pop ");
         GetVarAdress(node.right_index, compiler);
         fprintf(compiler->file_output, "\n");
@@ -130,13 +161,113 @@ CompileVarKW(ssize_t    lex,
 }
 
 static compiler_return_e 
-CompileKeyWord(ssize_t    lex,
+CompileIfKW(ssize_t    lex,     
+            compiler_t compiler)
+{
+    ASSERT(compiler != NULL);
+
+    node_s node = compiler->compiler_tree->nodes_array[lex];
+    compiler_return_e output = COMPILER_RETURN_SUCCESS;
+
+    if (node.left_index == NO_LINK)
+    {
+        return COMPILER_RETURN_AST_STANDARD_ERROR;
+    }
+
+    size_t if_label = compiler->label_count;    
+    compiler->label_count++;
+
+    output = CompileExpr(node.left_index, compiler);
+    CHECK_OUTPUT(output);
+    fprintf(compiler->file_output, 
+                "push 0\n"
+                "je .L%zu:\n", if_label);
+    output = CompileBranch(node.right_index, compiler);
+    fprintf(compiler->file_output, 
+                ".L%zu:\n", if_label);
+
+    /*
+        // condition 
+        push 0
+        je .L123:
+        // right part of the if node
+        .L123:
+    */
+
+    return COMPILER_RETURN_SUCCESS;
+}
+
+static compiler_return_e 
+CompileWhileKW(ssize_t    lex,
                compiler_t compiler)
 {
     ASSERT(compiler != NULL);
 
+    node_s node = compiler->compiler_tree->nodes_array[lex];
+    compiler_return_e output = COMPILER_RETURN_SUCCESS;
+
+    if (node.left_index == NO_LINK)
+    {
+        return COMPILER_RETURN_AST_STANDARD_ERROR;
+    }
+
+    size_t while_label = compiler->label_count;
+    size_t cond_label = compiler->label_count + 1; 
+    compiler->label_count += 2;
+
+    fprintf(compiler->file_output, 
+                ".L%zu:\n", while_label);
+
+    output = CompileExpr(node.left_index, compiler);
+    CHECK_OUTPUT(output);
+    fprintf(compiler->file_output, 
+                "push 0\n"
+                "je .L%zu:\n", cond_label);
+    output = CompileBranch(node.right_index, compiler);
+    
+    fprintf(compiler->file_output, 
+                "jmp .L%zu:\n", while_label);
+    fprintf(compiler->file_output, 
+                ".L%zu:\n", cond_label);
+
+    /* 
+        .L124:
+        // condition 
+        push 0
+        je .L123:
+        // right part of the if node
+        jmp .L124:
+        .L123:
+    */
 
     return COMPILER_RETURN_SUCCESS;
+}
+
+static compiler_return_e 
+CompileKeyWord(ssize_t    lex,
+               compiler_t compiler)
+{
+    ASSERT(compiler != NULL);
+    
+    struct key_word_compile 
+    {
+        key_word_type_e key_word;
+        compiler_return_e (*kw_function) (ssize_t, compiler_t);
+    };
+    key_word_compile kw_asm[] = 
+    {
+        {KEY_WORD_UNDEFINED, NULL          },
+        {KEY_WORD_IF,        CompileIfKW   },
+        {KEY_WORD_VAR,       CompileVarKW  },
+        {KEY_WORD_WHILE,     CompileWhileKW},
+        {KEY_WORD_FUNCTION,  NULL          },
+        {KEY_WORD_RETURN,    NULL          }
+    };
+
+    node_s node = compiler->compiler_tree->nodes_array[lex];
+
+    return kw_asm[node.node_value.value.op]
+                            .kw_function(lex, compiler);
 }
 
 // ========================== EXPR_COMPILATIONS ===============================
@@ -154,12 +285,10 @@ CompileAriphmetic(ssize_t     lex,
 
     output = CompileExpr(node.left_index, compiler);
     CHECK_OUTPUT(output);
-    fprintf(compiler->file_output, "push RDX\n"); 
     output = CompileExpr(node.right_index, compiler);
     CHECK_OUTPUT(output);
-    fprintf(compiler->file_output, "push RDX\n"
-                                   "%s\n"     
-                                   "pop RDX\n", ariphmetic);
+
+    fprintf(compiler->file_output, "%s\n", ariphmetic);
     
     return COMPILER_RETURN_SUCCESS;
 }
@@ -177,10 +306,8 @@ CompileBoolean(ssize_t     lex,
 
     output = CompileExpr(node.left_index, compiler);
     CHECK_OUTPUT(output);
-    fprintf(compiler->file_output, "push RDX\n"); 
     output = CompileExpr(node.right_index, compiler);
     CHECK_OUTPUT(output);
-    fprintf(compiler->file_output, "push RDX\n");
 
   /*je .L32
     push 0
@@ -188,6 +315,7 @@ CompileBoolean(ssize_t     lex,
     .L32:
     push 1 
     .L33:*/
+    
     fprintf(compiler->file_output, 
         "%s .L%zu:\n"
         "push 0\n"
@@ -198,7 +326,6 @@ CompileBoolean(ssize_t     lex,
                     compiler->label_count + 1, compiler->label_count,
                         compiler->label_count + 1);
     compiler->label_count += 2;
-    fprintf(compiler->file_output, "pop RDX\n");
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -253,17 +380,38 @@ CompileBelowOrEq(ssize_t lex, compiler_t compiler)
 {   const char* be_asm = "jbe";
     return CompileBoolean(lex, be_asm, compiler);}
 
-struct op_compiler_s 
+static compiler_return_e
+CompileAssign(ssize_t    lex,
+              compiler_t compiler)
 {
-    operator_type_e op;
-    compiler_return_e (*op_function) (ssize_t lex, compiler_t compiler);
-};
+    ASSERT(compiler != NULL);
+    
+    node_s node = compiler->compiler_tree->nodes_array[lex];
+    compiler_return_e output = CompileExpr(node.right_index, compiler);
+    CHECK_OUTPUT(output);
+    fprintf(compiler->file_output, 
+                "pop ");
+    GetVarAdress(node.left_index, compiler);
+    fprintf(compiler->file_output, "\n");
+    fprintf(compiler->file_output, 
+                "push ");
+    GetVarAdress(node.left_index, compiler);
+    fprintf(compiler->file_output, "\n");
+
+    return COMPILER_RETURN_SUCCESS;
+}
 
 static compiler_return_e 
-CompileOp(ssize_t lex, 
+CompileOp(ssize_t    lex, 
           compiler_t compiler)
 {
     ASSERT(compiler != NULL);
+
+    struct op_compiler_s 
+    {
+        operator_type_e op;
+        compiler_return_e (*op_function) (ssize_t lex, compiler_t compiler);
+    };
 
     op_compiler_s op_asm[] = 
     {
@@ -274,7 +422,7 @@ CompileOp(ssize_t lex,
         {OPERATOR_DIV,           CompileDiv      },
         {OPERATOR_EQUALITY,      CompileEq       },
         {OPERATOR_N_EQUALITY,    CompileNEq      },
-        {OPERATOR_ASSIGNMENT,    NULL            },
+        {OPERATOR_ASSIGNMENT,    CompileAssign   },
         {OPERATOR_MORE,          CompileAbove    },
         {OPERATOR_MORE_OR_EQ,    CompileAboveOrEq},
         {OPERATOR_LESS,          CompileBelow    },
@@ -298,13 +446,14 @@ CompileID(ssize_t    lex,
 
     if (value.is_function)
     {
+        // TODO: here make function features 
         return COMPILER_RETURN_SUCCESS;
     }
     else
     {
         fprintf(compiler->file_output, "push ");
         GetVarAdress(lex, compiler);
-        fprintf(compiler->file_output, "\npop RDX\n");
+        fprintf(compiler->file_output, "\n");
     }
 
     return COMPILER_RETURN_SUCCESS;
@@ -319,8 +468,7 @@ CompileConst(ssize_t    lex,
     node_s node = compiler->compiler_tree->nodes_array[lex];
 
     fprintf(compiler->file_output, 
-                "push %d\n"
-                "pop RDX\n", node.node_value.value.constant);
+                "push %d\n", node.node_value.value.constant);
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -331,7 +479,7 @@ CompileExpr(ssize_t    lex,
 {
     ASSERT(compiler != NULL);
     
-    node_s node = compiler->compiler_tree->nodes_array[lex];
+    node_s node = compiler->compiler_tree->nodes_array[lex]; 
 
     switch (node.node_value.lex_type)
     {
@@ -349,6 +497,18 @@ CompileExpr(ssize_t    lex,
         case LEX_TYPE_UNDEFINED:
         default: return COMPILER_RETURN_UNDEFINED_ELEMENT;
     }
+}
+
+static compiler_return_e
+CompileRDX(ssize_t    lex,
+           compiler_t compiler)
+{
+    ASSERT(compiler != NULL);
+    
+    compiler_return_e output = CompileExpr(lex, compiler);
+    fprintf(compiler->file_output, "pop RDX\n");
+
+    return output;
 }
 
 // ============================== ID_COMPILATION ==============================

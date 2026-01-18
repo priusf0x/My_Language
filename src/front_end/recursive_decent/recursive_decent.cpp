@@ -386,7 +386,7 @@ GetBool(read_context_t context,
     {
         VECTOR_ERASE;
         bool_op = ADD__(token);
-        CONNECT_LEXES(bool_op, GetTerm(context, scope), return_node); // check if variable 
+        CONNECT_LEXES(bool_op, return_node, GetTerm(context, scope)); // check if variable 
         return_node = bool_op;
         VECTOR_VIEW(token);
     }
