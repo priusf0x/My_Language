@@ -32,13 +32,15 @@ GetVarAdress(ssize_t    lex,
     
     if (value.is_global)
     {
+        fprintf(stderr, "%ld", lex);
+
         fprintf(compiler->file_output, 
                     "[%ld]", value.number_in_scope);
     }
     else 
     {
         fprintf(compiler->file_output, 
-                    "[RBX-%ld]", value.number_in_scope);
+                    "[RBX - %ld]", value.number_in_scope);
     }
 
     return COMPILER_RETURN_SUCCESS;  
@@ -151,7 +153,7 @@ CompileVarKW(ssize_t    lex,
         CHECK_OUTPUT(output);
         fprintf(compiler->file_output, 
                     "pop ");
-        GetVarAdress(node.right_index, compiler);
+        GetVarAdress(node.left_index, compiler);
         fprintf(compiler->file_output, "\n");
     }
 
@@ -282,6 +284,9 @@ SetArgsUseStack(size_t     arg_amount,
     lex = array[lex].left_index; // to arg connector
     ssize_t next_lex = lex;
 
+    fprintf(compiler->file_output, "pop REX\n");
+    fprintf(compiler->file_output, "pop RFX\n");
+
     while (next_lex != NO_LINK)
     {
         lex = next_lex;
@@ -293,6 +298,10 @@ SetArgsUseStack(size_t     arg_amount,
         fprintf(compiler->file_output, 
                     "pop [RBX - %zu]\n", arg_amount - 1);
     }
+    
+    fprintf(compiler->file_output, 
+                "push RFX\n"
+                "push REX\n");
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -331,8 +340,6 @@ SetOverhead(ssize_t    lex,
     fprintf(compiler->file_output, 
                 "%.*s:\n", (int) id.id.string_size, 
                             id.id.string_source);
-
-    SetArguments(lex, compiler);
     
     fprintf(compiler->file_output, 
                 "push RBX\n"
@@ -344,6 +351,8 @@ SetOverhead(ssize_t    lex,
                 "sub\n"
                 "pop RCX\n", id.number_in_scope);
 
+    SetArguments(lex, compiler);
+
     return COMPILER_RETURN_SUCCESS;
 }
 
@@ -354,8 +363,27 @@ CompileFunction(ssize_t    lex,
     assert(compiler != NULL);
 
     SetOverhead(lex, compiler);
-    
+
+    node_s* array = compiler->compiler_tree->nodes_array;
+    lex = array[lex].right_index;
+    compiler_return_e output = CompileBranch(lex, compiler);
+    CHECK_OUTPUT(output);
+
+    return COMPILER_RETURN_SUCCESS;
+}
+
+static compiler_return_e
+CompileReturn(ssize_t    lex,
+              compiler_t compiler)
+{
+    assert(compiler != NULL);
+
+    node_s* array = compiler->compiler_tree->nodes_array;
+    lex = array[lex].right_index;
+    compiler_return_e output = CompileExpr(lex, compiler);
+    CHECK_OUTPUT(output);
     fprintf(compiler->file_output, 
+                "pop RAX\n"
                 "pop RCX\n"
                 "pop RBX\n"
                 "ret\n");
@@ -381,7 +409,7 @@ CompileKeyWord(ssize_t    lex,
         {KEY_WORD_VAR,       CompileVarKW   },
         {KEY_WORD_WHILE,     CompileWhileKW },
         {KEY_WORD_FUNCTION,  CompileFunction},
-        {KEY_WORD_RETURN,    NULL          }
+        {KEY_WORD_RETURN,    CompileReturn  }
     };
 
     node_s node = compiler->compiler_tree->nodes_array[lex];
@@ -555,6 +583,114 @@ CompileOp(ssize_t    lex,
                             .op_function(lex, compiler);
 }
 
+static compiler_return_e 
+PushArgsInRegisters(size_t     arg_amount,
+                    ssize_t    lex,
+                    compiler_t compiler)
+{
+    assert(compiler != NULL);
+    
+    node_s* array = compiler->compiler_tree->nodes_array;
+    lex = array[lex].right_index; // to arg_connector 
+    ssize_t next_lex = lex;
+    compiler_return_e output = COMPILER_RETURN_SUCCESS;
+
+    while (next_lex != NO_LINK)
+    {
+        lex = next_lex;
+        next_lex = array[lex].left_index; 
+    }
+
+    #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+    
+    switch (arg_amount)
+    {
+        case 3:
+            output = CompileExpr(array[lex].right_index, compiler);
+            CHECK_OUTPUT(output);
+            fprintf(compiler->file_output, "pop RGX\n");
+            lex = array[lex].parent_index;
+
+        case 2:
+            output = CompileExpr(array[lex].right_index, compiler);
+            CHECK_OUTPUT(output);
+            fprintf(compiler->file_output, "pop RFX\n");
+            lex = array[lex].parent_index;
+
+        case 1:
+            output = CompileExpr(array[lex].right_index, compiler);
+            CHECK_OUTPUT(output);
+            fprintf(compiler->file_output, "pop REX\n");
+
+        case 0:
+        default: return COMPILER_RETURN_SUCCESS;
+    }
+        
+    #pragma GCC diagnostic warning "-Wimplicit-fallthrough"
+    
+    return COMPILER_RETURN_SUCCESS;
+}
+
+static compiler_return_e 
+PushArgsInStack(size_t     arg_amount,
+                ssize_t    lex,
+                compiler_t compiler)
+{
+    assert(compiler != NULL);
+    
+    node_s* array = compiler->compiler_tree->nodes_array;
+    lex = array[lex].right_index; // to arg_connector
+    compiler_return_e output = COMPILER_RETURN_SUCCESS;
+
+    for (; arg_amount > 0; arg_amount--)
+    {
+        output = CompileExpr(array[lex].right_index, compiler);
+        CHECK_OUTPUT(output);
+        lex = array[lex].left_index;
+    }
+    
+    return COMPILER_RETURN_SUCCESS;
+}
+
+static compiler_return_e 
+PushArgs(ssize_t    lex,
+         compiler_t compiler)
+{
+    assert(compiler != NULL);
+    
+    size_t arg_amount = CountTypeNode(LEX_TYPE_SYNTAX, SYNTAX_ARG_CONNECTOR, 
+                            lex, compiler->compiler_tree);
+
+    if (arg_amount <= 3)
+    {
+        return PushArgsInRegisters(arg_amount, lex, compiler);
+    } 
+    else 
+    {
+        return PushArgsInStack(arg_amount, lex, compiler);
+    }
+
+    return COMPILER_RETURN_SUCCESS;
+}
+
+static compiler_return_e
+CompileFunctionCall(ssize_t    lex,
+                    compiler_t compiler)
+{
+    assert(compiler != NULL);
+    
+    PushArgs(lex, compiler);
+    
+    node_s* array = compiler->compiler_tree->nodes_array;
+    id_s id = array[lex].node_value.value.id;
+
+    fprintf(compiler->file_output, 
+                "call %.*s\n", (int) id.id.string_size,
+                             id.id.string_source);
+
+    return COMPILER_RETURN_SUCCESS;
+}
+
 static compiler_return_e
 CompileID(ssize_t    lex,
           compiler_t compiler)
@@ -563,11 +699,13 @@ CompileID(ssize_t    lex,
 
     node_s node = compiler->compiler_tree->nodes_array[lex];
     id_s value = node.node_value.value.id;
+    compiler_return_e output = COMPILER_RETURN_SUCCESS;
 
     if (value.is_function)
-    {
-        // TODO: here make function features 
-        return COMPILER_RETURN_SUCCESS;
+    {   
+        output = CompileFunctionCall(lex, compiler);
+        CHECK_OUTPUT(output);
+        fprintf(compiler->file_output, "push RAX\n");
     }
     else
     {

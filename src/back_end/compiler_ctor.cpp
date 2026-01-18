@@ -68,6 +68,8 @@ CompilerCtor(const char* input_name,
         return COMPILER_RETURN_FILE_OPEN_ERROR;
     }
 
+    TreeDump((*compiler)->compiler_tree);
+
     return COMPILER_RETURN_SUCCESS;
 }
 

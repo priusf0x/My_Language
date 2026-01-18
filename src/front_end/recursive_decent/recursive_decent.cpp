@@ -278,7 +278,7 @@ GetPrimary(read_context_t context,
             array[id_node].node_value.value.id.is_function = true;
             
             ssize_t new_node = GetFunctionArg(context, scope);
-            CONNECT_LEXES(id_node, new_node, NO_LINK);
+            CONNECT_LEXES(id_node, NO_LINK, new_node);
             VECTOR_VIEW(token);
 
             if ((token.lex_type != LEX_TYPE_SYNTAX) 
@@ -475,7 +475,7 @@ GetReturn(read_context_t context,
     VECTOR_VIEW(return_token);
     VECTOR_ERASE;
     ssize_t return_node = ADD__(return_token);
-    CONNECT_LEXES(return_node, GetExpression(context, scope), NO_LINK);
+    CONNECT_LEXES(return_node, NO_LINK, GetExpression(context, scope));
 
     return return_node;
 }
@@ -514,6 +514,7 @@ GetInitVar(read_context_t context,
     node_array[var_node].node_value.value.id.is_global = scope->is_global;
     node_array[var_node].node_value.value.id.number_in_scope 
                                                 = (ssize_t)scope->variable_count;
+    fprintf(stderr, "%d", scope->is_global);
     InitNewVar(var_node, scope, context);
 
     token_s a_token = {};             

@@ -101,7 +101,7 @@ InitNewVar(ssize_t        declaration,
     string_s string = node->node_value.value.id.id;
 
     name_s name = {.string = string, .is_function = false,
-                   .is_global = scope->scope, 
+                   .is_global = scope->is_global, 
                    .info_num = (ssize_t) scope->variable_count,
                    .prev_element = scope->scope};
 
