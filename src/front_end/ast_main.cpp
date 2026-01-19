@@ -10,7 +10,7 @@ int
 main()
 {
     read_context_t read_context = NULL;
-     
+
     ReadContextCtor(&read_context);
 
     ReadContextDtor(&read_context);

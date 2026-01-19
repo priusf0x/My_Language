@@ -35,7 +35,7 @@ GetVarAdress(ssize_t    lex,
         fprintf(stderr, "%ld", lex);
 
         fprintf(compiler->file_output, 
-                    "[%ld]", value.number_in_scope);
+                    "[R0X + %ld]", value.number_in_scope);
     }
     else 
     {
