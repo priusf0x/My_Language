@@ -1,4 +1,3 @@
-#ifndef NDEBUG
 #include "tree.h"
 
 #include <assert.h>
@@ -110,18 +109,11 @@ TreeBaseDumpRecursive(tree_t  tree,
 
 }
 
-static const char* default_dump_file = "und3f1n3d_base.txt";
-
 tree_return_e 
 TreeBaseDump(tree_t      tree, 
              const char* file_name)
 {
     assert(tree != NULL);
-
-    if (file_name == NULL)
-    {
-        file_name = default_dump_file;
-    }
 
     FILE* file = fopen(file_name, "w+");
     if (file == NULL)
@@ -387,5 +379,3 @@ DrawNode(const node_s* node,
         fprintf(dot_file, "%ld -- %ld;\n", node->index_in_tree, node->right_index);
     }
 }
-
-#endif 

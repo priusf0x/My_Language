@@ -32,8 +32,6 @@ GetVarAdress(ssize_t    lex,
     
     if (value.is_global)
     {
-        fprintf(stderr, "%ld", lex);
-
         fprintf(compiler->file_output, 
                     "[R0X + %ld]", value.number_in_scope);
     }
@@ -56,7 +54,15 @@ SetASMHeader(compiler_t compiler)
 {
     assert(compiler != NULL);
 
-    const char* start_code = "call main\n"\
+    static const char* const start_processor_settings = 
+        "push 1000\n"
+        "pop  R0X \n" // globals memory space
+        "push 5000\n"
+        "pop  RCX \n"; // local variables memory space
+
+    fprintf(compiler->file_output, "%s", start_processor_settings);
+
+    const char* start_code = "call main:\n"\
                              "hlt\n\n";
 
     fprintf(compiler->file_output, "%s", start_code);
@@ -284,8 +290,10 @@ SetArgsUseStack(size_t     arg_amount,
     lex = array[lex].left_index; // to arg connector
     ssize_t next_lex = lex;
 
-    fprintf(compiler->file_output, "pop REX\n");
-    fprintf(compiler->file_output, "pop RFX\n");
+    fprintf(compiler->file_output, 
+        "pop REX\n"
+        "pop RFX\n"
+        "pop RDX\n");
 
     while (next_lex != NO_LINK)
     {
@@ -299,9 +307,10 @@ SetArgsUseStack(size_t     arg_amount,
                     "pop [RBX - %zu]\n", arg_amount - 1);
     }
     
-    fprintf(compiler->file_output, 
-                "push RFX\n"
-                "push REX\n");
+    fprintf(compiler->file_output,
+        "push RDX\n" 
+        "push RFX\n"
+        "push REX\n");
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -685,7 +694,7 @@ CompileFunctionCall(ssize_t    lex,
     id_s id = array[lex].node_value.value.id;
 
     fprintf(compiler->file_output, 
-                "call %.*s\n", (int) id.id.string_size,
+                "call %.*s:\n", (int) id.id.string_size,
                              id.id.string_source);
 
     return COMPILER_RETURN_SUCCESS;

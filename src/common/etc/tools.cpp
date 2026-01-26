@@ -31,13 +31,13 @@ GetTime(char*        current_time,
     time_t t;
     struct tm *tmp;
     time(&t);
-    char* tmp_string = (char*) calloc(string_size, sizeof(char));
+    const size_t tmp_string_size = 2 << 10;
+    char tmp_string[tmp_string_size] = "";
     tmp = localtime(&t);
     clock_t start_t = clock();
-    strftime(tmp_string, string_size, "%Y-%m-%H-%M-%S", tmp);
+    strftime(tmp_string, tmp_string_size, "%Y-%m-%H-%M-%S", tmp);
     snprintf(current_time, string_size,"%s-%.0f", tmp_string,
             1000000000 * (((double) (start_t % CLOCKS_PER_SEC)) / CLOCKS_PER_SEC));
-    free(tmp_string);
 }
 
 void

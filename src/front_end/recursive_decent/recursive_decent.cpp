@@ -52,6 +52,8 @@ InitMachine(const char*      file_name,
     
     if (StateMachineCtor(state_machine, state_amount) != 0)
     {
+        fclose(vector_file); 
+
         return RECURSIVE_RETURN_ALLOCATION_ERROR;
     }
 
@@ -104,7 +106,7 @@ ReadContextCtor(read_context_t* context)
     const size_t name_table_size = 10;
     if (InitNameTable(&(*context)->name_table, name_table_size) != 0)
     {
-        BufferDestroy(&(*context)->input_buffer);
+        BufferDtor(&(*context)->input_buffer);
         VectorDestroy(&(*context)->lex_vector);
         free(*context);
         *context = NULL;
@@ -116,7 +118,7 @@ ReadContextCtor(read_context_t* context)
         || InitMachine(OP_FILE_NAME, &(*context)->operator_machine)
         || InitMachine(SYNT_FILE_NAME, &(*context)->syntax_machine))
     {
-        BufferDestroy(&(*context)->input_buffer);
+        BufferDtor(&(*context)->input_buffer);
         VectorDestroy(&(*context)->lex_vector);
         DestroyNameTable(&(*context)->name_table);
         free(*context);
@@ -124,7 +126,7 @@ ReadContextCtor(read_context_t* context)
 
         return RECURSIVE_RETURN_STATE_MACHINE_ERROR;
     }
-
+        // FIXME: add goto command for destroying copypast, add file_name manager
     DivideInLexems(*context);
 
     TreeCtor(&(*context)->lex_tree, 10);
@@ -137,7 +139,12 @@ ReadContextCtor(read_context_t* context)
     fprintf(stderr, "%zu", (*context)->last_read_pos);
 
     TreeDump((*context)->lex_tree);
-    TreeBaseDump((*context)->lex_tree);
+    
+
+    //FIXME: tmp
+    const char* default_file_name = "ast.txt"; 
+    
+    TreeBaseDump((*context)->lex_tree, default_file_name);
     
     return RECURSIVE_RETURN_SUCCESS;
 } 
@@ -153,7 +160,7 @@ ReadContextDtor(read_context_t* context)
     StateMachineDtor(&(*context)->key_word_machine);
     StateMachineDtor(&(*context)->operator_machine);
     StateMachineDtor(&(*context)->syntax_machine);
-    BufferDestroy(&(*context)->input_buffer);
+    BufferDtor(&(*context)->input_buffer);
     VectorDestroy(&(*context)->lex_vector);
     TreeDtor(&(*context)->lex_tree);
     DestroyNameTable(&(*context)->name_table);

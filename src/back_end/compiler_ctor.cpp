@@ -21,56 +21,53 @@ CompilerCtor(const char* input_name,
     assert(output_name != NULL);
     assert(compiler != NULL);
 
+    compiler_return_e output = COMPILER_RETURN_SUCCESS;
+    const size_t start_tree_size = 100;
+
     *compiler = (compiler_t) calloc(1, sizeof(compiler_s));
 
     if (*compiler == NULL)
     {
-        return COMPILER_RETURN_SUCCESS;
+        return COMPILER_RETURN_ALLOCATION_ERROR; 
     }
 
     if (BufferCtor(&(*compiler)->buffer, input_name) != 0)
     {
-        free(*compiler);
-        *compiler = NULL;
-
-        return COMPILER_RETURN_BUFFER_ERROR;
+        output = COMPILER_RETURN_BUFFER_ERROR;
+        goto error;
     }
     
-    const size_t start_tree_size = 100;
     if (TreeCtor(&(*compiler)->compiler_tree, start_tree_size) != 0)
     {
-        BufferDestroy(&(*compiler)->buffer);
-        free(*compiler);
-        *compiler = NULL;
-
-        return COMPILER_RETURN_BUFFER_ERROR;
+        output = COMPILER_RETURN_TREE_ERROR;
+        goto error;
     }
 
     if (ReadTree(0, (*compiler)->compiler_tree, (*compiler)->buffer) != 0)
     {
-        BufferDestroy(&(*compiler)->buffer);
-        TreeDtor(&(*compiler)->compiler_tree);
-        free(*compiler);
-        *compiler = NULL;
-        
-        return COMPILER_RETURN_AST_STANDARD_ERROR;
+        output = COMPILER_RETURN_AST_STANDARD_ERROR;        
+        goto error;
     }
 
     (*compiler)->file_output = fopen(output_name, "w+");
     
     if ((*compiler)->file_output == NULL)
     {
-        BufferDestroy(&(*compiler)->buffer);
-        TreeDtor(&(*compiler)->compiler_tree);
-        free(*compiler);
-        *compiler = NULL;
-        
-        return COMPILER_RETURN_FILE_OPEN_ERROR;
+        output = COMPILER_RETURN_FILE_OPEN_ERROR;
+        goto error;
     }
 
     TreeDump((*compiler)->compiler_tree);
 
     return COMPILER_RETURN_SUCCESS;
+    
+error:
+    TreeDtor(&(*compiler)->compiler_tree);
+    BufferDtor(&(*compiler)->buffer);
+    free(*compiler);
+    *compiler = NULL;
+    
+    return output;
 }
 
 compiler_return_e
@@ -79,7 +76,7 @@ CompilerDtor(compiler_t* compiler)
     if ((compiler != NULL) && (*compiler != NULL))
     {
         TreeDtor(&(*compiler)->compiler_tree);
-        BufferDestroy(&(*compiler)->buffer);
+        BufferDtor(&(*compiler)->buffer);
         fclose((*compiler)->file_output);
         free(*compiler);
 

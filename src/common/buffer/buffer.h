@@ -30,7 +30,7 @@ BufferCtor(buffer_t*    buffer,
            const char*  file_name);
 
 buffer_return_e
-BufferDestroy(buffer_t* buffer);
+BufferDtor(buffer_t* buffer);
 
 // ================================ ACTIONS ===================================
 

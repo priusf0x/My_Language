@@ -3,8 +3,8 @@
 #include "lexes.h"
 #include "tree.h"
 
-static const char* AST_FILE =    "und3f1n3d_base.txt";
-static const char* OUTPUT_NAME = "meow_name.asm";
+static const char* AST_FILE =    "ast_optimized.txt";
+static const char* OUTPUT_NAME = "compiled.asm";
 
 int main(void)
 {
