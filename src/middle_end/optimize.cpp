@@ -1,16 +1,20 @@
 #include "optimize.h"
 
 #include <assert.h>
-#include <cinttypes>
 
-#include "lexes.h"
-#include "tools.h"
 #include "tree.h"
+#include "lexes.h"
 
 // ================================= DEFINES ==================================
 
 #define NODE(_X___) optimizer->ast_tree->nodes_array[(_X___)]
-
+#define RETURN_IF_TREE_ERROR(_X___) do {\
+    if ((_X___) != 0)\
+    { return OPTIMIZE_RETURN_TREE_ERROR;}} while (0)
+#define RETURN_IF_OPT_ERROR(_X___) do {\
+    optimize_return_e _output___ = (_X___);\
+    if (_output___ != 0)\
+    { return _output___;}} while (0)
 
 // ================================= WRAPPER ==================================
 
@@ -93,37 +97,48 @@ CalculateSubgraph(ssize_t     current_node,
         return node.node_value.value.constant;
     }
 
-    int r_result_for_div = CalculateSubgraph(node.right_index, optimizer); 
-    
+    int r_result = CalculateSubgraph(node.right_index, optimizer); 
+    int l_result = CalculateSubgraph(node.left_index, optimizer);
+
     switch (node.node_value.value.op)
     {
         case OPERATOR_PLUS: 
-            return CalculateSubgraph(node.left_index, optimizer)
-                    + CalculateSubgraph(node.right_index, optimizer);
+            return l_result + r_result;
             
         case OPERATOR_MINUS:
-            return CalculateSubgraph(node.left_index, optimizer)
-                    - CalculateSubgraph(node.right_index, optimizer);
+            return l_result - r_result;
         
         case OPERATOR_MUL:
-            return CalculateSubgraph(node.left_index, optimizer)
-                    * CalculateSubgraph(node.right_index, optimizer);
+            return l_result * r_result;
+
         case OPERATOR_DIV:
-            if (r_result_for_div == 0)
+            if (r_result == 0)
             {   
                 optimizer->state = OPTIMIZE_RETURN_ZERO_DIVISION;
                 // FIXME: add here pointer to buffer
                 return 0;
             }
-            return CalculateSubgraph(node.left_index, optimizer) / r_result_for_div;
+            return l_result / r_result;
         
         case OPERATOR_EQUALITY:
+            return l_result == r_result ? 1 : 0;
+            
         case OPERATOR_N_EQUALITY:
+            return l_result != r_result ? 1 : 0;
+
         case OPERATOR_MORE:
+            return l_result > r_result ? 1 : 0;
+
         case OPERATOR_MORE_OR_EQ:
+            return l_result >= r_result ? 1 : 0;
+            
         case OPERATOR_LESS:
+            return l_result < r_result ? 1 : 0;
+
         case OPERATOR_LESS_OR_EQUAL:
-        case OPERATOR_ASSIGNMENT:   
+            return l_result <= r_result ? 1 : 0;
+
+        case OPERATOR_ASSIGNMENT:
         case OPERATOR_UNDEFINED:
         default: assert(0); 
     } 
@@ -173,6 +188,30 @@ CheckIfChNum(int         num,
     return output_bool;
 }
 
+static optimize_return_e
+CreateConst(int         value,
+            ssize_t*    new_node,
+            optimizer_t optimizer)
+{
+    assert(new_node != NULL);
+    assert(optimizer != NULL);
+    
+    token_s token = {.lex_type = LEX_TYPE_CONST, 
+                     .value = {.constant = value}};
+    node_s node_struct = {.parent_index  = NO_LINK,
+                          .right_index   = NO_LINK,
+                          .left_index    = NO_LINK,
+                          .node_value    = token,
+                          .index_in_tree = NO_LINK};    
+
+    RETURN_IF_TREE_ERROR(TreeAddNode(optimizer->ast_tree, 
+                            &node_struct));
+
+    *new_node = node_struct.index_in_tree; 
+
+    return OPTIMIZE_RETURN_SUCCESS;
+}
+
 // ============================== EXPR_OPTIMIZERS =============================
 
 static optimize_return_e 
@@ -183,31 +222,86 @@ OptimizeConst(ssize_t     current_node,
     assert(current_node != NO_LINK);
 
     node_s node = NODE(current_node);
-    token_s token = {.lex_type = LEX_TYPE_CONST, 
-                     .value = {.constant = CalculateSubgraph(current_node,
-                                                                optimizer)}};
-    node_s new_node = {.parent_index  = NO_LINK,
-                       .right_index   = NO_LINK,
-                       .left_index    = NO_LINK,
-                       .node_value    = token,
-                       .index_in_tree = NO_LINK};    
+    ssize_t new_node = NO_LINK;
+    int calculated = CalculateSubgraph(current_node, optimizer);
 
-    if (TreeAddNode(optimizer->ast_tree, &new_node) != 0)
+    RETURN_IF_OPT_ERROR(CreateConst(calculated, &new_node, optimizer));
+    RETURN_IF_TREE_ERROR(ForceConnect(optimizer->ast_tree, 
+                            new_node, node.parent_index, 
+                                node.parent_connection));
+
+    return OPTIMIZE_RETURN_SUCCESS;
+}
+
+static optimize_return_e
+OptimizeZero(ssize_t     current_node,
+             optimizer_t optimizer)
+{
+    assert(optimizer != NULL);
+    assert(current_node != NO_LINK);
+    assert(NODE(current_node).node_value.lex_type == LEX_TYPE_OPERATOR);
+
+    node_s node = NODE(current_node);
+    ssize_t zero_node = CheckIfNum(0, node.left_index, 
+                                optimizer) ? node.left_index : node.right_index;
+    ssize_t non_zero_node = CheckIfNum(0, node.left_index, 
+                                optimizer) ? node.right_index : node.left_index; 
+    operator_type_e op = node.node_value.value.op;
+
+    if ((op == OPERATOR_PLUS) || (op == OPERATOR_MINUS))
     {
-        return OPTIMIZE_RETURN_TREE_ERROR;
+        edge_dir_e dir = node.parent_connection == EDGE_DIR_LEFT ?
+                                EDGE_DIR_RIGHT : EDGE_DIR_RIGHT;
+        RETURN_IF_TREE_ERROR(ForceConnect(optimizer->ast_tree, 
+                                non_zero_node, node.parent_index, dir));
     }
-
-    if (ForceConnect(optimizer->ast_tree, new_node.index_in_tree,
-                        node.parent_index, node.parent_connection) != 0)
-    {   
-        return OPTIMIZE_RETURN_TREE_ERROR;
+    else if (op == OPERATOR_MUL)
+    {
+        RETURN_IF_TREE_ERROR(ForceConnect(optimizer->ast_tree, 
+                                zero_node, node.parent_index, 
+                                    node.parent_connection));        
+    }
+    else if (op == OPERATOR_DIV)
+    {
+        if (CheckIfChNum(0, node.right_index, optimizer))
+        {
+            return OPTIMIZE_RETURN_ZERO_DIVISION;
+        }
+        else 
+        { 
+            RETURN_IF_TREE_ERROR(ForceConnect(optimizer->ast_tree, 
+                                    zero_node, node.parent_index, 
+                                        node.parent_connection));
+        }
     }
 
     return OPTIMIZE_RETURN_SUCCESS;
 }
 
-// static optimize_return
-// OptimizeZero(ssize_t    current_node)
+static optimize_return_e
+OptimizeOne(ssize_t     current_node,
+            optimizer_t optimizer)
+{
+    assert(optimizer != NULL);
+    assert(current_node != NO_LINK);
+    assert(NODE(current_node).node_value.lex_type == LEX_TYPE_OPERATOR);
+
+    node_s node = NODE(current_node);
+    ssize_t non_one_node = CheckIfNum(1, node.left_index, 
+                            optimizer) ? node.right_index : node.left_index;
+    operator_type_e op = node.node_value.value.op;
+
+    if ((op == OPERATOR_MUL) || (op == OPERATOR_DIV))
+    {
+        edge_dir_e dir = node.parent_connection == EDGE_DIR_LEFT ?
+                                EDGE_DIR_RIGHT : EDGE_DIR_RIGHT;
+        RETURN_IF_TREE_ERROR(ForceConnect(optimizer->ast_tree, 
+                                non_one_node, node.parent_index, dir));
+    }
+
+    return OPTIMIZE_RETURN_SUCCESS;
+}
+
 
 static optimize_return_e
 OptimizeOp(ssize_t     current_node,
@@ -217,23 +311,20 @@ OptimizeOp(ssize_t     current_node,
     assert(current_node != NO_LINK);
     assert(NODE(current_node).node_value.lex_type == LEX_TYPE_OPERATOR);
 
-    optimize_return_e output = OPTIMIZE_RETURN_SUCCESS; 
-
     if (CheckIfOnlyConst(current_node, optimizer))
     {        
-        output = OptimizeConst(current_node, optimizer);
-        if (output != OPTIMIZE_RETURN_SUCCESS)
-        {
-            return output;
-        }
+        RETURN_IF_OPT_ERROR(OptimizeConst(current_node, 
+                                optimizer));
     }
     if (CheckIfChNum(0, current_node, optimizer))
     {
-        output = OptimizeConst(current_node, optimizer);
-        if (output != OPTIMIZE_RETURN_SUCCESS)
-        {
-            return output;
-        }
+        RETURN_IF_OPT_ERROR(OptimizeZero(current_node, 
+                                optimizer));
+    }
+    if (CheckIfChNum(1, current_node, optimizer))
+    {
+        RETURN_IF_OPT_ERROR(OptimizeOne(current_node, 
+                                optimizer)); 
     }
 
     return OPTIMIZE_RETURN_SUCCESS;
@@ -250,13 +341,11 @@ OptimizeBranch(ssize_t     current_node,
         return OPTIMIZE_RETURN_SUCCESS;
     }
     
-    optimize_return_e output = OPTIMIZE_RETURN_SUCCESS;
-    
     switch (NODE(current_node).node_value.lex_type)
     {
         case LEX_TYPE_OPERATOR:
-            if ((output = OptimizeChildren(current_node, optimizer)) 
-                    != OPTIMIZE_RETURN_SUCCESS) return output;
+            RETURN_IF_OPT_ERROR(OptimizeChildren(current_node, 
+                                    optimizer));
             return OptimizeOp(current_node, optimizer);
 
         case LEX_TYPE_SYNTAX:
@@ -274,3 +363,5 @@ OptimizeBranch(ssize_t     current_node,
 // ================================== UNDEF ====================================
 
 #undef NODE
+#undef RETURN_IF_TREE_ERROR
+#undef RETURN_IF_OPT_ERROR
