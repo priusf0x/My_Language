@@ -1,5 +1,3 @@
-
-
 COMMON_SOURCES = \
 		  common/buffer/buffer.cpp\
 		  common/etc/tools.cpp\
@@ -29,7 +27,10 @@ COMP_SOURCES_ALT = \
 		  back_end/compiler.cpp\
 		  back_end/compiler_main.cpp
 
-
+MIDDLE_END_SOURCES_ALT = \
+		  middle_end/optimize_main.cpp\
+		  middle_end/optimizer_ctor.cpp\
+		  middle_end/optimize.cpp
 
 INCLUDES_DIR =\
 			backend/\
@@ -50,6 +51,7 @@ SOURCE_DIR = src
 AST_SOURCES = $(COMMON_SOURCES) $(AST_SOURCES_ALT)
 GEN_SOURCES = $(COMMON_SOURCES) $(GEN_SOURCES_ALT)
 COMP_SOURCES = $(COMMON_SOURCES) $(COMP_SOURCES_ALT)
+MIDDLE_END_SOURCES = $(COMMON_SOURCES) $(MIDDLE_END_SOURCES_ALT)
 
 INCLUDES = $(addprefix -I$(SOURCE_DIR)/, $(INCLUDES_DIR))
 
@@ -67,6 +69,11 @@ TARGET_GEN = gen.out
 COMP_OBJECTS := $(addprefix $(OBJ_DIR)/, $(COMP_SOURCES:.cpp=.o))
 COMP_SOURCES := $(addprefix $(SOURCE_DIR)/, $(COMP_SOURCES))
 TARGET_COMP = compiler.out
+
+#middle-end part 
+MIDDLE_END_OBJECTS := $(addprefix $(OBJ_DIR)/, $(MIDDLE_END_SOURCES:.cpp=.o))
+MIDDLE_END_SOURCES := $(addprefix $(SOURCE_DIR)/, $(MIDDLE_END_SOURCES))
+TARGET_MD = middle_end.out
 
 # c++/c compiler options
 CC = g++ 
@@ -108,19 +115,27 @@ $(TARGET_COMP): $(COMP_OBJECTS)
 	@$(CC) $(CFLAGS) $^ -o $@
 	@echo "Linked Successfully"
 
+$(TARGET_MD): $(MIDDLE_END_OBJECTS)
+	@echo "Linking..."
+	@$(CC) $(CFLAGS) $^ -o $@
+	@echo "Linked Successfully"
+
 ast: $(TARGET_AST)
-	@./ast.out
+	@./$(TARGET_AST)
 gen: $(TARGET_GEN)
-	@./gen.out
+	@./$(TARGET_GEN)
 comp: $(TARGET_COMP)
-	@./compiler.out
+	@./$(TARGET_COMP)
+md: $(TARGET_MD)
+	@./$(TARGET_MD)
 	
-all : $(TARGET_AST) $(TARGET_GEN) $(TARGET_COMP)
-	
+all : $(TARGET_AST) $(TARGET_GEN) $(TARGET_COMP) $(TARGET_MD)
+
 clean:
 	@rm -rf logs/*
 	@rm -rf $(OBJ_DIR)
 	@rm -f $(TARGET_AST)
 	@rm -f $(TARGET_GEN)
 	@rm -f $(TARGET_COMP)
+	@rm -f $(TARGET_MD)
 	@echo "Cleaned Successfully"

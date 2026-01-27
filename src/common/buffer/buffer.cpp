@@ -81,7 +81,7 @@ BufferCtor(buffer_t*    buffer,
 }
 
 buffer_return_e
-BufferDestroy(buffer_t* buffer)
+BufferDtor(buffer_t* buffer)
 {
     if ((buffer != NULL) && (*buffer != NULL))
     {

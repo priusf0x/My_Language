@@ -59,7 +59,7 @@ CheckIfAlNum(const char* string)
 
 static void
 ReadConstFromBuffer(buffer_t  buffer,
-                    int* constant)
+                    int*      constant)
 {
     assert(buffer != NULL);
     assert(constant != NULL);
@@ -103,9 +103,9 @@ CheckIfType(buffer_t        buffer,
     assert(buffer != NULL);
     assert(state_machine != NULL);
     
-    state_t  current_state = 0;
-    char*    string = CURRENT_POSITION;
-    size_t   read_amount = 0;
+    state_t current_state = 0;
+    char*   string = CURRENT_POSITION;
+    size_t  read_amount = 0;
 
     while (true)
     {

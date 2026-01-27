@@ -67,7 +67,7 @@ ReadNode(ssize_t*   return_node,
     
     *return_node = token.index_in_tree;
 
-    if (ReadTree(*return_node,  tree, buffer) != 0)
+    if (ReadTree(*return_node, tree, buffer) != 0)
     {
         return TREE_RETURN_AST_STANDARD_ERROR;
     }
@@ -94,15 +94,17 @@ ReadTree(ssize_t    parent,
         return TREE_RETURN_AST_STANDARD_ERROR;
     }
     SkipNSymbolsB(buffer, 1);
-
-    node_s* node = &tree->nodes_array[parent]; 
  
 // reading process 
-
-    if (ReadNode(&node->left_index, tree, buffer) != 0)
+    node_s* node = &tree->nodes_array[parent]; 
+    ssize_t new_l = NO_LINK;
+    if (ReadNode(&new_l, tree, buffer) != 0)
     {
         return TREE_RETURN_AST_STANDARD_ERROR;
     }
+    
+    node = &tree->nodes_array[parent]; 
+    node->left_index = new_l;
     if (node->left_index != NO_LINK)
     {
         tree->nodes_array[node->left_index].parent_connection 
@@ -110,14 +112,18 @@ ReadTree(ssize_t    parent,
         tree->nodes_array[node->left_index].parent_index = parent;
     }
     
-    if (ReadNode(&node->right_index, tree, buffer) != 0)
+    ssize_t new_r = NO_LINK;
+    if (ReadNode(&new_r, tree, buffer) != 0)
     {
         return TREE_RETURN_AST_STANDARD_ERROR;
     }
+    
+    node = &tree->nodes_array[parent]; 
+    node->right_index = new_r;
     if (node->right_index != NO_LINK)
     {
         tree->nodes_array[node->right_index].parent_connection 
-                                                    = EDGE_DIR_LEFT;
+                                                    = EDGE_DIR_RIGHT;
         tree->nodes_array[node->right_index].parent_index = parent;
     }
 
