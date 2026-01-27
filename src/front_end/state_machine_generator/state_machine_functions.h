@@ -28,7 +28,6 @@ typedef state_machine_s* state_machine_t;
 const state_t END_STATE_FLAG = state_t (1 << (8 * sizeof(state_t) -  1));
 const size_t  MAX_CHAR_AMOUNT = 1 << 8;
 
-
 #define MACHINE_CUR_DIR "src/front_end/state_machine_generator/"
 
 const char* const OP_FILE_NAME   = MACHINE_CUR_DIR "op_machine.conf";
