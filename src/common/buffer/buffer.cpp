@@ -168,8 +168,8 @@ PrintCurrentLine(size_t   position,
     assert(buffer != NULL);
 
     size_t start_line = GetStartLine(buffer->buffer, position);
-    size_t size = (size_t) (strchrnul(buffer->buffer + position, '\n') 
-                                    - buffer->buffer) - position;
+    size_t size = (size_t) (strchrnul(buffer->buffer + start_line, '\n') 
+                                    - buffer->buffer) - start_line;
 
     fprintf(stderr, "%.*s", (int) size, 
                                 buffer->buffer + start_line);

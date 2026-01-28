@@ -7,7 +7,7 @@ ToDo
 ###
 
 - Fix Grammar | ✔️
-- Add Error System
+- Add Error System | ✔️ 
 - Add includes
 - Clean "Lexes.h" file 
 - Add arrays

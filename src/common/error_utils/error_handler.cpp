@@ -19,9 +19,17 @@ struct error_s
 
 static const error_s ERROR_LIST[]=
 {
-    GEN_ERROR(ERROR_TYPE_FORGOTTEN, "forgotten ...")
-
-
+    GEN_ERROR(ERROR_TYPE_INCORRECT_IN_GLOBAL_SCOPE, "incorrect syntax in global scope")
+    GEN_ERROR(ERROR_TYPE_FORGOTTEN_END_STMT, "forgotten end statement symbol")
+    GEN_ERROR(ERROR_TYPE_INCORRECT_STMT_SYNTAX, "incorrect syntax in local scope")
+    GEN_ERROR(ERROR_TYPE_FORGOTTEN_START_BRACKET, "forgotten bracket in the start of expression")
+    GEN_ERROR(ERROR_TYPE_FORGOTTEN_END_BRACKET, "forgotten bracket in the end of expression")
+    GEN_ERROR(ERROR_TYPE_FORGOTTEN_START_BRACKET, "forgotten start statement symbol")
+    GEN_ERROR(ERROR_TYPE_UNEXPECTED_SYNTAX, "unexpected syntax")
+    GEN_ERROR(ERROR_TYPE_ASSIGMENT_R_VALUE, "incorrect r-value")
+    GEN_ERROR(ERROR_TYPE_ASSIGMENT_L_VALUE, "incorrect l-value")
+    GEN_ERROR(ERROR_TYPE_RETURN_VOID, "returning void иди нахуй")
+    GEN_ERROR(ERROR_TYPE_UNDEFINED_ID, "undefined id refference")
 };
 const size_t error_amount = sizeof(ERROR_LIST) / sizeof(ERROR_LIST[0]);
 
@@ -46,7 +54,6 @@ HandleError(error_type_e error,
     fprintf(stderr, "%zu │ ", string_number);
     PrintCurrentLine(position, buffer);
     fprintf(stderr, "\n");
-    
 }
 
 // ================================== UNDEF =================================== 

@@ -24,15 +24,6 @@ struct scope_context_s
 };
 typedef scope_context_s* scope_t;
 
-
-#define RETURN_IF_RECURSIVE_ERROR(___X___) \
-do\
-{\
-    recursive_return_e output = ___X___;\
-    if (output != RECURSIVE_RETURN_SUCCESS)\
-    { return output; }\
-} while (0);
-
 // ================================= INIT_HELPERS =============================
 
 static recursive_return_e 
@@ -71,7 +62,7 @@ InitMachine(const char*      file_name,
 
 // ================================ INITIALIZATION ============================ 
 
-static ssize_t MakeSyntaxAnalysis(read_context_t context);
+static ssize_t DoSyntaxAnalysis(read_context_t context);
 
 recursive_return_e 
 ReadContextCtor(read_context_t* context)
@@ -133,14 +124,11 @@ ReadContextCtor(read_context_t* context)
 
     TreeCtor(&(*context)->lex_tree, 10);
 
-    ssize_t meow =  MakeSyntaxAnalysis(*context);
+    ssize_t meow =  DoSyntaxAnalysis(*context);
     (*context)->lex_tree->nodes_array[0].left_index = meow; 
-    
-    NameTableDump((*context)->name_table);
 
     TreeDump((*context)->lex_tree);
     
-
     //FIXME: tmp
     const char* default_file_name = "ast.txt"; 
     
@@ -186,6 +174,10 @@ ReadContextDtor(read_context_t* context)
                           context->status = RECURSIVE_RETURN_READ_ERROR;\
                           return NO_LINK;}\
                         } while (0)
+
+#define HANDLE_ERROR(___TYPE___, ___POS___) do {RETURN_IF_ERROR; HandleError((___TYPE___),\
+    context->file_name, context->input_buffer, (___POS___));\
+    context->status = RECURSIVE_RETURN_READ_ERROR;} while(0)
 
 static ssize_t GetAssigmentExpression(read_context_t context, scope_s* scope);
 static ssize_t GetExpression         (read_context_t context, scope_s* scope);
@@ -247,8 +239,8 @@ GetPrimary(read_context_t context,
         VECTOR_VIEW(token);
         if ((token.lex_type != LEX_TYPE_SYNTAX) 
                 || (token.value.syntax!= SYNTAX_END_BRACKET))
-        {
-            context->status = RECURSIVE_RETURN_READ_ERROR;
+        {            
+            HANDLE_ERROR(ERROR_TYPE_FORGOTTEN_END_STMT, token.buf_pos); 
             
             return NO_LINK;
         }
@@ -262,8 +254,8 @@ GetPrimary(read_context_t context,
                                                         context->name_table);
         if (name_table_number == NO_LINK)
         {
-            // TODO: error system;
-            // TODO: check if function or variable 
+            HANDLE_ERROR(ERROR_TYPE_UNDEFINED_ID, token.buf_pos); 
+
             return NO_LINK;
         }
                                         
@@ -291,7 +283,7 @@ GetPrimary(read_context_t context,
             if ((token.lex_type != LEX_TYPE_SYNTAX) 
                     || (token.value.syntax != SYNTAX_END_BRACKET))
             {
-                context->status = RECURSIVE_RETURN_READ_ERROR;
+                HANDLE_ERROR(ERROR_TYPE_FORGOTTEN_END_BRACKET, token.buf_pos); 
                 
                 return NO_LINK;
             }
@@ -393,7 +385,7 @@ GetBool(read_context_t context,
     {
         VECTOR_ERASE;
         bool_op = ADD__(token);
-        CONNECT_LEXES(bool_op, return_node, GetTerm(context, scope)); // check if variable 
+        CONNECT_LEXES(bool_op, return_node, GetTerm(context, scope)); 
         return_node = bool_op;
         VECTOR_VIEW(token);
     }
@@ -432,8 +424,17 @@ GetAssigmentExpression(read_context_t context,
     VECTOR_VIEW(assigment_token);
     ssize_t assigment_node = ADD__(assigment_token);
     VECTOR_ERASE;
+    
+    ssize_t r_value = GetExpression(context, scope);
 
-    CONNECT_LEXES(assigment_node, NO_LINK, GetExpression(context, scope));
+    if (r_value == NO_LINK)
+    {
+        HANDLE_ERROR(ERROR_TYPE_ASSIGMENT_R_VALUE, assigment_token.buf_pos);
+        
+        return NO_LINK;
+    }
+
+    CONNECT_LEXES(assigment_node, NO_LINK, r_value);
 
     return assigment_node;
 }
@@ -482,7 +483,17 @@ GetReturn(read_context_t context,
     VECTOR_VIEW(return_token);
     VECTOR_ERASE;
     ssize_t return_node = ADD__(return_token);
-    CONNECT_LEXES(return_node, NO_LINK, GetExpression(context, scope));
+
+    ssize_t return_value = GetExpression(context, scope);
+
+    if (return_value == NO_LINK)  
+    {
+        HANDLE_ERROR(ERROR_TYPE_RETURN_VOID, return_token.buf_pos); 
+
+        return NO_LINK;
+    }
+    
+    CONNECT_LEXES(return_node, NO_LINK, return_value);
 
     return return_node;
 }
@@ -510,8 +521,8 @@ GetInitVar(read_context_t context,
     VECTOR_VIEW(id_token);
     if (id_token.lex_type != LEX_TYPE_ID)
     {   
-        context->status = RECURSIVE_RETURN_READ_ERROR;
-        
+        HANDLE_ERROR(ERROR_TYPE_ASSIGMENT_L_VALUE, id_token.buf_pos); // TODO: add check if array or el
+
         return NO_LINK;
     }
     VECTOR_ERASE;
@@ -529,7 +540,16 @@ GetInitVar(read_context_t context,
             && (a_token.value.op == OPERATOR_ASSIGNMENT))
     {
         VECTOR_ERASE;
-        CONNECT_LEXES(var_kw_node, NO_LINK, GetExpression(context, scope));
+        ssize_t r_value = GetExpression(context, scope);
+
+        if (r_value == NO_LINK)
+        {
+            HANDLE_ERROR(ERROR_TYPE_ASSIGMENT_R_VALUE, id_token.buf_pos);
+            
+            return NO_LINK;
+        }
+
+        CONNECT_LEXES(var_kw_node, NO_LINK, r_value);
     }
     
     CONNECT_LEXES(var_kw_node, var_node, NO_LINK);
@@ -557,7 +577,7 @@ GetFuncDefinition(read_context_t context,
 
     if (id_token.lex_type != LEX_TYPE_ID)
     {
-        context->status = RECURSIVE_RETURN_READ_ERROR;
+        HANDLE_ERROR(ERROR_TYPE_UNEXPECTED_SYNTAX, function_kw_token.buf_pos);
         
         return NO_LINK;
     } 
@@ -568,7 +588,7 @@ GetFuncDefinition(read_context_t context,
     if ((syntax_token.lex_type != LEX_TYPE_SYNTAX)
             || (syntax_token.value.syntax != SYNTAX_START_BRACKET))
     {
-        context->status = RECURSIVE_RETURN_READ_ERROR;
+        HANDLE_ERROR(ERROR_TYPE_FORGOTTEN_START_STMT, function_kw_token.buf_pos);
         
         return NO_LINK;
     }
@@ -612,7 +632,7 @@ GetFuncDefinition(read_context_t context,
     if ((syntax_token.lex_type != LEX_TYPE_SYNTAX)
             || (syntax_token.value.syntax != SYNTAX_END_BRACKET))
     {
-        context->status = RECURSIVE_RETURN_READ_ERROR;
+        HANDLE_ERROR(ERROR_TYPE_FORGOTTEN_END_STMT, function_kw_token.buf_pos);
         
         return NO_LINK;
     }
@@ -643,7 +663,7 @@ GetIfWhile(read_context_t context,
     if ((syntax_token.lex_type != LEX_TYPE_SYNTAX)
             || (syntax_token.value.syntax != SYNTAX_START_BRACKET))
     {
-        context->status = RECURSIVE_RETURN_READ_ERROR;
+        HANDLE_ERROR(ERROR_TYPE_FORGOTTEN_START_BRACKET, function_kw_token.buf_pos);
         
         return NO_LINK;
     }
@@ -655,7 +675,8 @@ GetIfWhile(read_context_t context,
     if ((syntax_token.lex_type != LEX_TYPE_SYNTAX)
             || (syntax_token.value.syntax != SYNTAX_END_BRACKET))
     {
-        context->status = RECURSIVE_RETURN_READ_ERROR;
+        HANDLE_ERROR(ERROR_TYPE_FORGOTTEN_END_BRACKET, 
+                        function_kw_token.buf_pos);
         
         return NO_LINK;
     }
@@ -693,9 +714,11 @@ GetStatement(read_context_t context,
             if ((token.lex_type != LEX_TYPE_SYNTAX)
                     || (token.value.syntax != SYNTAX_STATEMENT_CONNECTOR)) 
             {
-              context->status = RECURSIVE_RETURN_READ_ERROR;
+                node_s* array = context->lex_tree->nodes_array;
+                size_t error_stmt = array[return_node].node_value.buf_pos;
+                HANDLE_ERROR(ERROR_TYPE_FORGOTTEN_END_STMT, error_stmt);
 
-              return NO_LINK;
+                return NO_LINK;
             }
             VECTOR_ERASE;
         }
@@ -707,7 +730,9 @@ GetStatement(read_context_t context,
             if ((token.lex_type != LEX_TYPE_SYNTAX)
                  || (token.value.syntax != SYNTAX_STATEMENT_CONNECTOR))
             {
-                context->status = RECURSIVE_RETURN_READ_ERROR;
+                node_s* array = context->lex_tree->nodes_array;
+                size_t error_stmt = array[return_node].node_value.buf_pos;
+                HANDLE_ERROR(ERROR_TYPE_FORGOTTEN_END_STMT, error_stmt);
 
                 return NO_LINK;
             }
@@ -715,7 +740,7 @@ GetStatement(read_context_t context,
         }
         else
         {
-            context->status = RECURSIVE_RETURN_READ_ERROR;
+            HANDLE_ERROR(ERROR_TYPE_INCORRECT_STMT_SYNTAX, token.buf_pos);
         
             return NO_LINK;
         }
@@ -725,11 +750,6 @@ GetStatement(read_context_t context,
     {
         VECTOR_ERASE;
         scope_s local_scope = *scope;
-        if (scope->is_global)
-        {
-            local_scope.memory_size = 0;
-            local_scope.is_global = false;
-        }
         
         ssize_t statement_connector = STMT_CON;
         CONNECT_LEXES(statement_connector, NO_LINK, 
@@ -750,10 +770,7 @@ GetStatement(read_context_t context,
             VECTOR_VIEW(token);
         }
 
-        if (!scope->is_global) // for correct stack frames work
-        {
-            scope->memory_size = local_scope.memory_size;
-        }
+        scope->memory_size = local_scope.memory_size;
 
         VECTOR_ERASE;
     }
@@ -765,7 +782,9 @@ GetStatement(read_context_t context,
         if ((token.lex_type != LEX_TYPE_SYNTAX)
              || (token.value.syntax != SYNTAX_STATEMENT_CONNECTOR))
         {
-            context->status = RECURSIVE_RETURN_READ_ERROR;
+            node_s* array = context->lex_tree->nodes_array;
+            size_t error_stmt = array[return_node].node_value.buf_pos;
+            HANDLE_ERROR(ERROR_TYPE_FORGOTTEN_END_STMT, error_stmt);
             
             return NO_LINK;
         }
@@ -779,7 +798,7 @@ static ssize_t
 GetGlobal(read_context_t context,
           scope_s*       scope)
 {
-    assert(context);
+    assert(context != NULL);
     
     token_s token = {};
     VECTOR_VIEW(token);
@@ -800,30 +819,31 @@ GetGlobal(read_context_t context,
             if ((token.lex_type != LEX_TYPE_SYNTAX)
                     || (token.value.syntax != SYNTAX_STATEMENT_CONNECTOR)) 
             {
-              context->status = RECURSIVE_RETURN_READ_ERROR;
+                node_s* array = context->lex_tree->nodes_array;
+                size_t error_stmt = array[return_node].node_value.buf_pos;
+                HANDLE_ERROR(ERROR_TYPE_FORGOTTEN_END_STMT, error_stmt);
 
-              return NO_LINK;
+                return NO_LINK;
             }
             VECTOR_ERASE;
         }
         else 
         {
-            context->status = RECURSIVE_RETURN_READ_ERROR;
-            HandleError(ERROR_TYPE_FORGOTTEN, context->file_name, 
-                            context->input_buffer, context->last_read_pos);
+            HANDLE_ERROR(ERROR_TYPE_INCORRECT_IN_GLOBAL_SCOPE, 
+                            context->last_read_pos);
         }
     }
     else 
     {
-        context->status = RECURSIVE_RETURN_READ_ERROR;
-        // TODO: error 
+        HANDLE_ERROR(ERROR_TYPE_INCORRECT_IN_GLOBAL_SCOPE, 
+                        context->last_read_pos);
     }
 
     return return_node;
 }
 
 static ssize_t 
-MakeSyntaxAnalysis(read_context_t context)
+DoSyntaxAnalysis(read_context_t context)
 {
     assert(context != NULL);
 
@@ -857,4 +877,6 @@ MakeSyntaxAnalysis(read_context_t context)
 // =============================== UNDEFINITION ===============================
 
 #undef RETURN_IF_ERROR
-#undef RETURN_IF_RECURSIVE_ERROR
+#undef VECTOR_ERASE
+#undef VECTOR_VIEW
+#undef HANDLE_ERROR
