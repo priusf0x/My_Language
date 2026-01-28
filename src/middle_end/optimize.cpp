@@ -248,12 +248,19 @@ OptimizeZero(ssize_t     current_node,
                                 optimizer) ? node.right_index : node.left_index; 
     operator_type_e op = node.node_value.value.op;
 
-    if ((op == OPERATOR_PLUS) || (op == OPERATOR_MINUS))
+    if (op == OPERATOR_PLUS)
     {
-        edge_dir_e dir = node.parent_connection == EDGE_DIR_LEFT ?
-                                EDGE_DIR_RIGHT : EDGE_DIR_RIGHT;
         RETURN_IF_TREE_ERROR(ForceConnect(optimizer->ast_tree, 
-                                non_zero_node, node.parent_index, dir));
+                                non_zero_node, node.parent_index, node.parent_connection));
+    }   
+    else if (op == OPERATOR_MINUS)
+    {   
+        edge_dir_e dir = node.parent_connection;
+        if (dir == EDGE_DIR_LEFT)
+        {
+            RETURN_IF_TREE_ERROR(ForceConnect(optimizer->ast_tree, 
+                                non_zero_node, node.parent_index, EDGE_DIR_LEFT));
+        }
     }
     else if (op == OPERATOR_MUL)
     {

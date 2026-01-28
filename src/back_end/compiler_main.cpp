@@ -3,7 +3,7 @@
 #include "lexes.h"
 #include "tree.h"
 
-static const char* AST_FILE =    "ast.txt";
+static const char* AST_FILE =    "ast_optimized.txt";
 static const char* OUTPUT_NAME = "compiled.asm";
 
 int main(void)

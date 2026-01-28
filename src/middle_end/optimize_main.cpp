@@ -13,6 +13,7 @@ int main()
     OptimizeAST(optimizer);
     
     TreeDump(optimizer->ast_tree);
+    TreeBaseDump(optimizer->ast_tree, OUPUT_FILE_NAME);
 
     OptimizerDtor(&optimizer);
     

@@ -30,6 +30,7 @@ static const error_s ERROR_LIST[]=
     GEN_ERROR(ERROR_TYPE_ASSIGMENT_L_VALUE, "incorrect l-value")
     GEN_ERROR(ERROR_TYPE_RETURN_VOID, "returning void иди нахуй")
     GEN_ERROR(ERROR_TYPE_UNDEFINED_ID, "undefined id refference")
+    GEN_ERROR(ERROR_TYPE_INCORRECT_ARGS_AMOUNT, "incorrect arguments amount")
 };
 const size_t error_amount = sizeof(ERROR_LIST) / sizeof(ERROR_LIST[0]);
 

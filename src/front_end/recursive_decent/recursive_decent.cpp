@@ -262,6 +262,7 @@ GetPrimary(read_context_t context,
         name_s name = context->name_table->name_array[name_table_number];
         token.value.id.memory_location = (ssize_t) name.info_num;
         token.value.id.is_global = name.is_global;
+        size_t buffer_position = token.buf_pos;
 
         ssize_t id_node = ADD__(token);
         
@@ -285,6 +286,17 @@ GetPrimary(read_context_t context,
             {
                 HANDLE_ERROR(ERROR_TYPE_FORGOTTEN_END_BRACKET, token.buf_pos); 
                 
+                return NO_LINK;
+            }
+
+            
+            size_t real_arg_count = CountTypeNode(LEX_TYPE_SYNTAX, 
+                                        SYNTAX_ARG_CONNECTOR, id_node, context->lex_tree);
+        
+            if (real_arg_count != (size_t) name.info_num)
+            {
+                HANDLE_ERROR(ERROR_TYPE_INCORRECT_ARGS_AMOUNT, buffer_position);
+
                 return NO_LINK;
             }
 

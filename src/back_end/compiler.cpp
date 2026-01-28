@@ -1,6 +1,7 @@
 #include "compiler.h"
 
 #include <assert.h>
+#include <endian.h>
 
 #include "lexes.h"
 #include "tree.h"
@@ -47,7 +48,42 @@ GetVarAdress(ssize_t    lex,
 static compiler_return_e 
 CompileStatement(ssize_t lex, compiler_t compiler);
 
+static compiler_return_e
+CompileVar(ssize_t    lex,
+           compiler_t compiler);
+
 // =============================== MAIN_CYCLE =================================
+
+static compiler_return_e // Little bypass for compiling globals
+SetGlobalVariables(ssize_t    lex,
+                   compiler_t compiler)
+{
+    assert(compiler != NULL);
+
+    if (lex == NO_LINK)
+    {
+        return COMPILER_RETURN_SUCCESS;
+    }
+
+    node_s* array = compiler->compiler_tree->nodes_array;
+    node_s node = array[lex];
+    token_value_u value = node.node_value.value;
+
+    if ((node.node_value.lex_type == LEX_TYPE_KEY_WORD)
+            && (value.key_word == KEY_WORD_VAR))
+    {
+        node_s new_node = array[node.left_index];
+        if (new_node.node_value.value.id.is_global)
+        {
+            CHECK_OUTPUT(CompileVar(lex, compiler));
+        }
+    }
+
+    CHECK_OUTPUT(SetGlobalVariables(node.left_index, compiler));
+    CHECK_OUTPUT(SetGlobalVariables(node.right_index, compiler));
+
+    return COMPILER_RETURN_SUCCESS;
+}
 
 static compiler_return_e 
 SetASMHeader(compiler_t compiler)
@@ -61,6 +97,8 @@ SetASMHeader(compiler_t compiler)
         "pop  RCX \n"; // local variables memory space
 
     fprintf(compiler->file_output, "%s", start_processor_settings);
+
+    CHECK_OUTPUT(SetGlobalVariables(0, compiler));
 
     const char* start_code = "call main:\n"\
                              "hlt\n\n";
@@ -144,9 +182,9 @@ CompileStatement(ssize_t    lex,
 
 // ========================= KEY_WORD_COMPILATION =============================
 
-static compiler_return_e 
-CompileVarKW(ssize_t    lex,
-             compiler_t compiler)
+static compiler_return_e
+CompileVar(ssize_t    lex,
+           compiler_t compiler)
 {
     assert(compiler != NULL);
 
@@ -161,6 +199,24 @@ CompileVarKW(ssize_t    lex,
                     "pop ");
         GetVarAdress(node.left_index, compiler);
         fprintf(compiler->file_output, "\n");
+    }
+    
+    return COMPILER_RETURN_SUCCESS;
+}
+
+static compiler_return_e 
+CompileLocalVarKW(ssize_t    lex,
+                  compiler_t compiler)
+{
+    assert(compiler != NULL);
+    
+    node_s* array = compiler->compiler_tree->nodes_array;
+    node_s node = array[lex];
+    node = array[node.left_index];
+
+    if ((!node.node_value.value.id.is_global))
+    {
+        return CompileVar(lex, compiler);
     }
 
     return COMPILER_RETURN_SUCCESS;
@@ -377,6 +433,7 @@ CompileFunction(ssize_t    lex,
     lex = array[lex].right_index;
     compiler_return_e output = CompileBranch(lex, compiler);
     CHECK_OUTPUT(output);
+    fprintf(compiler->file_output, "hlt\n");
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -413,12 +470,12 @@ CompileKeyWord(ssize_t    lex,
     };
     key_word_compile kw_asm[] = 
     {
-        {KEY_WORD_UNDEFINED, NULL           },
-        {KEY_WORD_IF,        CompileIfKW    },
-        {KEY_WORD_VAR,       CompileVarKW   },
-        {KEY_WORD_WHILE,     CompileWhileKW },
-        {KEY_WORD_FUNCTION,  CompileFunction},
-        {KEY_WORD_RETURN,    CompileReturn  }
+        {KEY_WORD_UNDEFINED, NULL             },
+        {KEY_WORD_IF,        CompileIfKW      },
+        {KEY_WORD_VAR,       CompileLocalVarKW},
+        {KEY_WORD_WHILE,     CompileWhileKW   },
+        {KEY_WORD_FUNCTION,  CompileFunction  },
+        {KEY_WORD_RETURN,    CompileReturn    }
     };
 
     node_s node = compiler->compiler_tree->nodes_array[lex];
@@ -585,7 +642,7 @@ CompileOp(ssize_t    lex,
         {OPERATOR_LESS,          CompileBelow    },
         {OPERATOR_LESS_OR_EQUAL, CompileBelowOrEq}
     };
-// TODO: error handler
+
     node_s node = compiler->compiler_tree->nodes_array[lex];
 
     return op_asm[node.node_value.value.op]
