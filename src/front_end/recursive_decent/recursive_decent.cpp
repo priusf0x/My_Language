@@ -10,6 +10,7 @@
 #include "name_space.h"
 #include "recursive_decent_defines.h"
 #include "tools.h"
+#include "error_handler.h"
 #include "state_machine_functions.h"
 #include "vector.h"
 #include "tree.h"
@@ -70,7 +71,7 @@ InitMachine(const char*      file_name,
 
 // ================================ INITIALIZATION ============================ 
 
-static ssize_t GetGlobal(read_context_t context);
+static ssize_t MakeSyntaxAnalysis(read_context_t context);
 
 recursive_return_e 
 ReadContextCtor(read_context_t* context)
@@ -102,6 +103,7 @@ ReadContextCtor(read_context_t* context)
 
         return RECURSIVE_RETURN_BUFFER_ERROR;
     }
+    (*context)->file_name = INPUT_FILE_NAME;
 
     const size_t name_table_size = 10;
     if (InitNameTable(&(*context)->name_table, name_table_size) != 0)
@@ -131,12 +133,10 @@ ReadContextCtor(read_context_t* context)
 
     TreeCtor(&(*context)->lex_tree, 10);
 
-    ssize_t meow =  GetGlobal(*context);
+    ssize_t meow =  MakeSyntaxAnalysis(*context);
     (*context)->lex_tree->nodes_array[0].left_index = meow; 
     
     NameTableDump((*context)->name_table);
-
-    fprintf(stderr, "%zu", (*context)->last_read_pos);
 
     TreeDump((*context)->lex_tree);
     
@@ -268,7 +268,7 @@ GetPrimary(read_context_t context,
         }
                                         
         name_s name = context->name_table->name_array[name_table_number];
-        token.value.id.number_in_scope = (ssize_t) name.info_num;
+        token.value.id.memory_location = (ssize_t) name.info_num;
         token.value.id.is_global = name.is_global;
 
         ssize_t id_node = ADD__(token);
@@ -519,9 +519,8 @@ GetInitVar(read_context_t context,
 
     node_s* node_array = context->lex_tree->nodes_array;
     node_array[var_node].node_value.value.id.is_global = scope->is_global;
-    node_array[var_node].node_value.value.id.number_in_scope 
-                                                = (ssize_t)scope->variable_count;
-    fprintf(stderr, "%d", scope->is_global);
+    node_array[var_node].node_value.value.id.memory_location 
+                                                = (ssize_t)scope->memory_size;
     InitNewVar(var_node, scope, context);
 
     token_s a_token = {};             
@@ -580,7 +579,7 @@ GetFuncDefinition(read_context_t context,
 
     scope_s local_scope = *scope; //  need to make error if defined in local scope 
     local_scope.is_global = false;
-    local_scope.variable_count = 0;
+    local_scope.memory_size = 0;
 
     ssize_t var_node = GetInitVar(context, &local_scope);
     if (var_node != NO_LINK)
@@ -607,7 +606,7 @@ GetFuncDefinition(read_context_t context,
     }
     
     context->name_table->name_array[function_name].info_num 
-        = local_scope.variable_count; // setting amount of functions args 
+        = (ssize_t) local_scope.memory_size; // setting amount of functions args 
 
     VECTOR_VIEW(syntax_token);
     if ((syntax_token.lex_type != LEX_TYPE_SYNTAX)
@@ -622,7 +621,7 @@ GetFuncDefinition(read_context_t context,
     CONNECT_LEXES(function_kw_node, id_node, GetStatement(context, &local_scope));
     node_array = context->lex_tree->nodes_array;
     node_array[id_node].node_value.value
-        .id.number_in_scope = (ssize_t) local_scope.variable_count;
+        .id.memory_location = (ssize_t) local_scope.memory_size;
 
     return function_kw_node;
 }
@@ -700,10 +699,6 @@ GetStatement(read_context_t context,
             }
             VECTOR_ERASE;
         }
-        else if (token.value.key_word == KEY_WORD_FUNCTION)
-        {
-            return_node = GetFuncDefinition(context, scope);
-        }
         else if (token.value.key_word == KEY_WORD_RETURN)
         {
             return_node = GetReturn(context, scope);
@@ -732,7 +727,7 @@ GetStatement(read_context_t context,
         scope_s local_scope = *scope;
         if (scope->is_global)
         {
-            local_scope.variable_count = 0;
+            local_scope.memory_size = 0;
             local_scope.is_global = false;
         }
         
@@ -757,7 +752,7 @@ GetStatement(read_context_t context,
 
         if (!scope->is_global) // for correct stack frames work
         {
-            scope->variable_count = local_scope.variable_count;
+            scope->memory_size = local_scope.memory_size;
         }
 
         VECTOR_ERASE;
@@ -781,7 +776,54 @@ GetStatement(read_context_t context,
 }
 
 static ssize_t 
-GetGlobal(read_context_t context)
+GetGlobal(read_context_t context,
+          scope_s*       scope)
+{
+    assert(context);
+    
+    token_s token = {};
+    VECTOR_VIEW(token);
+
+    ssize_t return_node = NO_LINK;
+
+    if (token.lex_type == LEX_TYPE_KEY_WORD)
+    {
+        if (token.value.key_word == KEY_WORD_FUNCTION)
+        {
+            return_node = GetFuncDefinition(context, scope);
+        }
+        else if (token.value.key_word == KEY_WORD_VAR)
+        {
+            return_node = GetInitVar(context, scope);
+
+            VECTOR_VIEW(token);
+            if ((token.lex_type != LEX_TYPE_SYNTAX)
+                    || (token.value.syntax != SYNTAX_STATEMENT_CONNECTOR)) 
+            {
+              context->status = RECURSIVE_RETURN_READ_ERROR;
+
+              return NO_LINK;
+            }
+            VECTOR_ERASE;
+        }
+        else 
+        {
+            context->status = RECURSIVE_RETURN_READ_ERROR;
+            HandleError(ERROR_TYPE_FORGOTTEN, context->file_name, 
+                            context->input_buffer, context->last_read_pos);
+        }
+    }
+    else 
+    {
+        context->status = RECURSIVE_RETURN_READ_ERROR;
+        // TODO: error 
+    }
+
+    return return_node;
+}
+
+static ssize_t 
+MakeSyntaxAnalysis(read_context_t context)
 {
     assert(context != NULL);
 
@@ -789,10 +831,10 @@ GetGlobal(read_context_t context)
     VECTOR_VIEW(token);
     ssize_t connector_node = STMT_CON;
 
-    scope_s global_scope = {.scope = NO_LINK, .variable_count = 0, 
+    scope_s global_scope = {.scope = NO_LINK, .memory_size = 0, 
                                 .is_global = true};
     CONNECT_LEXES(connector_node, NO_LINK, 
-                        GetStatement(context, &global_scope));
+                        GetGlobal(context, &global_scope));
 
     ssize_t return_node = connector_node;
     ssize_t last_connector_node = connector_node;
@@ -802,7 +844,7 @@ GetGlobal(read_context_t context)
     {
         connector_node = STMT_CON;
         CONNECT_LEXES(connector_node, NO_LINK, 
-                            GetStatement(context, &global_scope));
+                            GetGlobal(context, &global_scope));
         CONNECT_LEXES(last_connector_node, connector_node, 
                         NO_LINK);
         last_connector_node = connector_node;

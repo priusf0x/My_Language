@@ -1,9 +1,8 @@
-G = {stmt} * 
+G = var_init ";" | func_def 
 
 stmt = if             |
        while          |
        var_init  ";"  |
-       func_def       |
        return    ";"  |
        '{'{stmt} *'}' |
        expr      ";"  |

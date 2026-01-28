@@ -164,7 +164,7 @@ IdentifyLex(token_s*       token,
     {  
         token->lex_type = LEX_TYPE_ID;
         ReadIdFromBuffer(buffer, &token->value.id.id);
-        token->value.id.number_in_scope = NO_LINK;
+        token->value.id.memory_location = NO_LINK;
     }
     else
     {

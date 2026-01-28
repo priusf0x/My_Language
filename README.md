@@ -6,8 +6,9 @@ ToDo
 
 ###
 
-- Fix Grammar
-- Add includes 
+- Fix Grammar | ✔️
+- Add Error System
+- Add includes
 - Clean "Lexes.h" file 
 - Add arrays
 - Add Emoji dictionary 

@@ -50,7 +50,7 @@ ReadNode(ssize_t*   return_node,
         SkipSpacesB(buffer);
         token.node_value.value.id.is_global = (int) ReadLongB(buffer);
         SkipSpacesB(buffer);
-        token.node_value.value.id.number_in_scope = ReadLongB(buffer);
+        token.node_value.value.id.memory_location = ReadLongB(buffer);
         SkipSpacesB(buffer);
     }
     else 

@@ -102,7 +102,7 @@ InitNewVar(ssize_t        declaration,
 
     name_s name = {.string = string, .is_function = false,
                    .is_global = scope->is_global, 
-                   .info_num = (ssize_t) scope->variable_count,
+                   .info_num = (ssize_t) scope->memory_size,
                    .prev_element = scope->scope};
 
     if (AddNameInTable(&name, &scope->scope, context->name_table) != 0)
@@ -110,7 +110,7 @@ InitNewVar(ssize_t        declaration,
         context->status = RECURSIVE_RETURN_NAME_SPACE_ERROR;
     }
 
-    scope->variable_count++;
+    scope->memory_size++;
 }
 
 void

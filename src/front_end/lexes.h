@@ -94,7 +94,7 @@ const char* const SYNTAX_NAMINGS[] =
 struct id_s 
 {
     string_s id;
-    ssize_t  number_in_scope;
+    ssize_t  memory_location;
     bool     is_function;
     bool     is_global;
 };

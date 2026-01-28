@@ -36,20 +36,21 @@ BufferDtor(buffer_t* buffer);
 
 void 
 SkipSpacesB(buffer_t buffer);
-
 void 
 SkipNSymbolsB(buffer_t buffer,
               size_t   n);
-
 bool 
 CheckIfSymbolB(char     character,
                buffer_t buffer);
-
 long int 
 ReadLongB(buffer_t buffer);
-
 int
 StrNCmpB(const char* string, size_t number, buffer_t buffer);
+size_t
+GetLineB(size_t position, buffer_t buffer);
+void 
+PrintCurrentLine(size_t position, buffer_t buffer);
+
 
 // ================================= DUMP =====================================
 

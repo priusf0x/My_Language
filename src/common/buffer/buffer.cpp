@@ -146,8 +146,35 @@ StrNCmpB(const char* string,
          size_t      number,
          buffer_t    buffer)
 {
-    return strncmp(string, buffer->buffer + buffer->current_position, number);  
+    return strncmp(string, buffer->buffer 
+                    + buffer->current_position, number);  
 }   
+
+size_t
+GetLineB(size_t   position,
+         buffer_t buffer)
+{
+    assert(buffer != NULL);
+
+    size_t n_amount = GetCharAmount('\n', buffer->buffer, position);
+
+    return n_amount + 1;
+}
+
+void 
+PrintCurrentLine(size_t   position,
+                 buffer_t buffer)
+{
+    assert(buffer != NULL);
+
+    size_t start_line = GetStartLine(buffer->buffer, position);
+    size_t size = (size_t) (strchrnul(buffer->buffer + position, '\n') 
+                                    - buffer->buffer) - position;
+
+    fprintf(stderr, "%.*s", (int) size, 
+                                buffer->buffer + start_line);
+}
+
 
 // =============================== BUFFER_DUMP ================================
 

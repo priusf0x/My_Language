@@ -10,7 +10,9 @@ void  SystemCall(const char* command_tmp, ... );
 bool  CheckIfInteger(double number);
 bool  CheckIfEqual(double number_1, double number_2);
 ssize_t GetFileSize(const char* file_name);
+size_t GetCharAmount(int c, const char* string, size_t max);
+size_t GetStartLine(const char* string, size_t pos);    
 
-#define MEOW fprintf(stderr, "meow in %d", __LINE__);
+#define MEOW do{ fprintf(stderr, "meow in %d", __LINE__); } while(0)
 
 #endif // TOOLS_H

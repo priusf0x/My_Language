@@ -34,12 +34,13 @@ struct read_context_s
     name_table_t       name_table;
     recursive_return_e status;
     size_t             last_read_pos;
+    const char*        file_name;
 };
 
 struct scope_s
 {
     ssize_t scope;
-    size_t  variable_count;
+    size_t  memory_size;
     bool    is_global;
 };
 

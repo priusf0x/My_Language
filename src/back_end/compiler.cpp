@@ -33,12 +33,12 @@ GetVarAdress(ssize_t    lex,
     if (value.is_global)
     {
         fprintf(compiler->file_output, 
-                    "[R0X + %ld]", value.number_in_scope);
+                    "[R0X + %ld]", value.memory_location);
     }
     else 
     {
         fprintf(compiler->file_output, 
-                    "[RBX - %ld]", value.number_in_scope);
+                    "[RBX - %ld]", value.memory_location);
     }
 
     return COMPILER_RETURN_SUCCESS;  
@@ -358,7 +358,7 @@ SetOverhead(ssize_t    lex,
                 "push RBX\n"
                 "push %ld\n"
                 "sub\n"
-                "pop RCX\n", id.number_in_scope);
+                "pop RCX\n", id.memory_location);
 
     SetArguments(lex, compiler);
 

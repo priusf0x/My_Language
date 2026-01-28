@@ -1,6 +1,7 @@
 #include "tools.h"
 
 #include <assert.h>
+#include <cstddef>
 #include <time.h>
 #include <math.h>
 #include <string.h>
@@ -99,4 +100,44 @@ GetFileSize(const char* file_name)
     ssize_t char_number = file_stat.st_size;
     
     return char_number;
+}
+
+size_t
+GetCharAmount(int         c,
+              const char* string,
+              size_t      max)
+{
+    assert(string != NULL);
+
+    size_t char_amount = 0;
+    const char* pos = string;
+
+    while (((pos = strchr(pos, c)) != NULL)
+                && ((unsigned long) (pos - string) < (unsigned long) max))
+    {
+        char_amount++;
+        pos++;
+    }
+
+    return char_amount;
+}
+
+size_t
+GetStartLine(const char* string,
+             size_t      pos)
+{
+    assert(string != NULL);
+
+    if (pos == 0)
+    {
+        return 0;
+    }
+
+    while ((*(string + pos) != '\n')
+                && (pos > 0))
+    {
+        pos--;
+    }
+
+    return pos + 1;
 }

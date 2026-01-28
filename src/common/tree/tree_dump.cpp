@@ -71,7 +71,7 @@ PrintNode(tree_t  tree,
                     LEX_TYPE_ID, (int) value.id.string_size,
                     (int) value.id.string_size, value.id.string_source,
                     value.is_function, value.is_global,
-                    value.number_in_scope);
+                    value.memory_location);
     }
     else 
     {
@@ -186,7 +186,7 @@ PrintElementInString(const token_s* token,
                         token->value.id.id.string_source, 
                         token->value.id.is_function,
                         token->value.id.is_global,
-                        token->value.id.number_in_scope);
+                        token->value.id.memory_location);
             
             break;
 
