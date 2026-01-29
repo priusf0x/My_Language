@@ -107,7 +107,7 @@ InitNewVar(ssize_t        declaration,
 
     if (AddNameInTable(&name, &scope->scope, context->name_table) != 0)
     {
-        context->status = RECURSIVE_RETURN_NAME_SPACE_ERROR;
+        context->status = RECURSIVE_RETURN_NAME_TABLE_ERROR;
     }
 
     scope->memory_size++;
@@ -132,7 +132,7 @@ InitNewFunction(ssize_t        declaration,
 
     if (AddNameInTable(&name, &scope->scope, context->name_table) != 0)
     {
-        context->status = RECURSIVE_RETURN_NAME_SPACE_ERROR;
+        context->status = RECURSIVE_RETURN_NAME_TABLE_ERROR;
     }
 }
 
