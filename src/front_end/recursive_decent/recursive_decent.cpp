@@ -15,8 +15,6 @@
 #include "vector.h"
 #include "tree.h"
 
-const char* INPUT_FILE_NAME = "pletnev.zov";
-
 struct scope_context_s
 {
     ssize_t scope;
@@ -62,79 +60,75 @@ InitMachine(const char*      file_name,
 
 // ================================ INITIALIZATION ============================ 
 
-static ssize_t DoSyntaxAnalysis(read_context_t context);
-
 recursive_return_e 
-ReadContextCtor(read_context_t* context)
+ReadContextCtor(read_context_t* context,
+                const char*     input_file_name)
 {
     assert(context != NULL);
+    assert(input_file_name != NULL);
+
+    const size_t start_tree_size = 50;
+    const size_t start_vector_size = 10;
+    const size_t name_table_size = 10;
+    
+    recursive_return_e output = RECURSIVE_RETURN_SUCCESS;
 
     *context = (read_context_t) calloc(1, sizeof(read_context_s));
 
     if (*context == NULL)
     {
-        return RECURSIVE_RETURN_ALLOCATION_ERROR;
+        output = RECURSIVE_RETURN_ALLOCATION_ERROR;
+        goto error;
     }
 
-    const size_t start_vector_size = 10;
     if (VectorInit(&(*context)->lex_vector, start_vector_size,
                         sizeof(token_s)) != 0)
     {
-        free(*context);
-        *context = NULL;
-
-        return RECURSIVE_RETURN_VECTOR_ERROR;
+        output = RECURSIVE_RETURN_VECTOR_ERROR;
+        goto error;
     }
 
-    if(BufferCtor(&(*context)->input_buffer, INPUT_FILE_NAME) != 0)
+    if(BufferCtor(&(*context)->input_buffer, input_file_name) != 0)
     {
-        VectorDestroy(&(*context)->lex_vector);
-        free(*context);
-        *context = NULL;
-
-        return RECURSIVE_RETURN_BUFFER_ERROR;
+        output = RECURSIVE_RETURN_BUFFER_ERROR;
+        goto error;    
     }
-    (*context)->file_name = INPUT_FILE_NAME;
+    (*context)->file_name = input_file_name;
 
-    const size_t name_table_size = 10;
     if (InitNameTable(&(*context)->name_table, name_table_size) != 0)
     {
-        BufferDtor(&(*context)->input_buffer);
-        VectorDestroy(&(*context)->lex_vector);
-        free(*context);
-        *context = NULL;
-        
-        return RECURSIVE_RETURN_NAME_SPACE_ERROR;
+        output = RECURSIVE_RETURN_NAME_TABLE_ERROR;
+        goto error;
+    }
+    
+    if (TreeCtor(&(*context)->lex_tree, start_tree_size) != 0)
+    {
+        output = RECURSIVE_RETURN_TREE_ERROR;
+        goto error; 
     }
 
     if (InitMachine(KW_FILE_NAME, &(*context)->key_word_machine) 
         || InitMachine(OP_FILE_NAME, &(*context)->operator_machine)
         || InitMachine(SYNT_FILE_NAME, &(*context)->syntax_machine))
     {
-        BufferDtor(&(*context)->input_buffer);
-        VectorDestroy(&(*context)->lex_vector);
-        DestroyNameTable(&(*context)->name_table);
-        free(*context);
-        *context = NULL;
-
-        return RECURSIVE_RETURN_STATE_MACHINE_ERROR;
+        output = RECURSIVE_RETURN_STATE_MACHINE_ERROR;
+        goto error;
     }
-        // FIXME: add goto command for destroying copypast, add file_name manager
-    DivideInLexems(*context);
-
-    TreeCtor(&(*context)->lex_tree, 10);
-
-    ssize_t meow =  DoSyntaxAnalysis(*context);
-    (*context)->lex_tree->nodes_array[0].left_index = meow; 
-
-    TreeDump((*context)->lex_tree);
-    
-    //FIXME: tmp
-    const char* default_file_name = "ast.txt"; 
-    
-    TreeBaseDump((*context)->lex_tree, default_file_name);
-    
+       
     return RECURSIVE_RETURN_SUCCESS;
+
+error:
+    StateMachineDtor(&(*context)->key_word_machine);
+    StateMachineDtor(&(*context)->operator_machine);
+    StateMachineDtor(&(*context)->syntax_machine);
+    BufferDtor(&(*context)->input_buffer);
+    VectorDestroy(&(*context)->lex_vector);
+    TreeDtor(&(*context)->lex_tree);
+    DestroyNameTable(&(*context)->name_table); 
+    free(*context);
+    *context = NULL;
+    
+    return output;
 } 
 
 recursive_return_e
@@ -157,6 +151,21 @@ ReadContextDtor(read_context_t* context)
     *context = NULL;
 
     return RECURSIVE_RETURN_SUCCESS;
+}
+
+// ============================== DECENT_WRAPPER ==============================
+
+static ssize_t ReadGlobalScope(read_context_t context);
+
+recursive_return_e 
+DoSyntaxAnalysis(read_context_t context)
+{
+    assert(context != NULL);
+
+    ssize_t maxim_gorohov =  ReadGlobalScope(context);
+    context->lex_tree->nodes_array[0].left_index = maxim_gorohov; 
+
+    return context->status;
 }
 
 // ======================== RECURSIVE_DECENT_ALGORITHM ========================
@@ -855,7 +864,7 @@ GetGlobal(read_context_t context,
 }
 
 static ssize_t 
-DoSyntaxAnalysis(read_context_t context)
+ReadGlobalScope(read_context_t context)
 {
     assert(context != NULL);
 

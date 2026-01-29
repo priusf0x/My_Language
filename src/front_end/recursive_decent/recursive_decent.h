@@ -20,7 +20,7 @@ enum recursive_return_e
     RECURSIVE_RETURN_STATE_MACHINE_ERROR,
     RECURSIVE_RETURN_TREE_ERROR,
     RECURSIVE_RETURN_READ_ERROR,
-    RECURSIVE_RETURN_NAME_SPACE_ERROR
+    RECURSIVE_RETURN_NAME_TABLE_ERROR
 };
 
 struct read_context_s 
@@ -43,16 +43,25 @@ struct scope_s
     size_t  memory_size;
     bool    is_global;
 };
-
 typedef read_context_s* read_context_t;
 
+// ============================= MEMORY_CONTROLLING ===========================
+
 recursive_return_e 
-ReadContextCtor(read_context_t* context);
+ReadContextCtor(read_context_t* context,
+                const char*     input_file_name);
 
 recursive_return_e
 ReadContextDtor(read_context_t* context);
 
+// ================================== ANALYSIS ================================
+
 recursive_return_e 
 DivideInLexems(read_context_t context);
+
+recursive_return_e 
+DoSyntaxAnalysis(read_context_t context);
     
+// ============================================================================
+
 #endif // RECURSIVE_DECENT_H
