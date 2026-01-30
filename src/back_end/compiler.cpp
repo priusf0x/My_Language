@@ -1,10 +1,10 @@
 #include "compiler.h"
 
 #include <assert.h>
-#include <endian.h>
 
 #include "lexes.h"
 #include "tree.h"
+#include "my_lang_lib.h"
 
 // ================================== HELPERS =================================
 
@@ -51,6 +51,24 @@ CompileStatement(ssize_t lex, compiler_t compiler);
 static compiler_return_e
 CompileVar(ssize_t    lex,
            compiler_t compiler);
+
+// ============================= ADDING_STDLIB ================================
+
+static compiler_return_e
+CompileStdLibFunctions(compiler_t compiler)
+{
+    assert(compiler != NULL);
+
+    function_s function = {};
+    
+    for (size_t i = 0; i < FUNCTIONS_AMOUNT; i++)
+    {
+        function = FUNCTIONS[i];
+        fprintf(compiler->file_output, "%s\n", function.asm_code);
+    }
+    
+    return COMPILER_RETURN_SUCCESS;
+}
 
 // =============================== MAIN_CYCLE =================================
 
@@ -104,6 +122,8 @@ SetASMHeader(compiler_t compiler)
                              "hlt\n\n";
 
     fprintf(compiler->file_output, "%s", start_code);
+    
+    CompileStdLibFunctions(compiler);
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -134,10 +154,6 @@ CompileBranch(ssize_t    lex,
 
             lex = array[lex].left_index; // switching to next stmt
         }    
-    }
-    else
-    {
-        return CompileStatement(lex, compiler);
     }
 
     return COMPILER_RETURN_SUCCESS;
@@ -377,8 +393,9 @@ SetArguments(ssize_t    lex,
 {
     assert(compiler != NULL);
     
-    size_t arg_amount = CountTypeNode(LEX_TYPE_SYNTAX, SYNTAX_ARG_CONNECTOR, 
-                            lex, compiler->compiler_tree);
+    node_s* array = compiler->compiler_tree->nodes_array;
+    size_t arg_amount = (size_t) array[lex].node_value
+                                    .value.id.memory_location;
 
     if (arg_amount <= 3)
     {

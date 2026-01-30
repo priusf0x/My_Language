@@ -126,7 +126,7 @@ InitNewFunction(ssize_t        declaration,
     string_s string = node->node_value.value.id.id;
     
     name_s name = {.string = string, .is_function = true,
-                   .is_global = scope->is_global, 
+                   .is_global = true, 
                    .info_num = (ssize_t) variable_amount,
                    .prev_element = scope->scope};
 

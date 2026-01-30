@@ -45,7 +45,8 @@ INCLUDES_DIR =\
 			common/string\
 			common/tree\
 			common/vector\
-			common/error_utils
+			common/error_utils\
+			my_lang_lib/\
 
 OBJ_DIR = obj
 SOURCE_DIR = src

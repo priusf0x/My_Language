@@ -1,12 +1,14 @@
 #include "recursive_decent.h"
 
 #include <assert.h>
-#include <cstddef>
+#include <exception>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "buffer.h"
 #include "lexes.h"
+#include "my_string.h"
 #include "name_space.h"
 #include "recursive_decent_defines.h"
 #include "tools.h"
@@ -14,13 +16,13 @@
 #include "state_machine_functions.h"
 #include "vector.h"
 #include "tree.h"
+#include "my_lang_lib.h"
 
 struct scope_context_s
 {
     ssize_t scope;
     size_t  id_num;
 };
-typedef scope_context_s* scope_t;
 
 // ================================= INIT_HELPERS =============================
 
@@ -188,6 +190,30 @@ DoSyntaxAnalysis(read_context_t context)
     context->file_name, context->input_buffer, (___POS___));\
     context->status = RECURSIVE_RETURN_READ_ERROR;} while(0)
 
+// ================================== CHECKERS ================================
+
+static size_t
+CountArgs(ssize_t        current_node,
+          read_context_t context)
+{
+    assert(context != NULL);
+    assert(current_node != NO_LINK);
+        
+    node_s* array = context->lex_tree->nodes_array;
+    size_t arg_amount = 0;
+    ssize_t arg_con = array[current_node].right_index;
+
+    while (arg_con != NO_LINK)
+    {
+        arg_amount++;
+        arg_con = array[arg_con].left_index;
+    }
+
+    return arg_amount;
+}
+               
+// ============================================================================
+
 static ssize_t GetAssigmentExpression(read_context_t context, scope_s* scope);
 static ssize_t GetExpression         (read_context_t context, scope_s* scope);
 static ssize_t GetTerm               (read_context_t context, scope_s* scope);
@@ -297,10 +323,8 @@ GetPrimary(read_context_t context,
                 
                 return NO_LINK;
             }
-
             
-            size_t real_arg_count = CountTypeNode(LEX_TYPE_SYNTAX, 
-                                        SYNTAX_ARG_CONNECTOR, id_node, context->lex_tree);
+            size_t real_arg_count = CountArgs(id_node, context); 
         
             if (real_arg_count != (size_t) name.info_num)
             {
@@ -819,6 +843,7 @@ static ssize_t
 GetGlobal(read_context_t context,
           scope_s*       scope)
 {
+    assert(scope != NULL);
     assert(context != NULL);
     
     token_s token = {};
@@ -863,6 +888,10 @@ GetGlobal(read_context_t context,
     return return_node;
 }
 
+static recursive_return_e
+AddStdlib(scope_s*       scope,
+          read_context_t context);
+
 static ssize_t 
 ReadGlobalScope(read_context_t context)
 {
@@ -874,6 +903,9 @@ ReadGlobalScope(read_context_t context)
 
     scope_s global_scope = {.scope = NO_LINK, .memory_size = 0, 
                                 .is_global = true};
+
+    AddStdlib(&global_scope, context);
+
     CONNECT_LEXES(connector_node, NO_LINK, 
                         GetGlobal(context, &global_scope));
 
@@ -893,6 +925,53 @@ ReadGlobalScope(read_context_t context)
     }
 
     return return_node;
+}
+
+// ================================= STDLIB ===================================
+
+static recursive_return_e
+AddStdlibFunction(size_t         function_num,
+                  scope_s*       scope,
+                  read_context_t context)
+{
+    assert(scope != NULL);
+    assert(context != NULL);
+
+    function_s function = FUNCTIONS[function_num];
+
+    name_s name = {.string = function.function_name, .is_function = true,
+                   .is_global = true, 
+                   .info_num = (ssize_t) function.arg_amount,
+                   .prev_element = scope->scope};
+
+    if (AddNameInTable(&name, &scope->scope, context->name_table) != 0)
+    {
+        context->status = RECURSIVE_RETURN_NAME_TABLE_ERROR;
+    }
+    
+    return context->status;
+}
+
+static recursive_return_e
+AddStdlib(scope_s*       scope,
+          read_context_t context)
+{
+    assert(scope != NULL);
+    assert(context != NULL);
+
+    recursive_return_e output = RECURSIVE_RETURN_SUCCESS;
+
+    for (size_t i = 0; i < FUNCTIONS_AMOUNT; i++)
+    {
+        output = AddStdlibFunction(i, scope, context);
+
+        if (output != RECURSIVE_RETURN_SUCCESS)
+        {
+            return output;
+        } 
+    }
+
+    return RECURSIVE_RETURN_SUCCESS;
 }
 
 // =============================== UNDEFINITION ===============================

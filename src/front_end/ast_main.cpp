@@ -4,7 +4,7 @@
 
 //TODO : make error check
 
-const char* INPUT_FILE_NAME = "pletnev.zov";
+const char* INPUT_FILE_NAME = "examples/quadratic.zov";
 
 int
 main()

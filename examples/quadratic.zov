@@ -1,0 +1,10 @@
+function discriminant(var a, var b, var c)
+{
+    return b*b - 4*a*c;
+}
+
+function main()
+{
+
+    print(discriminant(4, 7, 4));
+}
