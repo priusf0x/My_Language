@@ -1,17 +1,14 @@
 #include "recursive_decent.h"
 
 #include <assert.h>
-#include <exception>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "buffer.h"
 #include "lexes.h"
-#include "my_string.h"
 #include "name_space.h"
 #include "recursive_decent_defines.h"
-#include "tools.h"
 #include "error_handler.h"
 #include "state_machine_functions.h"
 #include "vector.h"
@@ -218,6 +215,7 @@ static ssize_t GetAssigmentExpression(read_context_t context, scope_s* scope);
 static ssize_t GetExpression         (read_context_t context, scope_s* scope);
 static ssize_t GetTerm               (read_context_t context, scope_s* scope);
 static ssize_t GetBool               (read_context_t context, scope_s* scope);
+static ssize_t GetUnary              (read_context_t context, scope_s* scope);
 static ssize_t GetPrimary            (read_context_t context, scope_s* scope);
 static ssize_t GetFunctionArg        (read_context_t context, scope_s* scope);
 static ssize_t GetReturn             (read_context_t context, scope_s* scope);
@@ -232,9 +230,15 @@ GetFunctionArg(read_context_t context,
 {
     assert(context != NULL);
     assert(scope != NULL);
+    
+    ssize_t expr_node = GetExpression(context, scope);
+    if (expr_node == NO_LINK) // zero arg case 
+    {
+        return expr_node;
+    }
 
     ssize_t arg_connector = ARG_CON;
-    CONNECT_LEXES(arg_connector, NO_LINK, GetExpression(context, scope)); 
+    CONNECT_LEXES(arg_connector, NO_LINK, expr_node); 
     ssize_t return_node = arg_connector; 
     ssize_t last_connector = arg_connector;
     token_s token = {};
@@ -268,9 +272,8 @@ GetPrimary(read_context_t context,
             && (token.value.syntax == SYNTAX_START_BRACKET))
     {
         VECTOR_ERASE;
-
         ssize_t new_node = GetExpression(context, scope);
-
+        
         VECTOR_VIEW(token);
         if ((token.lex_type != LEX_TYPE_SYNTAX) 
                 || (token.value.syntax!= SYNTAX_END_BRACKET))
@@ -279,7 +282,7 @@ GetPrimary(read_context_t context,
             
             return NO_LINK;
         }
-        
+
         VECTOR_ERASE;
         return new_node;
     }
@@ -348,26 +351,42 @@ GetPrimary(read_context_t context,
     return NO_LINK;
 }
 
-static bool
-CheckIfBoolOp(const token_s* token)
+static ssize_t 
+GetUnary(read_context_t context,
+         scope_s*       scope)
 {
-    assert(token != NULL);
+    assert(context != NULL);
+    assert(scope != NULL);
 
-    if (token->lex_type != LEX_TYPE_OPERATOR)
+    token_s token = {};
+    ssize_t return_node = NO_LINK;
+    VECTOR_VIEW(token);
+
+    //TODO: add errors
+    if ((token.lex_type == LEX_TYPE_OPERATOR)
+            && (token.value.op = OPERATOR_PLUS))
     {
-        return false;
+        VECTOR_ERASE;
+        return_node = GetPrimary(context, scope);
     }
-
-    operator_type_e op = token->value.op;
-
-    if (   (op == OPERATOR_EQUALITY)     || (op == OPERATOR_N_EQUALITY)
-        || (op == OPERATOR_MORE)         || (op == OPERATOR_MORE_OR_EQ)   
-        || (op == OPERATOR_LESS)         || (op == OPERATOR_LESS_OR_EQUAL))
+    else if ((token.lex_type == LEX_TYPE_OPERATOR)
+            && (token.value.op = OPERATOR_MINUS))
     {
-        return true;
-    }
+        VECTOR_ERASE;
+        token_s zero_token = {.lex_type = LEX_TYPE_CONST,
+                              .value = {.constant = 0}};
+        ssize_t minus_node = ADD__(token);
+        ssize_t zero_node = ADD__(zero_token);
 
-    return false;
+        CONNECT_LEXES(minus_node, zero_node, GetPrimary(context, scope)); 
+        return_node = minus_node;
+    }
+    else
+    {
+        return_node = GetPrimary(context, scope);
+    }
+    
+    return return_node;
 }
 
 static bool
@@ -397,7 +416,7 @@ GetTerm(read_context_t context,
     assert(context != NULL);
     assert(scope != NULL);
 
-    ssize_t return_node = GetPrimary(context, scope); 
+    ssize_t return_node = GetUnary(context, scope); 
     ssize_t mul_div_op = NO_LINK; 
     token_s token = {};
     VECTOR_VIEW(token);
@@ -406,12 +425,34 @@ GetTerm(read_context_t context,
     {
         VECTOR_ERASE;
         mul_div_op = ADD__(token);
-        CONNECT_LEXES(mul_div_op, return_node, GetPrimary(context, scope));
+        CONNECT_LEXES(mul_div_op, return_node, GetUnary(context, scope));
         return_node = mul_div_op;
         VECTOR_VIEW(token);
     }
 
     return return_node;
+}
+
+static bool
+CheckIfBoolOp(const token_s* token)
+{
+    assert(token != NULL);
+
+    if (token->lex_type != LEX_TYPE_OPERATOR)
+    {
+        return false;
+    }
+
+    operator_type_e op = token->value.op;
+
+    if (   (op == OPERATOR_EQUALITY)     || (op == OPERATOR_N_EQUALITY)
+        || (op == OPERATOR_MORE)         || (op == OPERATOR_MORE_OR_EQ)   
+        || (op == OPERATOR_LESS)         || (op == OPERATOR_LESS_OR_EQUAL))
+    {
+        return true;
+    }
+
+    return false;
 }
 
 static ssize_t 
@@ -491,8 +532,8 @@ GetExpression(read_context_t context,
     assert(context != NULL);
     assert(scope != NULL);
 
+    ssize_t return_node = GetBool(context, scope);
     token_s token = {};
-    ssize_t return_node = GetBool(context, scope); 
     ssize_t plus_minus_op = NO_LINK; 
     VECTOR_VIEW(token);
 
@@ -715,6 +756,13 @@ GetIfWhile(read_context_t context,
     VECTOR_ERASE;
 
     ssize_t condition_node = GetExpression(context, scope);
+    
+    if (condition_node == NO_LINK)
+    {
+        HANDLE_ERROR(ERROR_TYPE_NO_CONDITION, 
+                        function_kw_token.buf_pos);    
+        return NO_LINK;
+    }
 
     VECTOR_VIEW(syntax_token);
     if ((syntax_token.lex_type != LEX_TYPE_SYNTAX)
@@ -822,14 +870,12 @@ GetStatement(read_context_t context,
     else
     {
         return_node = GetExpression(context, scope);
-
+        
         VECTOR_VIEW(token); 
         if ((token.lex_type != LEX_TYPE_SYNTAX)
              || (token.value.syntax != SYNTAX_STATEMENT_CONNECTOR))
         {
-            node_s* array = context->lex_tree->nodes_array;
-            size_t error_stmt = array[return_node].node_value.buf_pos;
-            HANDLE_ERROR(ERROR_TYPE_FORGOTTEN_END_STMT, error_stmt);
+            HANDLE_ERROR(ERROR_TYPE_FORGOTTEN_END_STMT, token.buf_pos);
             
             return NO_LINK;
         }

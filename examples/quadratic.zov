@@ -1,3 +1,18 @@
+function herons_square(var a)
+{
+    var num = 10;
+    var square = a;
+
+    while (num > 0)
+    {
+        num = num - 1;
+        square = (square + a / square) / 2;
+    }
+
+    return square;
+}
+
+
 function discriminant(var a, var b, var c)
 {
     return b*b - 4*a*c;
@@ -5,6 +20,18 @@ function discriminant(var a, var b, var c)
 
 function main()
 {
+    var a = scan(); var b = scan(); var c = scan();
+    var discr = discriminant(a, b, c);
+    print(discr);
 
-    print(discriminant(4, 7, 4));
+    if (discr < 0)
+    {
+        print(0);
+    }
+    if (discr > 0)
+    {
+        print(1);
+        var x_1 = (-b);
+        print(x_1);
+    }
 }

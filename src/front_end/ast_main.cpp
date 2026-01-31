@@ -2,9 +2,7 @@
 
 #include <stdlib.h>
 
-//TODO : make error check
-
-const char* INPUT_FILE_NAME = "examples/quadratic.zov";
+const char* INPUT_FILE_NAME = "examples/hello_world.zov";
 
 int
 main()

@@ -36,7 +36,8 @@ CheckIfSymb(const char* string)
     char character = *string;
 
     if ((('a' <= character) && (character <= 'z'))
-            || (('A' <= character) && (character <= 'Z')))
+            || (('A' <= character) && (character <= 'Z'))
+            || (character == '_'))
     {
         return 1;
     }
@@ -89,7 +90,6 @@ ReadIdFromBuffer(buffer_t  buffer,
         string_length += check_output;
     }
     while (check_output);
-
 
     id_string->string_size = string_length;
 }

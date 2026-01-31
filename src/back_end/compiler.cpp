@@ -387,16 +387,33 @@ SetArgsUseStack(size_t     arg_amount,
     return COMPILER_RETURN_SUCCESS;
 }
 
+static size_t
+CountArgs(ssize_t    lex,
+          compiler_t compiler)
+{
+    assert(compiler != NULL);
+
+    node_s* array = compiler->compiler_tree->nodes_array;
+    size_t arg_amount = 0;
+    lex = array[lex].left_index; 
+
+    while (lex != NO_LINK)
+    {
+        arg_amount++;
+        lex = array[lex].left_index;
+    }
+
+    return arg_amount;
+}
+
 static compiler_return_e
 SetArguments(ssize_t    lex,
              compiler_t compiler)
 {
     assert(compiler != NULL);
     
-    node_s* array = compiler->compiler_tree->nodes_array;
-    size_t arg_amount = (size_t) array[lex].node_value
-                                    .value.id.memory_location;
-
+    size_t arg_amount = CountArgs(lex, compiler);
+    
     if (arg_amount <= 3)
     {
         SetArgsUseRegs(arg_amount, compiler);
@@ -741,8 +758,9 @@ PushArgs(ssize_t    lex,
 {
     assert(compiler != NULL);
     
-    size_t arg_amount = CountTypeNode(LEX_TYPE_SYNTAX, SYNTAX_ARG_CONNECTOR, 
-                            lex, compiler->compiler_tree);
+    node_s* array = compiler->compiler_tree->nodes_array;
+    size_t arg_amount = (size_t) array[lex].node_value
+                                    .value.id.memory_location;
 
     if (arg_amount <= 3)
     {

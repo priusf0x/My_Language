@@ -7,14 +7,15 @@ stmt = if             |
        '{'{stmt} *'}' |
        expr      ";"  |
 
-if = "if" '(' expr ')' stmt
+if = "if" '(' expr ')' stmt 
 while = "while" '(' expr ')' stmt
 func_def = "function" id '(' {var_init} ')' stmt
 var_init = "var" id ("=" expr) | ()
 return = "return" expr 
 assignment = "=" expr
 expr = (term () | assignment) {"+" | "-" term}*
-bool = primary "==" | ... | "!=" primary
+bool = unary "==" | ... | "!=" unary
+unary = ("+" | "-" | ) primary 
 primary = '(' expr ')'                      |
           (id | id '(' id {',' id}* ')'     |
           number                            |  
