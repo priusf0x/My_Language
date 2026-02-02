@@ -41,23 +41,23 @@ GetTime(char*        current_time,
             1000000000 * (((double) (start_t % CLOCKS_PER_SEC)) / CLOCKS_PER_SEC));
 }
 
-void
-SystemCall(const char* command_tmp, 
-           ... )
-{
-    assert(command_tmp != NULL);
+// void
+// SystemCall(const char* command_tmp, 
+//            ... )
+// {
+//     assert(command_tmp != NULL);
 
-    va_list command_args;
-    va_start(command_args, command_tmp);
+//     va_list command_args;
+//     va_start(command_args, command_tmp);
 
-    const size_t command_size = 1 << 10;
-    char command[command_size] = "";
-    vsnprintf(command, command_size, command_tmp, command_args);
+//     const size_t command_size = 1 << 10;
+//     char command[command_size] = "";
+//     vsnprintf(command, command_size, command_tmp, command_args);
 
-    system(command);
+//     system(command);
 
-    va_end(command_args);
-}
+//     va_end(command_args);
+// }
 
 bool
 CheckIfInteger(double number)

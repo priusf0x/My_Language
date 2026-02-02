@@ -57,7 +57,6 @@ CompilerCtor(const char* input_name,
         goto error;
     }
 
-    TreeDump((*compiler)->compiler_tree);
 
     return COMPILER_RETURN_SUCCESS;
     

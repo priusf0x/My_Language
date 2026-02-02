@@ -155,6 +155,11 @@ CompileBranch(ssize_t    lex,
             lex = array[lex].left_index; // switching to next stmt
         }    
     }
+    else 
+    {
+        output = CompileStatement(lex,compiler);  
+        CHECK_OUTPUT(output);
+    }
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -239,7 +244,8 @@ CompileLocalVarKW(ssize_t    lex,
 }
 
 static compiler_return_e 
-CompileIfKW(ssize_t    lex,     
+CompileIfKW(size_t     else_l,
+            ssize_t    lex,     
             compiler_t compiler)
 {
     assert(compiler != NULL);
@@ -261,22 +267,29 @@ CompileIfKW(ssize_t    lex,
                 "push 0\n"
                 "je .L%zu:\n", if_label);
     output = CompileBranch(node.right_index, compiler);
+    fprintf(compiler->file_output, "jmp .L%zu:\n", else_l);
     fprintf(compiler->file_output, 
                 ".L%zu:\n", if_label);
 
     /*
         // condition 
         push 0
-        je .L123:
+        je .L2:
         // right part of the if node
-        .L123:
+        jmp .L1:
+        .L2:
+        // else part 
+        .L1:
     */
 
     return COMPILER_RETURN_SUCCESS;
 }
 
+//TODO
+
 static compiler_return_e 
-CompileWhileKW(ssize_t    lex,
+CompileWhileKW(size_t     else_l,
+               ssize_t    lex,
                compiler_t compiler)
 {
     assert(compiler != NULL);
@@ -309,6 +322,7 @@ CompileWhileKW(ssize_t    lex,
                 ".L%zu:\n", cond_label);
 
     /* 
+        
         .L124:
         // condition 
         push 0
@@ -491,6 +505,49 @@ CompileReturn(ssize_t    lex,
     return COMPILER_RETURN_SUCCESS;
 }
 
+static compiler_return_e
+CompileElse(ssize_t    lex,
+            compiler_t compiler)
+{
+    assert(compiler != NULL);
+
+    node_s node = compiler->compiler_tree->nodes_array[lex];
+    compiler_return_e output = COMPILER_RETURN_SUCCESS;
+
+    if (node.left_index == NO_LINK)
+    {
+        return COMPILER_RETURN_AST_STANDARD_ERROR;
+    }
+    node_s node_left = compiler->compiler_tree->nodes_array[node.left_index];
+    
+    compiler_return_e (*function) (size_t, ssize_t, compiler_t) = NULL;
+    if (node_left.node_value.value.key_word == KEY_WORD_IF)
+    {
+        function = CompileIfKW;
+    }
+    else if (node_left.node_value.value.key_word == KEY_WORD_WHILE)
+    {
+        function = CompileWhileKW;
+    }
+    else 
+    {
+        return COMPILER_RETURN_AST_STANDARD_ERROR;
+    }
+    
+    size_t else_label = compiler->label_count;
+    compiler->label_count++;
+    output =  function(else_label, node.left_index, compiler);
+    CHECK_OUTPUT(output);
+    if (node.right_index != NO_LINK)
+    {
+        output =  CompileBranch(node.right_index, compiler);
+        CHECK_OUTPUT(output);
+    }
+    fprintf(compiler->file_output, ".L%zu:\n", else_label);
+
+    return COMPILER_RETURN_SUCCESS; 
+}
+
 static compiler_return_e 
 CompileKeyWord(ssize_t    lex,
                compiler_t compiler)
@@ -505,17 +562,25 @@ CompileKeyWord(ssize_t    lex,
     key_word_compile kw_asm[] = 
     {
         {KEY_WORD_UNDEFINED, NULL             },
-        {KEY_WORD_IF,        CompileIfKW      },
+        {KEY_WORD_IF,        NULL             },
         {KEY_WORD_VAR,       CompileLocalVarKW},
-        {KEY_WORD_WHILE,     CompileWhileKW   },
+        {KEY_WORD_WHILE,     NULL             },
         {KEY_WORD_FUNCTION,  CompileFunction  },
-        {KEY_WORD_RETURN,    CompileReturn    }
+        {KEY_WORD_RETURN,    CompileReturn    },
+        {KEY_WORD_ELSE,      CompileElse      }
     };
 
     node_s node = compiler->compiler_tree->nodes_array[lex];
-
-    return kw_asm[node.node_value.value.op]
-                            .kw_function(lex, compiler);
+        
+    compiler_return_e (*function) (ssize_t, compiler_t) =  
+            kw_asm[node.node_value.value.key_word].kw_function;
+    
+    if (function == NULL)
+    {
+        return COMPILER_RETURN_AST_STANDARD_ERROR;
+    }
+    
+    return function(lex, compiler);
 }
 
 // ========================== EXPR_COMPILATIONS ===============================

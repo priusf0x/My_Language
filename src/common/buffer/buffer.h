@@ -54,7 +54,9 @@ PrintCurrentLine(size_t position, buffer_t buffer);
 
 // ================================= DUMP =====================================
 
+#ifndef NDEBUG
 void
 BufferDump(const buffer_t buffer);
+#endif 
 
 #endif //RECURSIVE_DECENT_H

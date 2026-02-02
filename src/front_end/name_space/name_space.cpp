@@ -80,6 +80,8 @@ SetNameTableSize(name_table_t name_table,
 
 // =============================== ELEMENT_DUMP ===============================
 
+#ifndef NDEBUG
+
 static void  
 PrintNameInfo(const name_s* name, 
               size_t        current_index)
@@ -119,6 +121,8 @@ NameTableDump(name_table_t name_table)
     }
     fprintf(stderr, "%s", table_ending);
 }
+
+#endif
 
 // ============================ ELEMENT_ADD_DELETE ============================
 

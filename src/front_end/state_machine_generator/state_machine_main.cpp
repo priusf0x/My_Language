@@ -56,6 +56,7 @@ main()
     AddKeyWord("while"   , KW_END_SYMBOLS, KEY_WORD_WHILE   , key_word_machine);
     AddKeyWord("function", KW_END_SYMBOLS, KEY_WORD_FUNCTION, key_word_machine);
     AddKeyWord("return"  , KW_END_SYMBOLS, KEY_WORD_RETURN  , key_word_machine);
+    AddKeyWord("else"    , KW_END_SYMBOLS, KEY_WORD_ELSE    , key_word_machine);
 
     WriteInFileStateMachine(key_word_machine, KW_FILE_NAME);
     StateMachineDtor(&key_word_machine);

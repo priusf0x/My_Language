@@ -41,7 +41,9 @@ VectorEraseFirst(vector_t vector);
 
 // ================================== DUMP ====================================
  
+#ifndef NDEBUG
 void
 VectorDump(const vector_t vector);
+#endif 
 
 #endif 

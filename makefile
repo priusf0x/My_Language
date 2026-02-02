@@ -50,6 +50,7 @@ INCLUDES_DIR =\
 
 OBJ_DIR = obj
 SOURCE_DIR = src
+CACHE_DIR = cache
 
 AST_SOURCES = $(COMMON_SOURCES) $(AST_SOURCES_ALT)
 GEN_SOURCES = $(COMMON_SOURCES) $(GEN_SOURCES_ALT)
@@ -96,8 +97,12 @@ CFLAGS =  -D _DEBUG -ggdb3 -std=c++17 -O2 -Wall -Wextra -Weffc++ -Waggressive-lo
 CFLAGS += -lm
 CFLAGS += $(INCLUDES)
 
+RELEASE_FLAGS = -O2 -D NDEBUG 
+RELEASE_FLAGS += $(INCLUDES)
+
 $(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.cpp
 	@mkdir -p $(dir $@)
+	@mkdir -p $(CACHE_DIR)
 	@mkdir -p logs
 	@echo "Compiling" $<
 	@$(CC) $(CFLAGS) -c $< -o $@ 	
@@ -132,11 +137,13 @@ comp: $(TARGET_COMP)
 md: $(TARGET_MD)
 	@./$(TARGET_MD)
 	
-all : $(TARGET_AST) $(TARGET_GEN) $(TARGET_COMP) $(TARGET_MD)
+release: CFLAGS = $(RELEASE_FLAGS)
+release:  $(TARGET_AST) $(TARGET_GEN) $(TARGET_COMP) $(TARGET_MD)
 
 clean:
 	@rm -rf logs/*
 	@rm -rf $(OBJ_DIR)
+	@rm -rf $(CACHE_DIR)
 	@rm -f $(TARGET_AST)
 	@rm -f $(TARGET_GEN)
 	@rm -f $(TARGET_COMP)

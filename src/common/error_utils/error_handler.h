@@ -3,7 +3,13 @@
 
 #include "buffer.h"
 
-enum error_type_e
+struct error_s 
+{
+    int error_type;
+    const char* error_message;
+};
+
+enum read_error_type_e
 {
     ERROR_TYPE_INCORRECT_IN_GLOBAL_SCOPE,
     ERROR_TYPE_FORGOTTEN_END_STMT,
@@ -21,7 +27,7 @@ enum error_type_e
 };
 
 void 
-HandleError(error_type_e error, const char*  file_name,
+HandleError(read_error_type_e error, const char*  file_name,
             buffer_t buffer, size_t position);
 
 #endif // ERROR_HANDLER_H

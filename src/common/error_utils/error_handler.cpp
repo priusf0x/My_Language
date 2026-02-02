@@ -8,12 +8,6 @@
 
 // ================================ CODE_GEN ==================================
 
-struct error_s 
-{
-    error_type_e error_type;
-    const char* error_message;
-};
-
 #define GEN_ERROR(___TYPE___, ___STRING___) \
     {(___TYPE___), (___STRING___)},
 
@@ -38,7 +32,7 @@ const size_t error_amount = sizeof(ERROR_LIST) / sizeof(ERROR_LIST[0]);
 // ============================== ERROR_HANDLER ===============================
 
 void 
-HandleError(error_type_e error,
+HandleError(read_error_type_e error,
             const char*  file_name,
             buffer_t     buffer,
             size_t       position)

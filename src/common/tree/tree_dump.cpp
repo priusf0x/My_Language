@@ -11,6 +11,8 @@ static void DrawNode(const node_s* node, FILE* dot_file);
 
 // ================================ SINGLE_TONE ===============================
 
+#ifndef NDEBUG
+
 const char* LOG_FILE_NAME = "logs/tree_log_file.htm";
 
 FILE*
@@ -49,6 +51,8 @@ TreeDump(const tree_t tree)
 
     TreeDot(tree, current_time);
 }
+
+#endif
 
 // ======================== READING/WRITING TREE IN FILE ======================
 
@@ -137,6 +141,7 @@ TreeBaseDump(tree_t      tree,
 
 // ============================== DUMP_HELPERS ================================
 
+#ifndef NDEBUG
 static void
 PrintHTMLHeader(FILE*       log_file,
                 const char* current_time)
@@ -379,3 +384,4 @@ DrawNode(const node_s* node,
         fprintf(dot_file, "%ld -- %ld;\n", node->index_in_tree, node->right_index);
     }
 }
+#endif 

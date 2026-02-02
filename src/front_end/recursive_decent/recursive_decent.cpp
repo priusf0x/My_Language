@@ -364,7 +364,7 @@ GetUnary(read_context_t context,
 
     //TODO: add errors
     if ((token.lex_type == LEX_TYPE_OPERATOR)
-            && (token.value.op = OPERATOR_PLUS))
+            && (token.value.op == OPERATOR_PLUS))
     {
         VECTOR_ERASE;
         return_node = GetPrimary(context, scope);
@@ -777,8 +777,21 @@ GetIfWhile(read_context_t context,
 
     CONNECT_LEXES(whileif_kw_node, condition_node, 
                         GetStatement(context, scope));
+    
+    token_s else_token = {.lex_type = LEX_TYPE_KEY_WORD,
+                          .value = {.key_word = KEY_WORD_ELSE}};
+    ssize_t else_node = ADD__(else_token);
+    CONNECT_LEXES(else_node, whileif_kw_node, NO_LINK);
 
-    return whileif_kw_node;
+    VECTOR_VIEW(else_token);
+    if ((else_token.lex_type == LEX_TYPE_KEY_WORD)
+            && (else_token.value.key_word == KEY_WORD_ELSE))
+    {
+        VECTOR_ERASE;
+        CONNECT_LEXES(else_node, NO_LINK, GetStatement(context, scope));
+    }
+
+    return else_node;
 }
 
 static ssize_t 

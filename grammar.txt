@@ -7,8 +7,9 @@ stmt = if             |
        '{'{stmt} *'}' |
        expr      ";"  |
 
-if = "if" '(' expr ')' stmt 
-while = "while" '(' expr ')' stmt
+if = "if" '(' expr ')' stmt ( | else) 
+while = "while" '(' expr ')' stmt ( | else)
+else = "else" stmt
 func_def = "function" id '(' {var_init} ')' stmt
 var_init = "var" id ("=" expr) | ()
 return = "return" expr 

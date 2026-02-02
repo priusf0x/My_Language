@@ -4,6 +4,7 @@
 #include "my_string.h"
 
 // =================================== ENUMS ==================================
+// ================================= MAIN_ENUM ================================
 
 enum lex_types_e
 {
@@ -15,6 +16,8 @@ enum lex_types_e
     LEX_TYPE_SYNTAX
 };
 
+// ============================================================================
+
 enum key_word_type_e
 {
     KEY_WORD_UNDEFINED,
@@ -22,17 +25,8 @@ enum key_word_type_e
     KEY_WORD_VAR,
     KEY_WORD_WHILE,
     KEY_WORD_FUNCTION,
-    KEY_WORD_RETURN
-};
-
-const char* const KEY_WORD_NAMINGS[] = 
-{
-    "UNDEFINED",
-    "if",
-    "var",
-    "while",
-    "function",
-    "return"
+    KEY_WORD_RETURN,
+    KEY_WORD_ELSE
 };
 
 enum operator_type_e 
@@ -51,6 +45,29 @@ enum operator_type_e
     OPERATOR_LESS_OR_EQUAL
 };
 
+enum syntax_type_e
+{
+    SYNTAX_UNDEFINED,
+    SYNTAX_STATEMENT_CONNECTOR,
+    SYNTAX_START_BODY,
+    SYNTAX_END_BODY,
+    SYNTAX_START_BRACKET,
+    SYNTAX_END_BRACKET,
+    SYNTAX_ARG_CONNECTOR
+};
+
+// =============================== TECNICAL_NAMINGS ===========================
+
+const char* const KEY_WORD_NAMINGS[] = 
+{
+    "UNDEFINED",
+    "if",
+    "var",
+    "while",
+    "function",
+    "return",
+    "else"
+};
 const char* const OP_NAMINGS[] = 
 {
     "UNDEFINED",
@@ -65,17 +82,6 @@ const char* const OP_NAMINGS[] =
     ">=",
     "<",
     "<="
-};
-
-enum syntax_type_e
-{
-    SYNTAX_UNDEFINED,
-    SYNTAX_STATEMENT_CONNECTOR,
-    SYNTAX_START_BODY,
-    SYNTAX_END_BODY,
-    SYNTAX_START_BRACKET,
-    SYNTAX_END_BRACKET,
-    SYNTAX_ARG_CONNECTOR
 };
 
 const char* const SYNTAX_NAMINGS[] = 

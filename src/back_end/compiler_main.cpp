@@ -3,14 +3,21 @@
 #include "lexes.h"
 #include "tree.h"
 
-static const char* AST_FILE =    "ast_optimized.txt";
+static const char* AST_FILE =    "cache/ast_optimized.txt";
 static const char* OUTPUT_NAME = "compiled.asm";
+
+// TODO: ADD ERROR MESSAGES AND CHECK
+
 
 int main(void)
 {
     compiler_t compiler = {};
     
     CompilerCtor(AST_FILE, OUTPUT_NAME, &(compiler));
+
+    #ifndef NDEBUG
+    TreeDump(compiler->compiler_tree);
+    #endif
 
     CompileAST(compiler);
     

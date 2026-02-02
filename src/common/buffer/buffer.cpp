@@ -178,6 +178,8 @@ PrintCurrentLine(size_t   position,
 
 // =============================== BUFFER_DUMP ================================
 
+
+#ifndef NDEBUG
 void
 BufferDump(const buffer_t buffer)
 {
@@ -203,3 +205,4 @@ BufferDump(const buffer_t buffer)
     while (buffer->buffer[current_position] != '\0');
     fprintf(stderr, "\n");
 }
+#endif

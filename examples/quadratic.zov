@@ -12,6 +12,11 @@ function herons_square(var a)
     return square;
 }
 
+function solve_linear(var b, var c)
+{
+    return -c / b;
+}
+
 
 function discriminant(var a, var b, var c)
 {
@@ -21,17 +26,47 @@ function discriminant(var a, var b, var c)
 function main()
 {
     var a = scan(); var b = scan(); var c = scan();
-    var discr = discriminant(a, b, c);
-    print(discr);
 
-    if (discr < 0)
+    if (a == 0)
     {
-        print(0);
+        if (b == 0)
+        {
+            if (c == 0)
+            {
+                print(0);
+                print(0);
+                print(0);
+            }
+            else
+            {
+                print(-1);
+                print(-1);
+                print(-1);
+            }
+        }
+        else 
+        {
+            print(solve_linear(b, c));
+        }
     }
-    if (discr > 0)
+    else 
     {
-        print(1);
-        var x_1 = (-b);
-        print(x_1);
+        var d = discriminant(a, b, c);
+        if (d == 0)
+        {
+            print(0);
+        }
+        else if (d < 0)
+        {
+            print(-1);
+            print(-1);
+        }
+        else
+        {
+            print((-b + herons_square(d)) / 2 / a);
+            print((-b - herons_square(d)) / 2 / a);
+        }
     }
+
+    
 }

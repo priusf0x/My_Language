@@ -2,6 +2,7 @@
 #define RECURSIVE_DECENT_H
 
 #include <stdlib.h>
+#include <system_error>
 
 #include "name_space.h"
 #include "state_machine_functions.h" 

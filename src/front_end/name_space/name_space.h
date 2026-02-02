@@ -38,8 +38,10 @@ name_table_return_e DestroyNameTable(name_table_t* name_table);\
 
 // ============================= NAME_TABLE_DUMP ==============================
 
+#ifndef NDEBUG
 void 
 NameTableDump(name_table_t name_table);
+#endif
 
 // ============================ ELEMENT_ADD_DELETE ============================
 

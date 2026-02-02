@@ -198,6 +198,7 @@ VectorNormalizeSize(vector_t vector)
 
 // ================================== DUMP ====================================
 
+#ifndef NDEBUG
 
 void
 VectorDump(const vector_t vector)
@@ -227,3 +228,5 @@ VectorDump(const vector_t vector)
         }
     }
 }
+
+#endif
