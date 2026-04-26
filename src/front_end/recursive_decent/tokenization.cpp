@@ -60,7 +60,7 @@ CheckIfAlNum(const char* string)
 
 static void
 ReadConstFromBuffer(buffer_t  buffer,
-                    int*      constant)
+                    long*      constant)
 {
     assert(buffer != NULL);
     assert(constant != NULL);
@@ -164,7 +164,8 @@ IdentifyLex(token_s*       token,
     {  
         token->lex_type = LEX_TYPE_ID;
         ReadIdFromBuffer(buffer, &token->value.id.id);
-        token->value.id.memory_location = NO_LINK;
+        token->value.id.info1 = NO_LINK;
+        token->value.id.info2 = NO_LINK;
     }
     else
     {

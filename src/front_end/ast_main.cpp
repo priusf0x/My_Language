@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-const char* INPUT_FILE_NAME = "examples/quadratic.zov";
+const char* INPUT_FILE_NAME = "examples/factorial.zov";
 const char* OUTPUT_FILE_NAME = "cache/ast.txt"; 
 
 // TODO: ADD ERROR MESSAGES AND CHECK
@@ -10,7 +10,8 @@ const char* OUTPUT_FILE_NAME = "cache/ast.txt";
 int
 main()
 {
-    int return_code = 0;
+    
+    [[maybe_unused]] int return_code = 0;
     read_context_t read_context = NULL;
 
     ReadContextCtor(&read_context, INPUT_FILE_NAME);

@@ -1,14 +1,7 @@
-function factorial(var meow)
-{
-    if (meow < 2)
-    {
-        return 1;
-    }
 
-    return meow*factorial(meow - 1);
-}
 
-function main()
+function main(var dsa)
 {
-    print(factorial(scan()));
+    {var x = 123123;
+    x = x + 1;}
 }

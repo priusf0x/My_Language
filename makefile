@@ -25,8 +25,11 @@ GEN_SOURCES_ALT = \
 
 COMP_SOURCES_ALT = \
 		  back_end/compiler_ctor.cpp\
-		  back_end/compiler.cpp\
-		  back_end/compiler_main.cpp
+		  back_end/compiler_main.cpp\
+ 		  back_end/asm/asm_compiler.cpp
+
+
+# 		  back_end/compiler.cpp
 
 MIDDLE_END_SOURCES_ALT = \
 		  middle_end/optimize_main.cpp\
@@ -34,7 +37,7 @@ MIDDLE_END_SOURCES_ALT = \
 		  middle_end/optimize.cpp
 
 INCLUDES_DIR =\
-			backend/\
+			back_end/\
 			front_end/name_space\
 			front_end/recursive_decent\
 			front_end/state_machine_generator\
@@ -80,21 +83,61 @@ MIDDLE_END_SOURCES := $(addprefix $(SOURCE_DIR)/, $(MIDDLE_END_SOURCES))
 TARGET_MD = middle_end.out
 
 # c++/c compiler options
-CC = g++ 
-CFLAGS =  -D _DEBUG -ggdb3 -std=c++17 -O2 -Wall -Wextra -Weffc++ -Waggressive-loop-optimizations\
-		 -Wc++14-compat -Wmissing-declarations -Wcast-align -Wcast-qual -Wchar-subscripts\
-		 -Wconditionally-supported -Wconversion -Wctor-dtor-privacy -Wempty-body -Wfloat-equal\
-		 -Wformat-nonliteral -Wformat-security -Wformat-signedness -Wformat=2 -Winline -Wlogical-op\
-		 -Wnon-virtual-dtor -Wopenmp-simd -Woverloaded-virtual -Wpacked -Wpointer-arith -Winit-self\
-		 -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-null-sentinel\
-		 -Wstrict-overflow=2 -Wsuggest-attribute=noreturn -Wsuggest-final-methods\
-		 -Wsuggest-final-types -Wsuggest-override -Wswitch-default -Wswitch-enum -Wsync-nand\
-		 -Wundef -Wunreachable-code -Wunused -Wuseless-cast -Wvariadic-macros -Wno-literal-suffix\
-		 -Wno-missing-field-initializers -Wno-narrowing -Wno-old-style-cast -Wno-varargs -Wstack-protector\
-		 -fcheck-new -fsized-deallocation -fstack-protector -fstrict-overflow -fno-omit-frame-pointer -pie\
-		 -fPIE -Werror=vla \
-		 -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
-CFLAGS += -lm
+CC = clang++
+CFLAGS =\
+ 		-D_DEBUG\
+		-ggdb3\
+		-std=c++20\
+		-O2\
+		-Wall\
+		-Wextra\
+		-Wpedantic\
+		-Weffc++\
+		-Wmissing-declarations\
+		-Wcast-align\
+		-Wcast-qual\
+		-Wchar-subscripts\
+		-Wconversion\
+		-Wctor-dtor-privacy\
+		-Wempty-body\
+		-Wfloat-equal\
+		-Wformat-nonliteral\
+		-Wformat-security\
+		-Wformat-signedness\
+		-Wformat=2\
+		-Winline\
+		-Wnon-virtual-dtor\
+		-Woverloaded-virtual\
+		-Wpacked\
+		-Wpointer-arith\
+		-Winit-self\
+		-Wredundant-decls\
+		-Wshadow\
+		-Wextra-semi\
+		-Wsign-conversion\
+		-Wsign-promo\
+		-Wstrict-overflow=2\
+		-Wsuggest-override\
+		-Wswitch-default\
+		-Wswitch-enum\
+		-Wundef\
+		-Wunreachable-code\
+		-Wunused\
+		-Wvariadic-macros\
+		-Wno-missing-field-initializers\
+		-Wfloat-conversion\
+		-Wdouble-promotion\
+		-Wno-narrowing\
+		-Wno-old-style-cast\
+		-Wno-varargs\
+		-Wstack-protector\
+		-fsized-deallocation\
+		-fstack-protector\
+		-fstrict-overflow\
+		-fno-omit-frame-pointer\
+		-fPIE\
+		-Werror=vla\
+		-fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 CFLAGS += $(INCLUDES)
 
 RELEASE_FLAGS = -O2 -D NDEBUG 

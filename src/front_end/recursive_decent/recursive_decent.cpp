@@ -298,7 +298,7 @@ GetPrimary(read_context_t context,
         }
                                         
         name_s name = context->name_table->name_array[name_table_number];
-        token.value.id.memory_location = (ssize_t) name.info_num;
+        token.value.id.info1 = (ssize_t) name.info_num;
         token.value.id.is_global = name.is_global;
         size_t buffer_position = token.buf_pos;
 
@@ -616,7 +616,7 @@ GetInitVar(read_context_t context,
 
     node_s* node_array = context->lex_tree->nodes_array;
     node_array[var_node].node_value.value.id.is_global = scope->is_global;
-    node_array[var_node].node_value.value.id.memory_location 
+    node_array[var_node].node_value.value.id.info1 
                                                 = (ssize_t)scope->memory_size;
     InitNewVar(var_node, scope, context);
 
@@ -712,7 +712,10 @@ GetFuncDefinition(read_context_t context,
     }
     
     context->name_table->name_array[function_name].info_num 
-        = (ssize_t) local_scope.memory_size; // setting amount of functions args 
+        = (ssize_t) local_scope.memory_size; // setting amount of functions args
+    node_array[id_node].node_value.value
+        .id.info1 = (ssize_t) local_scope.memory_size;
+    
 
     VECTOR_VIEW(syntax_token);
     if ((syntax_token.lex_type != LEX_TYPE_SYNTAX)
@@ -727,7 +730,7 @@ GetFuncDefinition(read_context_t context,
     CONNECT_LEXES(function_kw_node, id_node, GetStatement(context, &local_scope));
     node_array = context->lex_tree->nodes_array;
     node_array[id_node].node_value.value
-        .id.memory_location = (ssize_t) local_scope.memory_size;
+        .id.info2 = (ssize_t) local_scope.memory_size;
 
     return function_kw_node;
 }

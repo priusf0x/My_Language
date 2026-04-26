@@ -83,7 +83,7 @@ OptimizeChildren(ssize_t     current_node,
     return OPTIMIZE_RETURN_SUCCESS;
 }  
 
-static int 
+static long int
 CalculateSubgraph(ssize_t     current_node,
                   optimizer_t optimizer)
 {   
@@ -97,8 +97,8 @@ CalculateSubgraph(ssize_t     current_node,
         return node.node_value.value.constant;
     }
 
-    int r_result = CalculateSubgraph(node.right_index, optimizer); 
-    int l_result = CalculateSubgraph(node.left_index, optimizer);
+    long int r_result = CalculateSubgraph(node.right_index, optimizer); 
+    long int l_result = CalculateSubgraph(node.left_index, optimizer);
 
     switch (node.node_value.value.op)
     {
@@ -223,7 +223,7 @@ OptimizeConst(ssize_t     current_node,
 
     node_s node = NODE(current_node);
     ssize_t new_node = NO_LINK;
-    int calculated = CalculateSubgraph(current_node, optimizer);
+    long int calculated = CalculateSubgraph(current_node, optimizer);
 
     RETURN_IF_OPT_ERROR(CreateConst(calculated, &new_node, optimizer));
     RETURN_IF_TREE_ERROR(ForceConnect(optimizer->ast_tree, 

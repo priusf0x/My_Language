@@ -71,15 +71,15 @@ PrintNode(tree_t  tree,
 
         id_s value = node.node_value.value.id;
         
-        fprintf(file_output, "%d %d %.*s %d %d %ld ",
+        fprintf(file_output, "%d %d %.*s %d %d %ld %ld",
                     LEX_TYPE_ID, (int) value.id.string_size,
                     (int) value.id.string_size, value.id.string_source,
                     value.is_function, value.is_global,
-                    value.memory_location);
+                    value.info1, value.info2);
     }
     else 
     {
-        fprintf(file_output, "%d %d", node.node_value.lex_type, 
+        fprintf(file_output, "%d %ld", node.node_value.lex_type, 
                                       node.node_value.value.constant);
     }
 }
@@ -186,12 +186,13 @@ PrintElementInString(const token_s* token,
     switch(token->lex_type)
     {   
         case LEX_TYPE_ID:
-            snprintf(address, string_length, "id %.*s %d %d %ld", 
+            snprintf(address, string_length, "id %.*s %d %d %ld %ld", 
                         (int) token->value.id.id.string_size,
                         token->value.id.id.string_source, 
                         token->value.id.is_function,
                         token->value.id.is_global,
-                        token->value.id.memory_location);
+                        token->value.id.info1,
+                        token->value.id.info2);
             
             break;
 

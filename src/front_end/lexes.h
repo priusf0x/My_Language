@@ -97,12 +97,13 @@ const char* const SYNTAX_NAMINGS[] =
 
 // ============================= STRUCT_AND_UNIONS ============================
 
-struct id_s 
-{
-    string_s id;
-    ssize_t  memory_location;
-    bool     is_function;
-    bool     is_global;
+struct id_s                      //_____________________________________
+{                                //| function        | var             |
+    string_s id;                 //|___________________________________|
+    ssize_t  info1;              //| number_of_args  | var_no          |
+    ssize_t  info2;              //| amount_of_locals|  -              | 
+    bool     is_function;        //|-----------------------------------|
+    bool     is_global;         
 };
 
 union token_value_u 
@@ -110,7 +111,7 @@ union token_value_u
     key_word_type_e key_word;
     operator_type_e op;
     syntax_type_e   syntax;
-    int             constant;
+    long int        constant;
     id_s            id;
 };
 

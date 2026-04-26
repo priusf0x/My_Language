@@ -245,18 +245,18 @@ call print:
 push RAX
 pop RDX
 jmp .L13:
-.L14:
-push 1
+.L14: 
+push -1
 pop REX
 call print:
 push RAX
 pop RDX
-push 1
+push -1
 pop REX
 call print:
 push RAX
 pop RDX
-push 1
+push -1
 pop REX
 call print:
 push RAX
@@ -313,12 +313,12 @@ push 1
 .L24:
 push 0
 je .L22:
-push 1
+push -1
 pop REX
 call print:
 push RAX
 pop RDX
-push 1
+push -1
 pop REX
 call print:
 push RAX

@@ -1,6 +1,6 @@
 var X_MAX = 30;
 var Y_MAX = 30;
-var RADIUS = 10;
+var RADIUS = 7;
 
 function main()
 {
@@ -15,10 +15,10 @@ function main()
 
         while (x < X_MAX)
         {
-            if (((x - X_MAX / 2)*(x- X_MAX /2 ) + (y - Y_MAX /2 )*(y - Y_MAX / 2))
+            if (((x - X_MAX / 2)*(x- X_MAX /2 )  + (y - Y_MAX /2 )*(y - Y_MAX / 2) * 4)
                     < RADIUS * RADIUS) 
             {
-                set(x, y, 42);
+                set(x, y, 42)
             }
             x = x + 1;
         }
