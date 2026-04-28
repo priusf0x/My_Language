@@ -2,6 +2,8 @@
 
 function main(var dsa)
 {
-    {var x = 123123;
-    x = x + 1;}
+    var x = 123123;
+    x = x + 1;
+
+    return 0;
 }

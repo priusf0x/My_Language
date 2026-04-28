@@ -57,7 +57,6 @@ CompilerCtor(const char* input_name,
         goto error;
     }
 
-
     return COMPILER_RETURN_SUCCESS;
     
 error:

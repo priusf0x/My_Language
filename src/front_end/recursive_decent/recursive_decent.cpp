@@ -299,6 +299,7 @@ GetPrimary(read_context_t context,
                                         
         name_s name = context->name_table->name_array[name_table_number];
         token.value.id.info1 = (ssize_t) name.info_num;
+        token.value.id.info2 = name.is_argument ? 1 : 0;
         token.value.id.is_global = name.is_global;
         size_t buffer_position = token.buf_pos;
 
@@ -618,6 +619,9 @@ GetInitVar(read_context_t context,
     node_array[var_node].node_value.value.id.is_global = scope->is_global;
     node_array[var_node].node_value.value.id.info1 
                                                 = (ssize_t)scope->memory_size;
+    node_array[var_node].node_value.value.id.info2 = 
+        scope->is_argument ? true : false;
+
     InitNewVar(var_node, scope, context);
 
     token_s a_token = {};             
@@ -683,11 +687,12 @@ GetFuncDefinition(read_context_t context,
     InitNewFunction(id_node, 0, scope, context);
     ssize_t function_name = scope->scope;
 
-    scope_s local_scope = *scope; //  need to make error if defined in local scope 
-    local_scope.is_global = false;
-    local_scope.memory_size = 0;
+    scope_s arg_scope = *scope; //  need to make error if defined in local scope 
+    arg_scope.is_global = false;
+    arg_scope.memory_size = 0;
+    arg_scope.is_argument = true;
 
-    ssize_t var_node = GetInitVar(context, &local_scope);
+    ssize_t var_node = GetInitVar(context, &arg_scope);
     if (var_node != NO_LINK)
     {
         ssize_t arg_connector = ARG_CON;
@@ -702,7 +707,7 @@ GetFuncDefinition(read_context_t context,
         {
             VECTOR_ERASE;
             arg_connector = ARG_CON;
-            CONNECT_LEXES(arg_connector, NO_LINK, GetInitVar(context, &local_scope));
+            CONNECT_LEXES(arg_connector, NO_LINK, GetInitVar(context, &arg_scope));
             CONNECT_LEXES(last_arg_connector, arg_connector, NO_LINK);
             last_arg_connector = arg_connector;
             VECTOR_VIEW(token);
@@ -712,10 +717,12 @@ GetFuncDefinition(read_context_t context,
     }
     
     context->name_table->name_array[function_name].info_num 
-        = (ssize_t) local_scope.memory_size; // setting amount of functions args
+        = (ssize_t) arg_scope.memory_size; // setting amount of functions args
     node_array[id_node].node_value.value
-        .id.info1 = (ssize_t) local_scope.memory_size;
-    
+        .id.info1 = (ssize_t) arg_scope.memory_size;
+    scope_s local_scope = arg_scope;
+    local_scope.memory_size = 0;
+    local_scope.is_argument = false;
 
     VECTOR_VIEW(syntax_token);
     if ((syntax_token.lex_type != LEX_TYPE_SYNTAX)
@@ -730,7 +737,7 @@ GetFuncDefinition(read_context_t context,
     CONNECT_LEXES(function_kw_node, id_node, GetStatement(context, &local_scope));
     node_array = context->lex_tree->nodes_array;
     node_array[id_node].node_value.value
-        .id.info2 = (ssize_t) local_scope.memory_size;
+        .id.info2 = (ssize_t) arg_scope.memory_size;
 
     return function_kw_node;
 }

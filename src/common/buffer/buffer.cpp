@@ -178,7 +178,6 @@ PrintCurrentLine(size_t   position,
 
 // =============================== BUFFER_DUMP ================================
 
-
 #ifndef NDEBUG
 void
 BufferDump(const buffer_t buffer)

@@ -19,7 +19,8 @@ struct name_s
     unsigned int hash;
     bool         is_function;
     bool         is_global;
-    ssize_t      info_num;
+    bool         is_argument;
+    ssize_t      info_num;          // if (is_funcion) {arg_amount} else {is_argument}
     ssize_t      prev_element;
 };
 

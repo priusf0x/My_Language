@@ -43,6 +43,7 @@ struct scope_s
     ssize_t scope;
     size_t  memory_size;
     bool    is_global;
+    bool    is_argument;
 };
 typedef read_context_s* read_context_t;
 
