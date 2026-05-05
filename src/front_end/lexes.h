@@ -38,11 +38,11 @@ enum operator_type_e
     OPERATOR_DIV,
     OPERATOR_EQUALITY,
     OPERATOR_N_EQUALITY,
-    OPERATOR_ASSIGNMENT,
     OPERATOR_MORE,
     OPERATOR_MORE_OR_EQ,
     OPERATOR_LESS,
-    OPERATOR_LESS_OR_EQUAL
+    OPERATOR_LESS_OR_EQUAL,
+    OPERATOR_ASSIGNMENT
 };
 
 enum syntax_type_e
@@ -77,11 +77,11 @@ const char* const OP_NAMINGS[] =
     "/",
     "==",
     "!=",
-    "=",    
     ">",
     ">=",
     "<",
-    "<="
+    "<=",
+    "=",    
 };
 
 const char* const SYNTAX_NAMINGS[] = 
@@ -111,6 +111,7 @@ union token_value_u
     key_word_type_e key_word;
     operator_type_e op;
     syntax_type_e   syntax;
+    int             integer;
     long int        constant;
     id_s            id;
 };

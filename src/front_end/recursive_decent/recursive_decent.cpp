@@ -185,7 +185,8 @@ DoSyntaxAnalysis(read_context_t context)
 
 #define HANDLE_ERROR(___TYPE___, ___POS___) do {RETURN_IF_ERROR; HandleError((___TYPE___),\
     context->file_name, context->input_buffer, (___POS___));\
-    context->status = RECURSIVE_RETURN_READ_ERROR;} while(0)
+    context->status = RECURSIVE_RETURN_READ_ERROR;\
+    fprintf(stderr, "%d", __LINE__); } while(0)
 
 // ================================== CHECKERS ================================
 
@@ -737,7 +738,7 @@ GetFuncDefinition(read_context_t context,
     CONNECT_LEXES(function_kw_node, id_node, GetStatement(context, &local_scope));
     node_array = context->lex_tree->nodes_array;
     node_array[id_node].node_value.value
-        .id.info2 = (ssize_t) arg_scope.memory_size;
+        .id.info2 = (ssize_t) local_scope.memory_size;
 
     return function_kw_node;
 }
@@ -780,7 +781,6 @@ GetIfWhile(read_context_t context,
     {
         HANDLE_ERROR(ERROR_TYPE_FORGOTTEN_END_BRACKET, 
                         function_kw_token.buf_pos);
-        
         return NO_LINK;
     }
     VECTOR_ERASE;

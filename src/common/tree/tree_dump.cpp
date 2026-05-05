@@ -77,10 +77,15 @@ PrintNode(tree_t  tree,
                     value.is_function, value.is_global,
                     value.info1, value.info2);
     }
-    else 
+    else if (node.node_value.lex_type == LEX_TYPE_CONST)
     {
         fprintf(file_output, "%d %ld", node.node_value.lex_type, 
                                       node.node_value.value.constant);
+    }
+    else  
+    {
+        fprintf(file_output, "%d %d", node.node_value.lex_type, 
+                                        node.node_value.value.integer);
     }
 }
 
