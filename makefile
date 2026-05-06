@@ -26,7 +26,8 @@ GEN_SOURCES_ALT = \
 COMP_SOURCES_ALT = \
 		  back_end/compiler_ctor.cpp\
 		  back_end/compiler_main.cpp\
- 		  back_end/asm/asm_compiler.cpp
+ 		  back_end/asm/asm_compiler.cpp\
+		  back_end/emiters/emiters.cpp
 
 
 # 		  back_end/compiler.cpp
@@ -38,6 +39,7 @@ MIDDLE_END_SOURCES_ALT = \
 
 INCLUDES_DIR =\
 			back_end/\
+			back_end/emiters\
 			front_end/name_space\
 			front_end/recursive_decent\
 			front_end/state_machine_generator\
