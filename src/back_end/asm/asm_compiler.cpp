@@ -41,7 +41,7 @@ GetVarPos(ssize_t    lex,
 
     if (val.value.id.is_global)
     {
-        fprintf(compiler->file_output, "qword [%*.s]", 
+        fprintf(compiler->file_output, "qword [%.*s]", 
                     (int) val.value.id.id.string_size,
                     val.value.id.id.string_source);
     }

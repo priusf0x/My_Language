@@ -42,6 +42,8 @@ main:
 
 ;body
 	mov qword [rbp - 56], 1000000000
+	mov rbx, 2
+	mov qword [meow], rbx
 	mov rbx, 1
 	mov rdi, rbx
 	mov rbx, 2

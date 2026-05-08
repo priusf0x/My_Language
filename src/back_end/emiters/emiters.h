@@ -5,11 +5,14 @@
 #include <stdint.h>
 #include <stdio.h>
 
-typedef uint64_t imm;
-typedef int64_t  offset;
-typedef uint64_t address;
-
 const uint8_t REG_EXTENDED = 0b1000;
+
+struct section_s
+{
+    uint8_t* section;
+    size_t   cur_pos;
+};
+typedef section_s* section_t;
 
 enum reg_e 
 {
@@ -29,108 +32,130 @@ enum reg_e
     R13 = 0b101 | REG_EXTENDED,
     R14 = 0b110 | REG_EXTENDED,
     R15 = 0b111 | REG_EXTENDED,
-    SKIP
+    NONE = 0b10000
 };
 
 // ================================= PUSH/POP =================================
 
-size_t 
-emit_push(char* section,
-          reg_e reg);
+void 
+emit_push(section_t section,
+          reg_e     reg);
 
-size_t 
-emit_pop(char* section,
-         reg_e reg);
+void 
+emit_pop(section_t section,
+         reg_e     reg);
 
 // ================================== CALL/RET ================================
 
-size_t 
-emit_call(char*   section,
-          address address);
+void 
+emit_call(section_t section,
+          uint64_t  addr);
 
-size_t 
-emit_ret(char* section);
+void 
+emit_ret(section_t section);
 
 // ==================================== MOVE ==================================
 
-size_t 
-emit_move(char* section,
-          reg_e reg_d,
-          reg_e reg_s);
+// move reg to reg
 
-size_t 
-emit_move(char* section,
-          reg_e reg_d,
-          imm   constant);
+void 
+emit_move(section_t section,
+          reg_e     reg_d,
+          reg_e     reg_s);
 
-size_t 
-emit_move(char*   section,
-          reg_e   reg_d,
-          address addr);
+// move const to reg
+          
+void 
+emit_move(section_t section,
+          reg_e     reg_d,
+          int64_t   constant);
 
-size_t 
-emit_move(char*  section,
-          reg_e  reg_d,
-          reg_e  reg_b,
-          offset offset);
+// move from/to memory
 
-size_t 
-emit_move(char*   section,
-          reg_e   reg_b,
-          offset  offset,
-          reg_e   reg_s);
+void 
+emit_move_mem(section_t section,
+              reg_e     reg_d,
+              uint64_t  addr);
+              
+void 
+emit_move_mem(section_t section,
+              uint64_t  addr,
+              reg_e     reg_d);
+
+void 
+emit_move_mem(section_t section,
+              reg_e     reg_d,
+              reg_e     reg_b,
+              int64_t   offset);
+
+void 
+emit_move_mem(section_t section,
+              reg_e     reg_b,
+              int64_t   offset,
+              reg_e     reg_s);
 
 // ================================== CMOVE ===================================
           
-size_t  
-emit_cmove(char* section);
+void  
+emit_cmove(section_t section,
+           reg_e     reg_d,
+           reg_e     reg_s);
 
-size_t  
-emit_cmovne(char* section);
+void  
+emit_cmovne(section_t section,
+            reg_e     reg_d,
+            reg_e     reg_s);
 
-size_t  
-emit_cmovg(char* section);
 
-size_t  
-emit_cmovge(char* section);
+void  
+emit_cmovg(section_t section,
+           reg_e     reg_d,
+           reg_e     reg_s);
 
-size_t  
-emit_cmovl(char* section);
+void  
+emit_cmovge(section_t section,
+            reg_e     reg_d,
+            reg_e     reg_s);
 
-size_t  
-emit_cmovle(char* section);
+void  
+emit_cmovl(section_t section,
+           reg_e     reg_d,
+           reg_e     reg_s);
+
+void  
+emit_cmovle(section_t section);
 
 // ================================ ARITHMETIC ================================
 
-size_t 
-emit_cmp(char* section,
-         reg_e reg_a,
-         reg_e reg_b);
+void 
+emit_cmp(section_t section,
+         reg_e     reg_a,
+         reg_e     reg_b);
 
-size_t 
-emit_add(char* section,
-         reg_e reg_d,
-         reg_e reg_s);
+void 
+emit_add(section_t section,
+         reg_e     reg_d,
+         reg_e     reg_s);
 
-size_t 
-emit_sub(char* section,
-         reg_e reg_d,
-         reg_e reg_s);
+void 
+emit_sub(section_t section,
+         reg_e     reg_d,
+         reg_e     reg_s);
 
-size_t 
-emit_div(char* section,
-         reg_e reg_d,
-         reg_e reg_s);
+void 
+emit_div(section_t section,
+         reg_e     reg_d,
+         reg_e     reg_s);
          
-size_t 
-emit_mul(char* section,
-         reg_e reg_d,
-         reg_e reg_s);
+void 
+emit_mul(section_t section,
+         reg_e     reg_d,
+         reg_e     reg_s);
 
 // ================================== JUMPS ===================================
           
-size_t 
-emit_jmp(char*   section,
-         address addr);
+// void 
+// emit_jmp(section_t section,
+//          address   addr);
 
 #endif // EMITERS_H
