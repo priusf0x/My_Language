@@ -1,7 +1,4 @@
 global main
-section .data
-	meow dq 232
-section .text
 
 zzzz:
 
@@ -42,8 +39,6 @@ main:
 
 ;body
 	mov qword [rbp - 56], 1000000000
-	mov rbx, 2
-	mov qword [meow], rbx
 	mov rbx, 1
 	mov rdi, rbx
 	mov rbx, 2
@@ -58,31 +53,6 @@ main:
 	mov r9, rbx
 	call zzzz
 	mov rbx, rax
-
-;while condition
-.L1:
-	mov rbx, qword [rbp - 56]
-	push rbx
-	mov rbx, 0
-	mov rax, rbx
-	pop rbx
-	cmp rbx, rax
-	mov rbx, 0
-	mov rax, 1
-	cmovg rbx, rax
-	cmp rbx, 0
-	jz .L0
-
-;while body
-	mov rbx, qword [rbp - 56]
-	push rbx
-	mov rbx, 1
-	mov rax, rbx
-	pop rbx
-	sub rbx, rax
-	mov qword [rbp - 56], rbx
-	jmp .L1
-.L0:
 	mov rbx, 0
 
 ;epilogue

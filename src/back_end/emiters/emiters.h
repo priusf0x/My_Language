@@ -5,14 +5,9 @@
 #include <stdint.h>
 #include <stdio.h>
 
-const uint8_t REG_EXTENDED = 0b1000;
+#include "my_elf.h"
 
-struct section_s
-{
-    uint8_t* section;
-    size_t   cur_pos;
-};
-typedef section_s* section_t;
+const uint8_t REG_EXTENDED = 0b1000;
 
 enum reg_e 
 {

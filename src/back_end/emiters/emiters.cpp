@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
+#include "my_elf.h"
+
 [[maybe_unused]] const uint8_t MAGIC_NUM_REX = 0b0100'0000;
 [[maybe_unused]] const uint8_t W_REX = 0b1000;
 [[maybe_unused]] const uint8_t R_REX = 0b0100;
@@ -24,7 +26,7 @@ SectionAddByte(section_t section,
     *(section->section + section->cur_pos) = byte;
 }
 
-#define EMIT(_X_) SectionAddByte(section, (_X_))
+#define EMIT(_X_) SectionEmitByte(section, (_X_))
 
 // ================================= EMITERS ==================================
 
@@ -102,13 +104,13 @@ emit_move(section_t section,
     
     uint8_t rex_byte = MAGIC_NUM_REX | W_REX;
 
-    if (reg_d & REG_EXTENDED) rex_byte |= B_REX;
-    if (reg_s & REG_EXTENDED) rex_byte |= R_REX;
+    if (reg_d & REG_EXTENDED) rex_byte |= R_REX;
+    if (reg_s & REG_EXTENDED) rex_byte |= B_REX;
     EMIT(rex_byte);
     EMIT(op_code);
 
     const uint8_t r_to_r = 0b11000000;
-    uint8_t rw_byte = (uint8_t) (r_to_r |((reg_d & REG_EXTENDED) << 3) | (reg_s & ~REG_EXTENDED));
+    uint8_t rw_byte = (uint8_t) (r_to_r |((reg_d & ~REG_EXTENDED) << 3) | (reg_s & ~REG_EXTENDED));
     EMIT(rw_byte);
 }
 
@@ -121,10 +123,12 @@ emit_move(section_t section,
 
     const uint8_t op_code = 0xB8;
 
+    uint8_t rex_byte = MAGIC_NUM_REX | W_REX;
     if (reg_d & REG_EXTENDED)
-    {
-        EMIT(MAGIC_NUM_REX | B_REX);
+    {                
+        rex_byte |= R_REX;
     }
+    EMIT(rex_byte);
 
     EMIT(op_code | ((uint8_t) reg_d & (~REG_EXTENDED)));
     
@@ -141,11 +145,12 @@ emit_move_mem(section_t section,
     
     const uint8_t op_code = 0x8b;
     
+    uint8_t rex_byte = MAGIC_NUM_REX | W_REX;
     if (reg_d & REG_EXTENDED)
     {                
-        uint8_t rex_byte = MAGIC_NUM_REX | W_REX | R_REX;
-        EMIT(rex_byte);
+        rex_byte |= R_REX;
     }
+    EMIT(rex_byte);
     EMIT(op_code);
 
     uint8_t rw_byte = (uint8_t) ((reg_d & ~REG_EXTENDED) << 3 | 0b100);
@@ -167,14 +172,15 @@ emit_move_mem(section_t section,
     
     const uint8_t op_code = 0x89;
     
+    uint8_t rex_byte = MAGIC_NUM_REX | W_REX;
     if (reg_d & REG_EXTENDED)
     {                
-        uint8_t rex_byte = MAGIC_NUM_REX | W_REX | R_REX;
-        EMIT(rex_byte);
+        rex_byte |= R_REX;
     }
+    EMIT(rex_byte);
     EMIT(op_code);
 
-    uint8_t rw_byte = (uint8_t) ((reg_d & REG_EXTENDED) << 3 | 0b100);
+    uint8_t rw_byte = (uint8_t) ((reg_d & ~REG_EXTENDED) << 3 | 0b100);
     EMIT(rw_byte);
 
     const uint8_t magic_byte = 0x25;
@@ -201,9 +207,9 @@ emit_move_mem(section_t section,
     EMIT(rex_byte);
     EMIT(op_code);
         
-    const uint8_t m_to_r = 0b01000000;
+    const uint8_t m_to_r = 0b10000000;
     
-    EMIT((uint8_t) (m_to_r | ((reg_d & ~REG_EXTENDED) << 3 | (reg_d & ~REG_EXTENDED))));
+    EMIT((uint8_t) (m_to_r | ((reg_d & ~REG_EXTENDED) << 3 | (reg_b & ~REG_EXTENDED))));
     
     memcpy(section->section + section->cur_pos, &offset, sizeof(int32_t));
     section->cur_pos += sizeof(int32_t);
