@@ -1,6 +1,7 @@
 #include "my_elf.h"
 
 #include <cstdint>
+#include <cstring>
 #include <elf.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -127,9 +128,23 @@ SectionEmitByte(section_t section,
 compiler_return_e
 SectionCreateFileHeader(section_t section)
 {
-    assert(section != 0);
+    assert(section != nullptr);
     
- 
+    compiler_return_e output = COMPILER_RETURN_SUCCESS;
+    if ((section->max_size + ELF_HEADER_SIZE) >= section->max_size)
+    {
+        output = SetSectionSize(section, 2 * (section->max_size + ELF_HEADER_SIZE));
+        if (output != COMPILER_RETURN_SUCCESS)
+        {
+            return output;
+        }
+    }
+
+    if (memcpy(section->section + section->cur_pos, ELF_FILE_HEADER,
+                ELF_HEADER_SIZE) == nullptr)
+    {
+        return COMPILER_RETURN_ALLOCATION_ERROR;
+    }
 
     return COMPILER_RETURN_SUCCESS;
 }
