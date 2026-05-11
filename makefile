@@ -8,7 +8,10 @@ COMMON_SOURCES = \
 		  common/tree/tree.cpp\
 		  common/tree/tree_dump.cpp\
 		  common/tree/tree_reader.cpp\
-		  common/error_utils/error_handler.cpp
+		  common/error_utils/error_handler.cpp\
+		  common/hashtable/hash.cpp\
+		  common/hashtable/hashtable.cpp\
+		  common/list/list.cpp
 
 AST_SOURCES_ALT = \
  		  front_end/recursive_decent/recursive_decent.cpp\
@@ -53,6 +56,8 @@ INCLUDES_DIR =\
 			common/tree\
 			common/vector\
 			common/error_utils\
+			common/list\
+			common/hashtable\
 			my_lang_lib/\
 
 OBJ_DIR = obj

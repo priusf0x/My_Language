@@ -175,6 +175,23 @@ PrintCurrentLine(size_t   position,
                                 buffer->buffer + start_line);
 }
 
+void 
+SkipAlNumB(buffer_t buffer)
+{
+    assert(buffer != nullptr);
+
+    buffer->current_position = SkipAlpha(buffer->buffer, buffer->current_position);
+}
+
+void 
+SkipNotAlNumB(buffer_t buffer)
+{
+    assert(buffer != nullptr);
+
+    buffer->current_position = SkipNotAlpha(buffer->buffer, buffer->current_position);
+}
+
+
 
 // =============================== BUFFER_DUMP ================================
 

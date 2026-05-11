@@ -72,8 +72,8 @@ PrintNode(tree_t  tree,
         id_s value = node.node_value.value.id;
         
         fprintf(file_output, "%d %d %.*s %d %d %ld %ld",
-                    LEX_TYPE_ID, (int) value.id.string_size,
-                    (int) value.id.string_size, value.id.string_source,
+                    LEX_TYPE_ID, (int) value.id.size,
+                    (int) value.id.size, value.id.string,
                     value.is_function, value.is_global,
                     value.info1, value.info2);
     }
@@ -192,8 +192,8 @@ PrintElementInString(const token_s* token,
     {   
         case LEX_TYPE_ID:
             snprintf(address, string_length, "id %.*s %d %d %ld %ld", 
-                        (int) token->value.id.id.string_size,
-                        token->value.id.id.string_source, 
+                        (int) token->value.id.id.size,
+                        token->value.id.id.string, 
                         token->value.id.is_function,
                         token->value.id.is_global,
                         token->value.id.info1,

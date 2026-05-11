@@ -25,5 +25,15 @@ compiler_return_e
 SectionEmitByte(section_t section,
                 uint8_t   byte);
 
+compiler_return_e
+SectionEmitQword(section_t section,
+                 uint64_t  qword);
+
+compiler_return_e
+SectionEmitDword(section_t section,
+                 uint32_t  dword);
+
+compiler_return_e
+SectionCreateFileH(section_t section);
 
 #endif // ELF_H

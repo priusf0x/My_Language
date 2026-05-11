@@ -42,8 +42,8 @@ GetVarPos(ssize_t    lex,
     if (val.value.id.is_global)
     {
         fprintf(compiler->file_output, "qword [%.*s]", 
-                    (int) val.value.id.id.string_size,
-                    val.value.id.id.string_source);
+                    (int) val.value.id.id.size,
+                    val.value.id.id.string);
     }
     else 
     {
@@ -148,7 +148,7 @@ CompileFuncCall(ssize_t    lex,
 
     CHECK_OUTPUT(CompileFunctionArgs(lex, compiler));
     fprintf(compiler->file_output, "\tcall %.*s\n", 
-                (int) id.id.string_size, id.id.string_source);
+                (int) id.id.size, id.id.string);
     fprintf(compiler->file_output, "\tmov rbx, rax\n");
 
     return COMPILER_RETURN_SUCCESS;
@@ -200,7 +200,7 @@ CompileGlobalData(ssize_t    lex,
     node_data_t val_str = id_node.node_value;
         
     fprintf(compiler->file_output, data_template, 
-                val_str.value.id.id.string_size, val_str.value.id.id.string_source,
+                val_str.value.id.id.size, val_str.value.id.id.string,
                 val_node.node_value.value.constant);
     
     return COMPILER_RETURN_SUCCESS;
@@ -224,7 +224,7 @@ CompileGlobalBSS(ssize_t    lex,
     node_data_t val = cur_node.node_value;
         
     fprintf(compiler->file_output, bss_template, 
-                val.value.id.id.string_size, val.value.id.id.string_source);
+                val.value.id.id.size, val.value.id.id.string);
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -315,6 +315,8 @@ CompileArguments(ssize_t    lex,
     
     COMMENT("\n;compile args\n");
 
+    assert(arg_count <= 6); // not added yet  
+
     switch (arg_count)
     {
         default:
@@ -359,7 +361,7 @@ SetFunctionName(ssize_t    lex,
     string_s id = array[id_ind].node_value.value.id.id;
     
     fprintf(compiler->file_output, "\n%.*s:\n", 
-                (int) id.string_size, id.string_source);
+                (int) id.size, id.string);
 
     return COMPILER_RETURN_SUCCESS;
 }

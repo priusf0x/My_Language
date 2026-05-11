@@ -50,6 +50,10 @@ size_t
 GetLineB(size_t position, buffer_t buffer);
 void 
 PrintCurrentLine(size_t position, buffer_t buffer);
+void 
+SkipAlNumB(buffer_t buffer);
+void 
+SkipNotAlNumB(buffer_t buffer);
 
 
 // ================================= DUMP =====================================

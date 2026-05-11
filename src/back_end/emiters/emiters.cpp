@@ -27,6 +27,8 @@ SectionAddByte(section_t section,
 }
 
 #define EMIT(_X_) SectionEmitByte(section, (_X_))
+#define EMIT_D(_X_) SectionEmitDword(section, (_X_))
+#define EMIT_Q(_X_) SectionEmitQword(section, (_X_))
 
 // ================================= EMITERS ==================================
 
@@ -78,8 +80,7 @@ emit_call(section_t section,
     
     int32_t rel_address = (int32_t) ((int64_t) address - (int64_t) rel_start); 
 
-    memcpy(section->section + section->cur_pos, &rel_address, sizeof(int32_t));
-    section->cur_pos += sizeof(int32_t);
+    EMIT_D((uint32_t) rel_address);
 }
 
 void 
@@ -132,8 +133,7 @@ emit_move(section_t section,
 
     EMIT(op_code | ((uint8_t) reg_d & (~REG_EXTENDED)));
     
-    memcpy(section->section + section->cur_pos, &constant, sizeof(int64_t));
-    section->cur_pos += sizeof(int64_t);
+    EMIT_Q(constant);
 }
 
 void 
@@ -159,8 +159,7 @@ emit_move_mem(section_t section,
     const uint8_t magic_byte = 0x25;
     EMIT(magic_byte);
     
-    memcpy(section->section + section->cur_pos, &addr, sizeof(int32_t));
-    section->cur_pos += sizeof(int32_t);
+    EMIT_D((uint32_t) addr);
 }
 
 void 
@@ -186,8 +185,7 @@ emit_move_mem(section_t section,
     const uint8_t magic_byte = 0x25;
     EMIT(magic_byte);
     
-    memcpy(section->section + section->cur_pos, &addr, sizeof(int32_t));
-    section->cur_pos += sizeof(int32_t);
+    EMIT_D((uint32_t) addr);
 }
 
 void 
@@ -211,8 +209,7 @@ emit_move_mem(section_t section,
     
     EMIT((uint8_t) (m_to_r | ((reg_d & ~REG_EXTENDED) << 3 | (reg_b & ~REG_EXTENDED))));
     
-    memcpy(section->section + section->cur_pos, &offset, sizeof(int32_t));
-    section->cur_pos += sizeof(int32_t);
+    EMIT_D((uint32_t) offset);
 }
 
 void 
@@ -236,8 +233,7 @@ emit_move_mem(section_t section,
     
     EMIT((uint8_t) (m_to_r | ((reg_d & ~REG_EXTENDED) << 3 | (reg_d & ~REG_EXTENDED))));
     
-    memcpy(section->section + section->cur_pos, &offset, sizeof(int32_t));
-    section->cur_pos += sizeof(int32_t);
+    EMIT_D((uint32_t) offset);
 }
    
 // ----------------------------------------------------------------------------
@@ -350,9 +346,9 @@ emit_arithmetic(section_t section,
     EMIT(op_code);
     
     const uint8_t r_to_r = 0b11000000;
-    uint8_t rw_byte = (uint8_t) (r_to_r |((reg_s & ~REG_EXTENDED) << 3) | (reg_d & ~REG_EXTENDED));
+    uint8_t rw_byte = (uint8_t) (r_to_r |((reg_s & ~REG_EXTENDED) << 3) 
+                                    | (reg_d & ~REG_EXTENDED));
     EMIT(rw_byte);
-    
 }
 
 void
@@ -380,14 +376,14 @@ emit_add(section_t section,
 }
 
 
-void
-emit_imul(section_t section,
-          reg_e     reg_d,
-          reg_e     reg_s)
-{
-    assert(section != nullptr);
+// void
+// emit_imul(section_t section,
+//           reg_e     reg_d,
+//           reg_e     reg_s)
+// {
+//     assert(section != nullptr);
 
     // const uint8_t op_code = 0x01;
 
     // emit_arithmetic(section, reg_d, reg_s, op_code);
-}
+// }

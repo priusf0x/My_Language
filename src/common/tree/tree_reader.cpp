@@ -41,11 +41,11 @@ ReadNode(ssize_t*   return_node,
     }
     else if (lex_type == LEX_TYPE_ID)
     {
-        token.node_value.value.id.id.string_size = (size_t) ReadLongB(buffer);
+        token.node_value.value.id.id.size = (size_t) ReadLongB(buffer);
         SkipSpacesB(buffer);
-        token.node_value.value.id.id.string_source = 
+        token.node_value.value.id.id.string = 
                                 buffer->buffer + buffer->current_position;
-        SkipNSymbolsB(buffer, token.node_value.value.id.id.string_size);
+        SkipNSymbolsB(buffer, token.node_value.value.id.id.size);
         token.node_value.value.id.is_function = (int) ReadLongB(buffer);
         SkipSpacesB(buffer);
         token.node_value.value.id.is_global = (int) ReadLongB(buffer);

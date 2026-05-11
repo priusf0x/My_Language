@@ -6,8 +6,8 @@
 
 struct string_s
 {
-    char*  string_source;
-    size_t string_size;
+    char*  string;
+    size_t size;
 };
 
 typedef string_s* string_t;
@@ -32,7 +32,8 @@ bool StrCmpWithEnding(const char* string, const char* example,
               size_t lenght, const char* end_symbols);
 bool CheckIfSymbVar(char symbol);
 void ReadVarString(char* src, string_s* string_dst);
-
+size_t SkipAlpha(const char* string, size_t current_position);
+size_t SkipNotAlpha(const char* string, size_t current_position);
 unsigned int HashString(const string_s* string);
 
 // ============================================================================

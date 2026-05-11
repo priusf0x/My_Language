@@ -1,6 +1,7 @@
 #include "my_elf.h"
 
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <elf.h>
 #include <stdlib.h>
@@ -31,7 +32,7 @@ static const char* const ELF_FILE_HEADER =
     "\x00\x00"                             /*amount of sections*/
     "\x00\x00"                             /*index of shrtab*/
     ;
-static const size_t ELF_HEADER_SIZE = sizeof(ELF_FILE_HEADER);
+static const size_t ELF_FILE_H_SIZE = 64;
 
 static const char* const ELF_PROGRAM_HEADER = 
     "\x01\x00\x00\x00"                     /*type of segment*/
@@ -43,7 +44,7 @@ static const char* const ELF_PROGRAM_HEADER =
     "\x00\x00\x00\x00\x00\x00\x00\x00"     /*segment mem size*/
     "\x00\x00\x00\x00\x00\x00\x00\x00"     /*align*/
     ;
-static const size_t ELF_PROGRAM_SIZE = sizeof(ELF_PROGRAM_HEADER);
+static const size_t ELF_PROGRAM_H_SIZE = 56;
 
 // ============================== SECTION_METHODS =============================
 
@@ -64,7 +65,7 @@ SetSectionSize(section_t section,
     section->section = new_ptr;
     section->max_size = new_size;
 
-   return COMPILER_RETURN_ALLOCATION_ERROR; 
+   return COMPILER_RETURN_SUCCESS; 
 }
 
 
@@ -126,14 +127,59 @@ SectionEmitByte(section_t section,
 }
 
 compiler_return_e
-SectionCreateFileHeader(section_t section)
+SectionEmitDword(section_t section,
+                 uint32_t  dword)
 {
     assert(section != nullptr);
     
     compiler_return_e output = COMPILER_RETURN_SUCCESS;
-    if ((section->max_size + ELF_HEADER_SIZE) >= section->max_size)
+    if (section->cur_pos + 4 >= section->max_size)
     {
-        output = SetSectionSize(section, 2 * (section->max_size + ELF_HEADER_SIZE));
+        output = SetSectionSize(section, 2 * section->max_size);
+        if (output != COMPILER_RETURN_SUCCESS)
+        {
+            return output;
+        }
+    }
+    
+    memcpy(section->section + section->cur_pos, &dword, sizeof(int32_t));
+    section->cur_pos += sizeof(int32_t);
+    
+    return COMPILER_RETURN_SUCCESS;
+}
+
+
+compiler_return_e
+SectionEmitQword(section_t section,
+                 uint64_t  qword)
+{
+    assert(section != nullptr);
+    
+    compiler_return_e output = COMPILER_RETURN_SUCCESS;
+    if (section->cur_pos + 8 >= section->max_size)
+    {
+        output = SetSectionSize(section, 2 * section->max_size);
+        if (output != COMPILER_RETURN_SUCCESS)
+        {
+            return output;
+        }
+    }
+    
+    memcpy(section->section + section->cur_pos, &qword, sizeof(int64_t));
+    section->cur_pos += sizeof(int64_t);
+
+    return COMPILER_RETURN_SUCCESS;
+}
+
+compiler_return_e
+SectionCreateFileH(section_t section)
+{
+    assert(section != nullptr);
+    
+    compiler_return_e output = COMPILER_RETURN_SUCCESS;
+    if ((section->cur_pos + ELF_FILE_H_SIZE) >= section->max_size)
+    {
+        output = SetSectionSize(section, 2 * (section->max_size + ELF_FILE_H_SIZE));
         if (output != COMPILER_RETURN_SUCCESS)
         {
             return output;
@@ -141,10 +187,11 @@ SectionCreateFileHeader(section_t section)
     }
 
     if (memcpy(section->section + section->cur_pos, ELF_FILE_HEADER,
-                ELF_HEADER_SIZE) == nullptr)
+                ELF_FILE_H_SIZE) == nullptr)
     {
         return COMPILER_RETURN_ALLOCATION_ERROR;
     }
+    section->cur_pos += ELF_FILE_H_SIZE;
 
     return COMPILER_RETURN_SUCCESS;
 }

@@ -63,6 +63,6 @@ unsigned int MurmurHash2 (char * key, unsigned int len)
 unsigned int 
 HashString(const string_s* string)
 {
-    return MurmurHash2(string->string_source, 
-                          (unsigned int) string->string_size);
+    return MurmurHash2(string->string, 
+                          (unsigned int) string->size);
 }

@@ -46,9 +46,9 @@ PrintString(const string_s* string,
     assert(string != NULL);
     assert(file_output != NULL);
     
-    fwrite(string->string_source,
+    fwrite(string->string,
            sizeof(char),
-           string->string_size,
+           string->size,
            file_output);
 }
 
@@ -90,6 +90,40 @@ ReadVarString(char*       src,
         current_symbol = src[lenght]; 
     } 
 
-    *string_dst = {.string_source = src,
-                   .string_size   = lenght};
+    *string_dst = {.string = src,
+                   .size   = lenght};
+}
+
+size_t
+SkipAlpha(const char* string,  
+          size_t      current_position)
+{
+    assert(string != nullptr);
+
+    char character = *(string + current_position);
+
+    while (isalnum(character) && (character != '\0'))
+    {
+        current_position++;
+        character = *(string + current_position);
+    }
+
+    return current_position;
+}
+
+size_t
+SkipNotAlpha(const char* string,
+             size_t      current_position)
+{
+    assert(string != NULL);
+
+    char character = *(string + current_position);
+
+    while (!isalnum(character) && (character != '\0'))
+    {
+        current_position++;
+        character = *(string + current_position);
+    }
+
+    return current_position;
 }
