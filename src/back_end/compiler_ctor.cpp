@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "list.h"
+#include "my_elf.h"
 #include "tree.h"
 #include "buffer.h"
 #include "tools.h"
@@ -23,6 +25,8 @@ CompilerCtor(const char* input_name,
 
     compiler_return_e output = COMPILER_RETURN_SUCCESS;
     const size_t start_tree_size = 100;
+    const size_t start_section_size = 100;
+    const size_t placeholder_size = 10;
 
     *compiler = (compiler_t) calloc(1, sizeof(compiler_s));
 
@@ -51,9 +55,21 @@ CompilerCtor(const char* input_name,
 
     (*compiler)->file_output = fopen(output_name, "w+");
     
-    if ((*compiler)->file_output == NULL)
+    if ((*compiler)->file_output == nullptr)
     {
         output = COMPILER_RETURN_FILE_OPEN_ERROR;
+        goto error;
+    }
+    
+    if (SectionCtor(&(*compiler)->main_section, start_section_size))
+    {
+        output = COMPILER_RETURN_SECTION_ERROR;
+        goto error;
+    }
+
+    if (InitList(&(*compiler)->placeholder.placeholder_list, placeholder_size))
+    {
+        output = COMPILER_RETURN_LIST_ERROR;
         goto error;
     }
 
@@ -62,8 +78,10 @@ CompilerCtor(const char* input_name,
 error:
     TreeDtor(&(*compiler)->compiler_tree);
     BufferDtor(&(*compiler)->buffer);
+    fclose((*compiler)->file_output);
+    SectionDtor((*compiler)->main_section);
     free(*compiler);
-    *compiler = NULL;
+    *compiler = nullptr;
     
     return output;
 }
@@ -71,14 +89,16 @@ error:
 compiler_return_e
 CompilerDtor(compiler_t* compiler)
 {   
-    if ((compiler != NULL) && (*compiler != NULL))
+    if ((compiler != nullptr) && (*compiler != nullptr))
     {
         TreeDtor(&(*compiler)->compiler_tree);
         BufferDtor(&(*compiler)->buffer);
         fclose((*compiler)->file_output);
+        SectionDtor((*compiler)->main_section);
+        DestroyList((*compiler)->placeholder);
         free(*compiler);
 
-        *compiler = NULL;
+        *compiler = nullptr;
     }
 
     return COMPILER_RETURN_SUCCESS;

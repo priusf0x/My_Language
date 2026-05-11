@@ -1,17 +1,29 @@
 #ifndef COMPILER_H
 #define COMPILER_H
 
+#include <cstdint>
 #include <stdlib.h>
 
+#include "my_elf.h"
 #include "tree.h"
 #include "buffer.h"
+#include "list.h"
+
+struct placeholders_s 
+{
+    list_t placeholder_list;
+    size_t function_placeholders;
+    size_t variable_placeholders;
+};
 
 struct compiler_s 
 {  
-    buffer_t buffer;
-    tree_t   compiler_tree;
-    FILE*    file_output;
-    size_t   label_count;
+    buffer_t       buffer;
+    tree_t         compiler_tree;
+    FILE*          file_output;
+    size_t         label_count;
+    section_t      main_section;
+    placeholders_s placeholder;
 };
 typedef compiler_s* compiler_t;
 
@@ -24,7 +36,9 @@ enum compiler_return_e
     COMPILER_RETURN_AST_STANDARD_ERROR,
     COMPILER_RETURN_FILE_OPEN_ERROR,
     COMPILER_RETURN_FILE_CLOSE_ERROR,
-    COMPILER_RETURN_INCORRECT_AST
+    COMPILER_RETURN_INCORRECT_AST,
+    COMPILER_RETURN_SECTION_ERROR,
+    COMPILER_RETURN_LIST_ERROR
 };
 
 // =========================== MEMORY_CONTROLLING =============================

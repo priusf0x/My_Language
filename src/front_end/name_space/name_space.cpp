@@ -159,8 +159,8 @@ AddNameInTable(name_s*      name,
 
     name_table_return_e output = NAME_TABLE_RETURN_SUCCESS;
 
-    if ((name->string.string_source == NULL) 
-            || (name->string.string_size == 0))
+    if ((name->string.string == NULL) 
+            || (name->string.size == 0))
     {
         return NAME_TABLE_RETURN_BAD_ID;
     }

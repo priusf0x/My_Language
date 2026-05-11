@@ -18,38 +18,20 @@ static const char* OUTPUT_NAME = "compiled.asm";
 int main(void)
 {
 
-    // compiler_t compiler = nullptr;
-    // CompilerCtor(AST_FILE, OUTPUT_NAME, &compiler);
+    compiler_t compiler = nullptr;
+    CompilerCtor(AST_FILE, OUTPUT_NAME, &compiler);
 
-    // #ifndef NDEBUG
-    // TreeDump(compiler->compiler_tree);
-    // #endif
+    #ifndef NDEBUG
+    TreeDump(compiler->compiler_tree);
+    #endif
 
-    // CompileAST(compiler);
-    
-    // CompilerDtor(&compiler);
+    CompileAST(compiler);
 
-    // section_t section = nullptr;
+    for (size_t i = 0; i < compiler->main_section->cur_pos; i++) {
+        fprintf(stderr, "%02X ", compiler->main_section->section[i]);
+    }
 
-    // SectionCtor(&section, 10);
-
-    // SectionCreateFileH(section);
-    
-    // for (size_t i = 0; i < section->cur_pos; i++) {
-    //     fprintf(stderr, "%02X ", section->section[i]);
-    // }
-
-    // SectionDtor(section);
-    
-    // EmitPush(meow, REGISTER, R11);
-    
-    // size_t i = 0;
-    // while (meow[i])
-    // {
-    //     fprintf(stderr, "%x", meow[i]);
-    //     i++;
-    // }
-
+    CompilerDtor(&compiler);
 
     return 0;
 }

@@ -81,7 +81,7 @@ ReadIdFromBuffer(buffer_t  buffer,
 
     size_t check_output = 0;
     size_t string_length = 0;
-    id_string->string_source = CURRENT_POSITION;
+    id_string->string = CURRENT_POSITION;
 
     do 
     {
@@ -91,7 +91,7 @@ ReadIdFromBuffer(buffer_t  buffer,
     }
     while (check_output);
 
-    id_string->string_size = string_length;
+    id_string->size = string_length;
 }
 
 // ================================== LEXER ===================================

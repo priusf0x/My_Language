@@ -5,7 +5,9 @@
 #include <cstdio>
 #include <stdlib.h>
 
+#include "emiters.h"
 #include "lexes.h"
+#include "list.h"
 #include "tree.h"
 
 // ============================== MACROS/STRUCTS ==============================
@@ -842,6 +844,8 @@ SetASMHeader(compiler_t compiler)
 {
     assert(compiler != nullptr);
 
+/* nasm part */ 
+
     const char* asm_header = 
                              "global main\n";
 /*                              "_start:\n"
@@ -852,6 +856,12 @@ SetASMHeader(compiler_t compiler)
  */
     fprintf(compiler->file_output, "%s", asm_header);
     
+/* elf part*/
+    
+    emit_call(compiler->main_section, 0x696969);    
+    
+    
+
     return COMPILER_RETURN_SUCCESS;
 }
 
@@ -871,3 +881,26 @@ CompileAST(compiler_t compiler)
 }
 
 #pragma clang diagnostic warning "-Wformat-nonliteral"
+
+// ---------------------------- placeholder -----------------------------------
+
+static compiler_return_e 
+SetFuncPlaceholder(compiler_t compiler,
+                   string_s   string,
+                   size_t     offset)
+{
+    assert(compiler != nullptr);
+
+    if (compiler->placeholder.function_placeholders == 0)
+    {
+        data_type new_elem = {.string = string, .addr = offset};
+        list_t list = compiler->placeholder.placeholder_list;
+        if (ListInitNewElem(list, &new_elem,
+                    &compiler->placeholder.function_placeholders))
+        {
+            return COMPILER_RETURN_LIST_ERROR;
+        }
+    }
+    
+    return COMPILER_RETURN_SUCCESS;
+}

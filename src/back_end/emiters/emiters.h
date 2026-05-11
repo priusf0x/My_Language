@@ -68,14 +68,14 @@ emit_move(section_t section,
 // move from/to memory
 
 void 
-emit_move_mem(section_t section,
-              reg_e     reg_d,
-              uint64_t  addr);
+emit_move_abs_mem(section_t section,
+                  reg_e     reg_d,
+                  uint64_t  addr);
               
 void 
-emit_move_mem(section_t section,
-              uint64_t  addr,
-              reg_e     reg_d);
+emit_move_abs_mem(section_t section,
+                  uint64_t  addr,
+                  reg_e     reg_d);
 
 void 
 emit_move_mem(section_t section,

@@ -48,7 +48,7 @@ static const size_t ELF_PROGRAM_H_SIZE = 56;
 
 // ============================== SECTION_METHODS =============================
 
-static compiler_return_e
+static section_return_e
 SetSectionSize(section_t section,
                size_t    new_size)
 {
@@ -59,40 +59,40 @@ SetSectionSize(section_t section,
 
     if (new_ptr == nullptr)
     {
-        return COMPILER_RETURN_ALLOCATION_ERROR;
+        return SECTION_BAD_ALLOC;
     }
     
     section->section = new_ptr;
     section->max_size = new_size;
 
-   return COMPILER_RETURN_SUCCESS; 
+   return SECTION_SUCCESS; 
 }
 
 
-compiler_return_e
+section_return_e
 SectionCtor(section_t* section,
             size_t     start_size)
 {
     assert(section != nullptr);
 
-    compiler_return_e output = COMPILER_RETURN_SUCCESS;
+    section_return_e output = SECTION_SUCCESS;
 
     (*section) = (section_t) calloc(1, sizeof(section_s));
     if (*section == nullptr)
     {
-       return COMPILER_RETURN_ALLOCATION_ERROR; 
+       return SECTION_BAD_ALLOC; 
     }
 
     output = SetSectionSize(*section, start_size);
-    if (output != COMPILER_RETURN_SUCCESS)
+    if (output != SECTION_SUCCESS)
     {
         return output;
     }
    
-    return COMPILER_RETURN_SUCCESS;
+    return SECTION_SUCCESS;
 }
 
-compiler_return_e 
+section_return_e 
 SectionDtor(section_t section)
 {
     if (section != nullptr)
@@ -101,20 +101,20 @@ SectionDtor(section_t section)
         free(section);
     }
     
-    return COMPILER_RETURN_SUCCESS;
+    return SECTION_SUCCESS;
 }
 
-compiler_return_e
+section_return_e
 SectionEmitByte(section_t section,
                 uint8_t   byte)
 {
     assert(section != nullptr);
     
-    compiler_return_e output = COMPILER_RETURN_SUCCESS;
+    section_return_e output = SECTION_SUCCESS;
     if (section->cur_pos + 1 >= section->max_size)
     {
         output = SetSectionSize(section, 2 * section->max_size);
-        if (output != COMPILER_RETURN_SUCCESS)
+        if (output != SECTION_SUCCESS)
         {
             return output;
         }
@@ -123,20 +123,20 @@ SectionEmitByte(section_t section,
     *(section->section + section->cur_pos) = byte;
     section->cur_pos++;
 
-    return COMPILER_RETURN_SUCCESS;
+    return SECTION_SUCCESS;
 }
 
-compiler_return_e
+section_return_e
 SectionEmitDword(section_t section,
                  uint32_t  dword)
 {
     assert(section != nullptr);
     
-    compiler_return_e output = COMPILER_RETURN_SUCCESS;
+    section_return_e output = SECTION_SUCCESS;
     if (section->cur_pos + 4 >= section->max_size)
     {
         output = SetSectionSize(section, 2 * section->max_size);
-        if (output != COMPILER_RETURN_SUCCESS)
+        if (output != SECTION_SUCCESS)
         {
             return output;
         }
@@ -145,21 +145,21 @@ SectionEmitDword(section_t section,
     memcpy(section->section + section->cur_pos, &dword, sizeof(int32_t));
     section->cur_pos += sizeof(int32_t);
     
-    return COMPILER_RETURN_SUCCESS;
+    return SECTION_SUCCESS;
 }
 
 
-compiler_return_e
+section_return_e
 SectionEmitQword(section_t section,
                  uint64_t  qword)
 {
     assert(section != nullptr);
     
-    compiler_return_e output = COMPILER_RETURN_SUCCESS;
+    section_return_e output = SECTION_SUCCESS;
     if (section->cur_pos + 8 >= section->max_size)
     {
         output = SetSectionSize(section, 2 * section->max_size);
-        if (output != COMPILER_RETURN_SUCCESS)
+        if (output != SECTION_SUCCESS)
         {
             return output;
         }
@@ -168,19 +168,19 @@ SectionEmitQword(section_t section,
     memcpy(section->section + section->cur_pos, &qword, sizeof(int64_t));
     section->cur_pos += sizeof(int64_t);
 
-    return COMPILER_RETURN_SUCCESS;
+    return SECTION_SUCCESS;
 }
 
-compiler_return_e
+section_return_e
 SectionCreateFileH(section_t section)
 {
     assert(section != nullptr);
     
-    compiler_return_e output = COMPILER_RETURN_SUCCESS;
+    section_return_e output = SECTION_SUCCESS;
     if ((section->cur_pos + ELF_FILE_H_SIZE) >= section->max_size)
     {
         output = SetSectionSize(section, 2 * (section->max_size + ELF_FILE_H_SIZE));
-        if (output != COMPILER_RETURN_SUCCESS)
+        if (output != SECTION_SUCCESS)
         {
             return output;
         }
@@ -189,9 +189,9 @@ SectionCreateFileH(section_t section)
     if (memcpy(section->section + section->cur_pos, ELF_FILE_HEADER,
                 ELF_FILE_H_SIZE) == nullptr)
     {
-        return COMPILER_RETURN_ALLOCATION_ERROR;
+        return SECTION_COPY_ERR;
     }
     section->cur_pos += ELF_FILE_H_SIZE;
 
-    return COMPILER_RETURN_SUCCESS;
+    return SECTION_SUCCESS;
 }

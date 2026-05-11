@@ -213,6 +213,7 @@ DestroyList(list_t list)
 
     return LIST_RETURN_SUCCESS;
 }
+
 // ================== NAVIGATION_IN_LIST =======================
 
 list_return_e

@@ -163,7 +163,7 @@ emit_move_mem(section_t section,
 }
 
 void 
-emit_move_mem(section_t section,
+emit_move_abs_mem(section_t section,
               uint64_t  addr,
               reg_e     reg_d)
 {

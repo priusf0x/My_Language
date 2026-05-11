@@ -163,16 +163,16 @@ FindDifference(state_machine_t state_machine,
     assert(state_machine != NULL);
     assert(key_word_string != NULL);
 
-    unsigned char character = (unsigned char) *key_word_string->string_source;
+    unsigned char character = (unsigned char) *key_word_string->string;
     state_t next_state = GetNextState(character, 0, state_machine);;
     state_t current_state = 0;
     
     while (!(next_state & END_STATE_FLAG) // change to check if end state 
-                && (key_word_string->string_size != 0))
+                && (key_word_string->size != 0))
     {
-        key_word_string->string_source++;
-        key_word_string->string_size--;
-        character = (unsigned char) *key_word_string->string_source;
+        key_word_string->string++;
+        key_word_string->size--;
+        character = (unsigned char) *key_word_string->string;
         current_state = next_state;
         next_state = GetNextState(character, next_state, 
                                                 state_machine); 
@@ -193,14 +193,14 @@ AddWordToDictionary(state_t*        state,
     state_t current_state = *state;
     state_t next_state = *state;
 
-    while (key_word_string->string_size != 0) 
+    while (key_word_string->size != 0) 
     {
         RETURN_IF_STATE_MACHINE_ERROR(CreateNewState(&next_state, 
                                                         state_machine));
         
-        character = (unsigned char) *key_word_string->string_source;
-        key_word_string->string_source++;
-        key_word_string->string_size--;
+        character = (unsigned char) *key_word_string->string;
+        key_word_string->string++;
+        key_word_string->size--;
         PutValueInState(next_state, character, current_state, state_machine);
     
         current_state = next_state;
