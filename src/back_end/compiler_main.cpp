@@ -27,8 +27,10 @@ int main(void)
 
     CompileAST(compiler);
 
-    for (size_t i = 0; i < compiler->main_section->cur_pos; i++) {
-        fprintf(stderr, "%02X ", compiler->main_section->section[i]);
+    SegmentWriteInFile(compiler->main_segment, "a.out");
+
+    for (size_t i = 0; i < compiler->main_segment->cur_pos; i++) {
+        fprintf(stderr, "%02X ", compiler->main_segment->segment[i]);
     }
 
     CompilerDtor(&compiler);

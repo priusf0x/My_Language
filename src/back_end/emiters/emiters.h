@@ -30,127 +30,130 @@ enum reg_e
     NONE = 0b10000
 };
 
+void 
+emit_syscall(segment_t segment);
+             
 // ================================= PUSH/POP =================================
 
 void 
-emit_push(section_t section,
+emit_push(segment_t segment,
           reg_e     reg);
 
 void 
-emit_pop(section_t section,
+emit_pop(segment_t segment,
          reg_e     reg);
 
 // ================================== CALL/RET ================================
 
 void 
-emit_call(section_t section,
+emit_call(segment_t segment,
           uint64_t  addr);
 
 void 
-emit_ret(section_t section);
+emit_ret(segment_t segment);
 
 // ==================================== MOVE ==================================
 
 // move reg to reg
 
 void 
-emit_move(section_t section,
-          reg_e     reg_d,
-          reg_e     reg_s);
+emit_mov(segment_t segment,
+         reg_e     reg_d,
+         reg_e     reg_s);
 
 // move const to reg
           
 void 
-emit_move(section_t section,
-          reg_e     reg_d,
-          int64_t   constant);
+emit_mov(segment_t segment,
+         reg_e     reg_d,
+         int64_t   constant);
 
 // move from/to memory
 
 void 
-emit_move_abs_mem(section_t section,
-                  reg_e     reg_d,
-                  uint64_t  addr);
+emit_mov_abs_mem(segment_t segment,
+                 reg_e     reg_d,
+                 uint64_t  addr);
               
 void 
-emit_move_abs_mem(section_t section,
-                  uint64_t  addr,
-                  reg_e     reg_d);
+emit_mov_abs_mem(segment_t segment,
+                 uint64_t  addr,
+                 reg_e     reg_d);
 
 void 
-emit_move_mem(section_t section,
-              reg_e     reg_d,
-              reg_e     reg_b,
-              int64_t   offset);
+emit_mov_mem(segment_t segment,
+             reg_e     reg_d,
+             reg_e     reg_b,
+             int64_t   offset);
 
 void 
-emit_move_mem(section_t section,
-              reg_e     reg_b,
-              int64_t   offset,
-              reg_e     reg_s);
+emit_mov_mem(segment_t segment,
+             reg_e     reg_b,
+             int64_t   offset,
+             reg_e     reg_s);
 
 // ================================== CMOVE ===================================
           
 void  
-emit_cmove(section_t section,
+emit_cmove(segment_t segment,
            reg_e     reg_d,
            reg_e     reg_s);
 
 void  
-emit_cmovne(section_t section,
+emit_cmovne(segment_t segment,
             reg_e     reg_d,
             reg_e     reg_s);
 
 
 void  
-emit_cmovg(section_t section,
+emit_cmovg(segment_t segment,
            reg_e     reg_d,
            reg_e     reg_s);
 
 void  
-emit_cmovge(section_t section,
+emit_cmovge(segment_t segment,
             reg_e     reg_d,
             reg_e     reg_s);
 
 void  
-emit_cmovl(section_t section,
+emit_cmovl(segment_t segment,
            reg_e     reg_d,
            reg_e     reg_s);
 
 void  
-emit_cmovle(section_t section);
+emit_cmovle(segment_t segment);
 
 // ================================ ARITHMETIC ================================
 
 void 
-emit_cmp(section_t section,
+emit_cmp(segment_t segment,
          reg_e     reg_a,
          reg_e     reg_b);
 
 void 
-emit_add(section_t section,
+emit_add(segment_t segment,
          reg_e     reg_d,
          reg_e     reg_s);
 
 void 
-emit_sub(section_t section,
+emit_sub(segment_t segment,
          reg_e     reg_d,
          reg_e     reg_s);
 
 void 
-emit_div(section_t section,
+emit_div(segment_t segment,
          reg_e     reg_d,
          reg_e     reg_s);
          
 void 
-emit_mul(section_t section,
+emit_mul(segment_t segment,
          reg_e     reg_d,
          reg_e     reg_s);
 
 // ================================== JUMPS ===================================
           
 // void 
-// emit_jmp(section_t section,
+// emit_jmp(section_t segment,
 //          address   addr);
 
 #endif // EMITERS_H

@@ -2,12 +2,14 @@
 
 #include <assert.h>
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <stdlib.h>
 
 #include "emiters.h"
 #include "lexes.h"
 #include "list.h"
+#include "my_elf.h"
 #include "tree.h"
 
 // ============================== MACROS/STRUCTS ==============================
@@ -73,6 +75,43 @@ GetVarPos(ssize_t    lex,
 }
     
 // ============================= AST COMPILE ==================================
+
+// ---------------------------- placeholder -----------------------------------
+
+static compiler_return_e 
+SetPlaceholder(compiler_t compiler,
+               string_s   string,
+               size_t     offset,
+               size_t*    prev_el)
+{
+    assert(compiler != nullptr);
+    assert(prev_el != nullptr);
+
+    if (*prev_el == 0)
+    {
+        data_type new_elem = {.string = string, .addr = offset};
+        list_t list = compiler->placehldr.list;
+        if (ListInitNewElem(list, &new_elem, prev_el))
+        {
+            return COMPILER_RETURN_LIST_ERROR;
+        }
+    }
+    else 
+    {
+        data_type new_elem = {.string = string, .addr = offset};
+        list_t list = compiler->placehldr.list;
+        if (ListAddAfterElement(list, &new_elem, 
+                (size_t) compiler->placehldr.func))
+        {
+            return COMPILER_RETURN_LIST_ERROR;
+        }
+        *prev_el = (size_t) GetNextElement(list, *prev_el);
+    } 
+    
+    
+    return COMPILER_RETURN_SUCCESS;
+}
+
 
 // ----------------------------- compile_id -----------------------------------
 
@@ -192,9 +231,9 @@ CompileGlobalData(ssize_t    lex,
     assert(lex != NO_LINK);
 
     const char* data_template = 
-        "section .data\n" 
+        "segment .data\n" 
         "\t%.*s dq %ld\n" 
-        "section .text\n";
+        "segment .text\n";
     
     node_s* array = compiler->compiler_tree->nodes_array;
     node_s id_node = array[array[lex].left_index];
@@ -217,9 +256,9 @@ CompileGlobalBSS(ssize_t    lex,
     assert(lex != NO_LINK);
 
     const char* bss_template = 
-        "section .bss\n" 
+        "segment .bss\n" 
         "\t%.*s resq 1\n" 
-        "section .code\n";
+        "segment .code\n";
     
     node_s* array = compiler->compiler_tree->nodes_array;
     node_s cur_node = array[array[lex].left_index];
@@ -857,10 +896,13 @@ SetASMHeader(compiler_t compiler)
     fprintf(compiler->file_output, "%s", asm_header);
     
 /* elf part*/
-    
-    emit_call(compiler->main_section, 0x696969);    
-    
-    
+
+    SegmentCreateFileH(compiler->main_segment);
+    SegmentCreateProgramH(compiler->main_segment);
+
+    emit_mov(compiler->main_segment, RDI, RAX);
+    emit_mov(compiler->main_segment, RAX, (uint64_t) 0x3c);
+    emit_syscall(compiler->main_segment);
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -881,26 +923,3 @@ CompileAST(compiler_t compiler)
 }
 
 #pragma clang diagnostic warning "-Wformat-nonliteral"
-
-// ---------------------------- placeholder -----------------------------------
-
-static compiler_return_e 
-SetFuncPlaceholder(compiler_t compiler,
-                   string_s   string,
-                   size_t     offset)
-{
-    assert(compiler != nullptr);
-
-    if (compiler->placeholder.function_placeholders == 0)
-    {
-        data_type new_elem = {.string = string, .addr = offset};
-        list_t list = compiler->placeholder.placeholder_list;
-        if (ListInitNewElem(list, &new_elem,
-                    &compiler->placeholder.function_placeholders))
-        {
-            return COMPILER_RETURN_LIST_ERROR;
-        }
-    }
-    
-    return COMPILER_RETURN_SUCCESS;
-}

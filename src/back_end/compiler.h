@@ -11,9 +11,9 @@
 
 struct placeholders_s 
 {
-    list_t placeholder_list;
-    size_t function_placeholders;
-    size_t variable_placeholders;
+    list_t list;
+    size_t func;
+    size_t var;
 };
 
 struct compiler_s 
@@ -22,8 +22,8 @@ struct compiler_s
     tree_t         compiler_tree;
     FILE*          file_output;
     size_t         label_count;
-    section_t      main_section;
-    placeholders_s placeholder;
+    segment_t      main_segment;
+    placeholders_s placehldr;
 };
 typedef compiler_s* compiler_t;
 

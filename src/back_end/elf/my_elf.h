@@ -4,41 +4,52 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-enum section_return_e
+enum segment_return_e
 {
-    SECTION_SUCCESS,
-    SECTION_BAD_ALLOC,
-    SECTION_COPY_ERR
+    SEGMENT_SUCCESS,
+    SEGMENT_BAD_ALLOC,
+    SEGMENT_COPY_ERR,
+    SEGMENT_FILE_OPEN_ERR,
+    SEGMENT_FILE_CLOSE_ERR
 };
 
 struct section_s 
 {
-    uint8_t* section;
+    uint8_t* segment;
     size_t   cur_pos;
     size_t   max_size;
+    size_t   program_header;
 };
-typedef section_s* section_t;
+typedef section_s* segment_t;
 
-section_return_e
-SectionCtor(section_t* section,
+segment_return_e
+SegmentCtor(segment_t* segment,
             size_t     start_size);
 
-section_return_e 
-SectionDtor(section_t section);
+segment_return_e 
+SegmentDtor(segment_t segment);
 
-section_return_e
-SectionEmitByte(section_t section,
+segment_return_e
+SegmentEmitByte(segment_t segment,
                 uint8_t   byte);
 
-section_return_e
-SectionEmitQword(section_t section,
+segment_return_e
+SegmentEmitQword(segment_t segment,
                  uint64_t  qword);
 
-section_return_e
-SectionEmitDword(section_t section,
+segment_return_e
+SegmentEmitDword(segment_t segment,
                  uint32_t  dword);
 
-section_return_e
-SectionCreateFileH(section_t section);
+segment_return_e
+SegmentCreateFileH(segment_t segment);
+
+segment_return_e
+SegmentCreateProgramH(segment_t segment);
+
+segment_return_e 
+SegmentWriteInFile(segment_t   segment,
+                   const char* file_name);
+
 
 #endif // ELF_H
