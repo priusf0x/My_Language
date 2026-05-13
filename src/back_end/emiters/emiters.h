@@ -1,6 +1,7 @@
 #ifndef EMITERS_H
 #define EMITERS_H
 
+#include <cassert>
 #include <cstdint>
 #include <stdint.h>
 #include <stdio.h>
@@ -94,34 +95,23 @@ emit_mov_mem(segment_t segment,
 
 // ================================== CMOVE ===================================
           
-void  
-emit_cmove(segment_t segment,
-           reg_e     reg_d,
-           reg_e     reg_s);
+void 
+emit_sete_bl(segment_t segment);
 
-void  
-emit_cmovne(segment_t segment,
-            reg_e     reg_d,
-            reg_e     reg_s);
+void 
+emit_setne_bl(segment_t segment);
 
+void 
+emit_setg_bl(segment_t segment);
 
-void  
-emit_cmovg(segment_t segment,
-           reg_e     reg_d,
-           reg_e     reg_s);
+void 
+emit_setge_bl(segment_t segment);
 
-void  
-emit_cmovge(segment_t segment,
-            reg_e     reg_d,
-            reg_e     reg_s);
+void 
+emit_setl_bl(segment_t segment);
 
-void  
-emit_cmovl(segment_t segment,
-           reg_e     reg_d,
-           reg_e     reg_s);
-
-void  
-emit_cmovle(segment_t segment);
+void 
+emit_setle_bl(segment_t segment);
 
 // ================================ ARITHMETIC ================================
 
@@ -130,6 +120,11 @@ emit_cmp(segment_t segment,
          reg_e     reg_a,
          reg_e     reg_b);
 
+void 
+emit_test(segment_t segment,
+          reg_e     reg_l,
+          reg_e     reg_r);
+         
 void 
 emit_add(segment_t segment,
          reg_e     reg_d,
@@ -140,6 +135,10 @@ emit_sub(segment_t segment,
          reg_e     reg_d,
          reg_e     reg_s);
 
+void 
+emit_sub_rbx_const(segment_t segment, 
+                   int32_t   num);
+         
 void 
 emit_div(segment_t segment,
          reg_e     reg_d,
@@ -152,8 +151,12 @@ emit_mul(segment_t segment,
 
 // ================================== JUMPS ===================================
           
-// void 
-// emit_jmp(section_t segment,
-//          address   addr);
+void 
+emit_jmp(segment_t segment,
+         uint32_t  addr);
+
+void 
+emit_jz(segment_t segment,
+        uint32_t  addr);
 
 #endif // EMITERS_H

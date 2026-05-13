@@ -56,21 +56,73 @@ GetVarPos(ssize_t    lex,
             if (val.value.id.info1 < 7)
             {
                 fprintf(compiler->file_output, "qword [rbp - %ld]",
-                    val.value.id.info1 + 8);
+                    8 * val.value.id.info1 + 8);
+                
             }
             else 
             {
                 fprintf(compiler->file_output, "qword [rbp + %ld]",
-                    val.value.id.info1 + 16);
+                    8 * val.value.id.info1 + 16);
             }
         }
         else 
         {
             fprintf(compiler->file_output, "qword [rbp - %ld]",
-                        val.value.id.info1 + 56);
+                        8 * val.value.id.info1 + 56);
         }
     }
 
+    return COMPILER_RETURN_SUCCESS;
+}
+
+static compiler_return_e 
+MovRegVar(compiler_t compiler,
+          ssize_t    lex,
+          reg_e      reg,
+          bool       reverse = false)
+{
+    assert(compiler != nullptr);
+    assert(lex != NO_LINK);
+
+    node_s* array = compiler->compiler_tree->nodes_array;
+    node_s cur_node = array[lex];
+    node_data_t val = cur_node.node_value;
+
+    assert(val.lex_type == LEX_TYPE_ID);    
+    assert(!val.value.id.is_function);    
+
+    if (val.value.id.is_global)
+    {
+        assert(0); // not added yet 
+    }
+    else 
+    {
+        if (val.value.id.info2) // check if argument 
+        {
+            if (val.value.id.info1 < 7)
+            {
+                reverse ?   emit_mov_mem(compiler->main_segment, RBP, 
+                                - (int64_t) (val.value.id.info1 * 8 + 8), reg) :
+                            emit_mov_mem(compiler->main_segment, reg, RBP, 
+                                - (int64_t) (val.value.id.info1 * 8 + 8));
+            }
+            else 
+            {
+                reverse ?   emit_mov_mem(compiler->main_segment, RBP, 
+                                 (int64_t) (val.value.id.info1 * 8 + 16), reg) :
+                            emit_mov_mem(compiler->main_segment, reg, RBP, 
+                                 (int64_t) (val.value.id.info1 * 8 + 16));
+            }
+        }
+        else 
+        {
+            reverse ?   emit_mov_mem(compiler->main_segment, RBP, 
+                            - (int64_t) (val.value.id.info1 * 8 + 56), reg) :
+                        emit_mov_mem(compiler->main_segment, reg, RBP, 
+                            - (int64_t) (val.value.id.info1 * 8  + 56));
+        }
+    }
+    
     return COMPILER_RETURN_SUCCESS;
 }
     
@@ -138,8 +190,20 @@ CompileRegArg(size_t     arg_num,
         "r9"
     };
     
+    const reg_e elf_registers[] = 
+    {
+        RDI,
+        RSI,
+        RDX,
+        RCX,
+        R8,
+        R9
+    };
+    
     fprintf(compiler->file_output, 
                 "\tmov %s, rbx\n", registers[arg_num]);
+    emit_mov(compiler->main_segment, 
+                elf_registers[arg_num], RBX);
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -190,7 +254,9 @@ CompileFuncCall(ssize_t    lex,
     CHECK_OUTPUT(CompileFunctionArgs(lex, compiler));
     fprintf(compiler->file_output, "\tcall %.*s\n", 
                 (int) id.id.size, id.id.string);
+    //NOTE
     fprintf(compiler->file_output, "\tmov rbx, rax\n");
+    emit_mov(compiler->main_segment, RBX, RAX);
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -215,6 +281,7 @@ CompileID(ssize_t    lex,
         fprintf(compiler->file_output, "\tmov rbx, ");
         GetVarPos(lex, compiler);
         fprintf(compiler->file_output, "\n");
+        MovRegVar(compiler, lex, RBX);
     }
 
     return COMPILER_RETURN_SUCCESS;
@@ -284,23 +351,11 @@ CompileLocalVar(ssize_t    lex,
 
     node_s* array = compiler->compiler_tree->nodes_array;
     
-    if (array[array[lex].right_index].node_value.lex_type
-            == LEX_TYPE_CONST)
-    {
-        fprintf(compiler->file_output, "\tmov ");
-        GetVarPos(array[lex].left_index, compiler);
-        fprintf(compiler->file_output, ", %ld\n", 
-                    array[array[lex].right_index].node_value.value.constant);
-        
-        return COMPILER_RETURN_SUCCESS;
-    }
-    else 
-    {
-        CHECK_OUTPUT(CompileRValue(array[lex].right_index, compiler)); 
-        fprintf(compiler->file_output, "\tmov ");
-        GetVarPos(array[lex].left_index, compiler);
-        fprintf(compiler->file_output, ", rbx\n");
-    }
+    CHECK_OUTPUT(CompileRValue(array[lex].right_index, compiler)); 
+    fprintf(compiler->file_output, "\tmov ");
+    GetVarPos(array[lex].left_index, compiler);
+    fprintf(compiler->file_output, ", rbx\n");
+    MovRegVar(compiler, array[lex].left_index, RBX, true);
     
     return COMPILER_RETURN_SUCCESS; 
 }
@@ -364,21 +419,27 @@ CompileArguments(ssize_t    lex,
         case 6:
             fprintf(compiler->file_output,
                         "\tmov qword [rbp - 48], r9\n");
+            emit_mov_mem(compiler->main_segment, RBP, -48, R9);
         case 5:
             fprintf(compiler->file_output,
                         "\tmov qword [rbp - 40], r8\n");
+            emit_mov_mem(compiler->main_segment, RBP, -40, R8);
         case 4:
             fprintf(compiler->file_output,
                         "\tmov qword [rbp - 32], rcx\n");
+            emit_mov_mem(compiler->main_segment, RBP, -32, RCX);
         case 3:
             fprintf(compiler->file_output,
                         "\tmov qword [rbp - 24], rdx\n");
+            emit_mov_mem(compiler->main_segment, RBP, -24, RCX);
         case 2: 
             fprintf(compiler->file_output,
                         "\tmov qword [rbp - 16], rsi\n");
+            emit_mov_mem(compiler->main_segment, RBP, -16, RSI);
         case 1:
             fprintf(compiler->file_output,
                         "\tmov qword [rbp - 8], rdi\n");
+            emit_mov_mem(compiler->main_segment, RBP, -8, RDI);
         case 0:;
     }
 
@@ -419,6 +480,8 @@ CompilePrologue(ssize_t    lex,
     fprintf(compiler->file_output,
             "\tpush rbp\n"
             "\tmov rbp, rsp\n");   
+    emit_push(compiler->main_segment, RBP);
+    emit_mov(compiler->main_segment, RBP, RSP);
     
     node_s* array = compiler->compiler_tree->nodes_array;
     size_t local_count = (size_t) array[array[lex].left_index] 
@@ -426,10 +489,12 @@ CompilePrologue(ssize_t    lex,
 
     fprintf(compiler->file_output,
             "\tsub rsp, %zu\n", 8 * (local_count + 6));   
+    emit_sub_rbx_const(compiler->main_segment, 8 * (int32_t) (local_count + 6));
     CompileArguments(lex, compiler);
 
     fprintf(compiler->file_output,
             "\tpush rbx\n");
+    emit_push(compiler->main_segment, RBX);
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -446,10 +511,13 @@ CompileEpilogue(ssize_t    lex,
     
     fprintf(compiler->file_output,
             "\tpop rbx\n");
+    emit_pop(compiler->main_segment, RBX);
 
     fprintf(compiler->file_output,
             "\tmov rsp, rbp\n"
             "\tpop rbp\n");   
+    emit_mov(compiler->main_segment, RSP, RBP);
+    emit_pop(compiler->main_segment, RBP);
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -497,7 +565,9 @@ CompileReturn(ssize_t    lex,
     CHECK_OUTPUT(CompileEpilogue(lex, compiler));
     fprintf(compiler->file_output, "\tmov rax, rbx\n"
                                    "\tret\n");
-    
+    emit_mov(compiler->main_segment, RAX, RBX);
+    emit_ret(compiler->main_segment);
+
     return COMPILER_RETURN_SUCCESS;
 }
 
@@ -519,13 +589,22 @@ CompileIf(ssize_t    lex,
     compiler->label_count++;
     
     CHECK_OUTPUT(CompileRValue(cur_node.left_index, compiler));
-    fprintf(compiler->file_output, "\tcmp rbx, 0\n");
+    fprintf(compiler->file_output, "\ttest rbx, rbx\n");
+    emit_test(compiler->main_segment, RBX, RBX);
     fprintf(compiler->file_output, "\tjz .L%zu\n", cond_jmp); 
-    
+
+    const size_t jz_placeholder = compiler->main_segment->cur_pos;  
+    emit_jz(compiler->main_segment, 0);
+
     COMMENT("\n;if body\n");
     
     CHECK_OUTPUT(CompileBranch(cur_node.right_index, compiler));
     fprintf(compiler->file_output, "\t.L%zu:\n", cond_jmp);
+    
+    const size_t skip_label = compiler->main_segment->cur_pos;
+    compiler->main_segment->cur_pos = jz_placeholder;
+    emit_jz(compiler->main_segment, skip_label);
+    compiler->main_segment->cur_pos = skip_label;
     
     /*
         // condition 
@@ -554,14 +633,27 @@ CompileWhile(ssize_t    lex,
     compiler->label_count += 2;
     
     fprintf(compiler->file_output, ".L%zu:\n", test_jmp);
+    const size_t test_jmp_pos = compiler->main_segment->cur_pos; 
+
     CHECK_OUTPUT(CompileRValue(cur_node.left_index, compiler));
-    fprintf(compiler->file_output, "\tcmp rbx, 0\n");
+    fprintf(compiler->file_output, "\ttest rbx, rbx\n");
+    emit_test(compiler->main_segment, RBX, RBX);
     fprintf(compiler->file_output, "\tjz .L%zu\n", cond_jmp); 
+    
+    const size_t jz_placeholder = compiler->main_segment->cur_pos;  
+    emit_jz(compiler->main_segment, 0);
+
     COMMENT("\n;while body\n");
     CHECK_OUTPUT(CompileBranch(cur_node.right_index, compiler));
     fprintf(compiler->file_output,"\tjmp .L%zu\n" 
                                   ".L%zu:\n", test_jmp, cond_jmp);
+    emit_jmp(compiler->main_segment, (uint32_t) test_jmp_pos);
     
+    const size_t skip_label = compiler->main_segment->cur_pos;
+    compiler->main_segment->cur_pos = jz_placeholder;
+    emit_jz(compiler->main_segment, skip_label);
+    compiler->main_segment->cur_pos = skip_label;
+
     /* 
         .L124:
         // condition 
@@ -649,6 +741,8 @@ CompileConst(ssize_t    lex,
 
     fprintf(compiler->file_output, "\tmov rbx, %ld\n", 
                 cur_node.node_value.value.constant);    
+    emit_mov(compiler->main_segment, RBX, 
+                cur_node.node_value.value.constant);
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -700,6 +794,8 @@ CompileAssignment(ssize_t    lex,
     GetVarPos(cur_node.left_index, compiler);
     fprintf(compiler->file_output, ", rbx\n");
 
+    MovRegVar(compiler, cur_node.left_index, RBX);
+    
     return COMPILER_RETURN_SUCCESS;
 }
 
@@ -714,31 +810,52 @@ CompileBool(ssize_t         lex,
     
     assert(op > OPERATOR_DIV);
     assert(op < OPERATOR_ASSIGNMENT);
-    
-    size_t op_index = op - OPERATOR_EQUALITY;
-    const char* op_array[] =
-    { 
-        "cmove",
-        "cmovne",
-        "cmovg",
-        "cmovge",
-        "cmovl",
-        "cmovle",
-    };
 
     node_s* array = compiler->compiler_tree->nodes_array;
     node_s cur_node = array[lex];
-    const char* op_string = op_array[op_index];
-    
+
     CHECK_OUTPUT(CompileRValue(cur_node.left_index, compiler));
     fprintf(compiler->file_output, "\tpush rbx\n");
+    emit_push(compiler->main_segment, RBX);
     CHECK_OUTPUT(CompileRValue(cur_node.right_index, compiler));
     fprintf(compiler->file_output, "\tmov rax, rbx\n");
+    emit_mov(compiler->main_segment, RAX, RBX);
     fprintf(compiler->file_output, "\tpop rbx\n");
+    emit_pop(compiler->main_segment, RBX);
     fprintf(compiler->file_output, "\tcmp rbx, rax\n");
+    emit_cmp(compiler->main_segment, RBX, RAX);
     fprintf(compiler->file_output, "\tmov rbx, 0\n");
-    fprintf(compiler->file_output, "\tmov rax, 1\n");
-    fprintf(compiler->file_output,  "\t%s rbx, rax\n", op_string);
+    emit_mov(compiler->main_segment, RBX, 0);
+    
+    switch(op)
+    {
+        case OPERATOR_EQUALITY:
+            fprintf(compiler->file_output, "\tsete bl\n");
+            emit_sete_bl(compiler->main_segment);
+            break;
+        case OPERATOR_N_EQUALITY:
+            fprintf(compiler->file_output, "\tsetne bl\n");
+            emit_setne_bl(compiler->main_segment);
+            break;
+        case OPERATOR_MORE:
+            fprintf(compiler->file_output, "\tsetg bl\n");
+            emit_setg_bl(compiler->main_segment);
+            break;
+        case OPERATOR_MORE_OR_EQ:
+            fprintf(compiler->file_output, "\tsetge bl\n");
+            emit_setge_bl(compiler->main_segment);
+            break;
+        case OPERATOR_LESS:
+            fprintf(compiler->file_output, "\tsetl bl\n");
+            emit_setl_bl(compiler->main_segment);
+            break;
+        case OPERATOR_LESS_OR_EQUAL:
+            fprintf(compiler->file_output, "\tsetle bl\n");
+            emit_setle_bl(compiler->main_segment);
+            break;
+        default: assert(0);
+    }
+
     
     return COMPILER_RETURN_SUCCESS;
 }
@@ -754,25 +871,36 @@ CompileArithm(ssize_t         lex,
     assert(op <= OPERATOR_DIV);
     assert(op > 0); 
 
-    size_t op_index = op - OPERATOR_PLUS;
-    const char* op_array[] =
-    {
-        "add",
-        "sub",
-        "imul",
-        "idiv"
-    };
-
     node_s* array = compiler->compiler_tree->nodes_array;
     node_s cur_node = array[lex];
-    const char* op_string = op_array[op_index];
     
     CHECK_OUTPUT(CompileRValue(cur_node.left_index, compiler));
     fprintf(compiler->file_output, "\tpush rbx\n");
+    emit_push(compiler->main_segment, RBX);
     CHECK_OUTPUT(CompileRValue(cur_node.right_index, compiler));
     fprintf(compiler->file_output, "\tmov rax, rbx\n");
+    emit_mov(compiler->main_segment, RAX, RBX);
     fprintf(compiler->file_output, "\tpop rbx\n");
-    fprintf(compiler->file_output,  "\t%s rbx, rax\n", op_string);
+    emit_pop(compiler->main_segment, RBX);
+    
+    switch(op)
+    {
+        case OPERATOR_PLUS:
+            fprintf(compiler->file_output,  "\tadd rbx, rax\n");
+            emit_add(compiler->main_segment, RBX, RAX);
+            break;
+        case OPERATOR_MINUS:
+            fprintf(compiler->file_output,  "\tsub rbx, rax\n");
+            emit_sub(compiler->main_segment, RBX, RAX);
+            break;
+        case OPERATOR_MUL:
+            fprintf(compiler->file_output,  "\timul rbx, rax\n");
+            emit_mul(compiler->main_segment, RBX, RAX);
+            break;
+        case OPERATOR_DIV:
+        default: assert(0);
+    } 
+    
     
     return COMPILER_RETURN_SUCCESS;
 }
@@ -886,13 +1014,13 @@ SetASMHeader(compiler_t compiler)
 /* nasm part */ 
 
     const char* asm_header = 
-                             "global main\n";
-/*                              "_start:\n"
+                            //  "global main\n";
+                             "_start:\n"
                              "\tcall main\n"
                              "\tmov rdi, rax\n"
                              "\tmov rax, 60\n"        
                              "\tsyscall\n";
- */
+
     fprintf(compiler->file_output, "%s", asm_header);
     
 /* elf part*/

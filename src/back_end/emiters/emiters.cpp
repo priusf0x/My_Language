@@ -104,8 +104,8 @@ emit_ret(segment_t segment)
 
 void 
 emit_mov(segment_t segment,
-          reg_e     reg_d,
-          reg_e     reg_s)
+         reg_e     reg_d,
+         reg_e     reg_s)
 {
     assert(segment != nullptr);
     
@@ -114,13 +114,13 @@ emit_mov(segment_t segment,
     
     uint8_t rex_byte = MAGIC_NUM_REX | W_REX;
 
-    if (reg_d & REG_EXTENDED) rex_byte |= R_REX;
-    if (reg_s & REG_EXTENDED) rex_byte |= B_REX;
+    if (reg_s & REG_EXTENDED) rex_byte |= R_REX;
+    if (reg_d & REG_EXTENDED) rex_byte |= B_REX;
     EMIT(rex_byte);
     EMIT(op_code);
 
     const uint8_t r_to_r = 0b11000000;
-    uint8_t rw_byte = (uint8_t) (r_to_r |((reg_d & ~REG_EXTENDED) << 3) | (reg_s & ~REG_EXTENDED));
+    uint8_t rw_byte = (uint8_t) (r_to_r |((reg_d & ~REG_EXTENDED)) | (reg_s & ~REG_EXTENDED) << 3);
     EMIT(rw_byte);
 }
 
@@ -227,9 +227,9 @@ emit_mov_mem(segment_t segment,
 
 void 
 emit_mov_mem(segment_t segment,
-              reg_e     reg_b,
-              int64_t   offset,
-              reg_e     reg_d)
+             reg_e     reg_b,
+             int64_t   offset,
+             reg_e     reg_d)
 {
     assert(segment != nullptr);
 
@@ -242,105 +242,83 @@ emit_mov_mem(segment_t segment,
     if (reg_d & REG_EXTENDED) rex_byte |= R_REX;
     EMIT(rex_byte);
     EMIT(op_code);
-        
-    const uint8_t m_to_r = 0b01000000;
+
+    const uint8_t mode = uint8_t (offset >= -128) && (offset <= 127) ? 0b01 : 0b10;
     
-    EMIT((uint8_t) (m_to_r | ((reg_d & ~REG_EXTENDED) << 3 | (reg_d & ~REG_EXTENDED))));
+    EMIT((uint8_t) (mode << 6 | ((reg_d & ~REG_EXTENDED) << 3 | (reg_b & ~REG_EXTENDED))));
     
-    EMIT_D((uint32_t) offset);
+    if (mode == 0b01) EMIT((uint8_t) offset);
+    else if (mode == 0b01) EMIT_D((uint32_t) offset);
 }
    
 // ----------------------------------------------------------------------------
 
 static void 
-emit_cmov__(segment_t segment,
-            reg_e     reg_d,
-            reg_e     reg_s,
-            uint8_t   cond_byte)
+emit_set_bl(segment_t segment, 
+            uint8_t   op_code)
 {
     assert(segment != nullptr);
 
-    DEBUG();
-    const uint8_t op_code = 0x0f;
-
-    uint8_t rex_byte = MAGIC_NUM_REX | W_REX;
-
-    if (reg_d & REG_EXTENDED) rex_byte |= B_REX;
-    if (reg_s & REG_EXTENDED) rex_byte |= R_REX;
-    EMIT(rex_byte);
+    const uint8_t op_code_1 = 0x0f;
+    EMIT(op_code_1);
     EMIT(op_code);
-    EMIT(cond_byte);
-
-    const uint8_t r_to_r = 0b11000000;
-    uint8_t rw_byte = (uint8_t) (r_to_r |((reg_d & ~REG_EXTENDED) << 3) | (reg_s & ~REG_EXTENDED));
-    EMIT(rw_byte);
+    const uint8_t sib = 0xc3;
+    EMIT(sib);
 
 }
 
-void  
-emit_cmove(segment_t segment,
-           reg_e     reg_d,
-           reg_e     reg_s)
+void 
+emit_sete_bl(segment_t segment)
 {
     assert(segment != nullptr);
 
-    const uint8_t cond_byte = 0x44;
-    emit_cmov__(segment, reg_d, reg_s, cond_byte);
+    const uint8_t op_code = 0x94;
+    emit_set_bl(segment, op_code);
 }
 
-void  
-emit_cmovne(segment_t segment,
-           reg_e     reg_d,
-           reg_e     reg_s)
-{
+void 
+emit_setne_bl(segment_t segment)
+{ 
     assert(segment != nullptr);
 
-    const uint8_t cond_byte = 0x45;
-    emit_cmov__(segment, reg_d, reg_s, cond_byte);
+    const uint8_t op_code = 0x95;
+    emit_set_bl(segment, op_code);
 }
 
-void  
-emit_cmovg(segment_t segment,
-           reg_e     reg_d,
-           reg_e     reg_s)
+void 
+emit_setg_bl(segment_t segment)
 {
     assert(segment != nullptr);
 
-    const uint8_t cond_byte = 0x4f;
-    emit_cmov__(segment, reg_d, reg_s, cond_byte);
+    const uint8_t op_code = 0x9f;
+    emit_set_bl(segment, op_code);
 }
 
-void  
-emit_cmovge(segment_t segment,
-           reg_e     reg_d,
-           reg_e     reg_s)
+void 
+emit_setge_bl(segment_t segment)
 {
     assert(segment != nullptr);
 
-    const uint8_t cond_byte = 0x4c;
-    emit_cmov__(segment, reg_d, reg_s, cond_byte);
+    const uint8_t op_code = 0x9d;
+    emit_set_bl(segment, op_code);
 }
 
-void  
-emit_cmovl(segment_t segment,
-           reg_e     reg_d,
-           reg_e     reg_s)
+void 
+emit_setl_bl(segment_t segment)
 {
     assert(segment != nullptr);
 
-    const uint8_t cond_byte = 0x4c;
-    emit_cmov__(segment, reg_d, reg_s, cond_byte);
+    const uint8_t op_code = 0x9c;
+    emit_set_bl(segment, op_code);
 }
 
-void  
-emit_cmovle(segment_t segment,
-           reg_e     reg_d,
-           reg_e     reg_s)
+void 
+emit_setle_bl(segment_t segment)
 {
     assert(segment != nullptr);
 
-    const uint8_t cond_byte = 0x4e;
-    emit_cmov__(segment, reg_d, reg_s, cond_byte);
+    const uint8_t op_code = 0x9e;
+    emit_set_bl(segment, op_code);
 }
 
 // ----------------------------------------------------------------------------
@@ -380,6 +358,30 @@ emit_cmp(segment_t segment,
     emit_arithmetic(segment, reg_d, reg_s, op_code);
 }
 
+void 
+emit_test(segment_t segment,
+          reg_e     reg_l,
+          reg_e     reg_r)
+{
+    assert(segment != nullptr);
+    
+    DEBUG();
+
+    uint8_t rex_byte = MAGIC_NUM_REX | W_REX;
+
+    if (reg_l & REG_EXTENDED) rex_byte |= B_REX;
+    if (reg_r & REG_EXTENDED) rex_byte |= R_REX;
+    
+    EMIT(rex_byte);
+
+    const uint8_t op_code = 0x85; 
+    EMIT(op_code);
+
+    const uint8_t r_to_r = 0b11000000; 
+    EMIT((r_to_r |((reg_r & ~REG_EXTENDED) << 3) 
+                                    | (reg_l & ~REG_EXTENDED)));
+}
+
 void
 emit_add(segment_t segment,
          reg_e     reg_d,
@@ -391,6 +393,63 @@ emit_add(segment_t segment,
     const uint8_t op_code = 0x01;
 
     emit_arithmetic(segment, reg_d, reg_s, op_code);
+}
+
+void
+emit_sub(segment_t segment,
+         reg_e     reg_d,
+         reg_e     reg_s)
+{
+    assert(segment != nullptr);
+
+    DEBUG();
+    const uint8_t op_code = 0x29;
+
+    emit_arithmetic(segment, reg_d, reg_s, op_code);
+}
+
+void 
+emit_mul(segment_t segment,
+         reg_e     reg_d,
+         reg_e     reg_s)
+{
+    assert(segment != nullptr);
+
+    DEBUG();
+    
+    const uint8_t op_code_1 = 0x0f;
+    const uint8_t op_code_2 = 0xaf;
+
+    uint8_t rex_byte = MAGIC_NUM_REX | W_REX;
+
+    if (reg_s & REG_EXTENDED) rex_byte |= B_REX;
+    if (reg_d & REG_EXTENDED) rex_byte |= R_REX;
+    EMIT(rex_byte);
+    EMIT(op_code_1);
+    EMIT(op_code_2);
+    
+    const uint8_t r_to_r = 0b11000000;
+    uint8_t rw_byte = (uint8_t) (r_to_r |((reg_s & ~REG_EXTENDED) << 3) 
+                                    | (reg_d & ~REG_EXTENDED));
+    EMIT(rw_byte);
+}
+
+void 
+emit_sub_rbx_const(segment_t segment, 
+                   int32_t   num)
+{
+    assert(segment != nullptr);
+    
+    DEBUG();
+
+    const uint8_t rex_byte = 0x48;
+    const uint8_t op_code = 0x81;
+    const uint8_t sib = 0xeb;
+
+    EMIT(rex_byte);
+    EMIT(op_code);
+    EMIT(sib);
+    EMIT_D((uint32_t) num);
 }
 
 void 
@@ -406,14 +465,50 @@ emit_syscall(segment_t segment)
     EMIT(op_code_2);
 }
 
-// void
-// emit_imul(section_t segment,
-//           reg_e     reg_d,
-//           reg_e     reg_s)
-// {
-//     assert(segment != nullptr);
+// ----------------------------------------------------------------------------
 
-    // const uint8_t op_code = 0x01;
+void 
+emit_jmp(segment_t segment,
+         uint32_t  addr)
+{
+    assert(segment != nullptr);
 
-    // emit_arithmetic(segment, reg_d, reg_s, op_code);
-// }
+    DEBUG();
+
+    const uint8_t short_op_code = 0xeb;
+    const uint8_t long_op_code = 0xe9;
+    
+    int32_t short_rel_address = (int32_t) (addr) 
+                        - (int32_t) (segment->cur_pos + 2);  
+    int32_t long_rel_address = (int32_t) (addr) 
+                        - (int32_t) (segment->cur_pos + 5);  
+    
+    bool is_short = (short_rel_address >= -128)     
+                        && (short_rel_address <= 127);
+
+    is_short ? EMIT(short_op_code) 
+             : EMIT(long_op_code);
+
+    is_short ? EMIT((int8_t) short_rel_address) 
+             : EMIT_D((int32_t) long_rel_address);
+}
+
+void 
+emit_jz(segment_t segment,
+        uint32_t  addr)
+{
+    assert(segment != nullptr);
+
+    DEBUG();
+
+    const uint8_t long_op_code_1 = 0x0f;
+    const uint8_t long_op_code_2 = 0x84;
+    
+    int32_t long_rel_address = (int32_t) (addr) 
+                        - (int32_t) (segment->cur_pos + 5);  
+
+    EMIT(long_op_code_1);
+    EMIT(long_op_code_2);
+    
+    EMIT_D((int32_t) long_rel_address);
+}

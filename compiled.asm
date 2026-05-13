@@ -1,4 +1,8 @@
-global main
+_start:
+	call main
+	mov rdi, rax
+	mov rax, 60
+	syscall
 
 zzzz:
 
@@ -31,14 +35,22 @@ main:
 ;prologue
 	push rbp
 	mov rbp, rsp
-	sub rsp, 56
+	sub rsp, 64
 
 ;compile args
 	mov qword [rbp - 8], rdi
 	push rbx
 
 ;body
-	mov qword [rbp - 56], 1000000000
+	mov rbx, 321
+	mov qword [rbp - 56], rbx
+	mov rbx, 1000000000
+	push rbx
+	mov rbx, qword [rbp - 56]
+	mov rax, rbx
+	pop rbx
+	add rbx, rax
+	mov qword [rbp - 64], rbx
 	mov rbx, 1
 	mov rdi, rbx
 	mov rbx, 2
@@ -53,6 +65,37 @@ main:
 	mov r9, rbx
 	call zzzz
 	mov rbx, rax
+
+;if condition
+	mov rbx, qword [rbp - 64]
+	push rbx
+	mov rbx, 0
+	mov rax, rbx
+	pop rbx
+	cmp rbx, rax
+	mov rbx, 0
+	setg bl
+	mov rbx, qword [rbp - 64]
+	push rbx
+	mov rbx, 0
+	mov rax, rbx
+	pop rbx
+	cmp rbx, rax
+	mov rbx, 0
+	setg bl
+	test rbx, rbx
+	jz .L0
+
+;if body
+	mov rbx, 1
+
+;epilogue
+	pop rbx
+	mov rsp, rbp
+	pop rbp
+	mov rax, rbx
+	ret
+	.L0:
 	mov rbx, 0
 
 ;epilogue
