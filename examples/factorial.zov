@@ -1,18 +1,16 @@
-function zzzz(var x1, var x2, var x3, var x4, var x5, var x6)
+function factorial(var meow)
 {
-    return x1;
-}
-
-function main(var dsa)
-{
-    var y = 321;
-    var x = 1000000000 + y;
-    zzzz(1,2,3,4,5,6);
-
-    if (x > 0)
+    if (meow == 0)
     {
         return 1;
     }
 
-    return 0;
+
+    return meow * factorial(meow - 1);
+}
+
+function main(var dsa)
+{
+
+    return factorial(6);
 }

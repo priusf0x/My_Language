@@ -136,7 +136,7 @@ emit_sub(segment_t segment,
          reg_e     reg_s);
 
 void 
-emit_sub_rbx_const(segment_t segment, 
+emit_sub_rsp_const(segment_t segment, 
                    int32_t   num);
          
 void 

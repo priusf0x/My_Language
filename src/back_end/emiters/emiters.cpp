@@ -15,7 +15,7 @@
 [[maybe_unused]] const uint8_t X_REX = 0b0010;
 [[maybe_unused]] const uint8_t B_REX = 0b0001;
 
-const uint8_t FILL_BETWEEN_INSTR = 0xcc;
+const uint8_t FILL_BETWEEN_INSTR = 0x90;
 
 // ============================== SECTION_CONTROL =============================
 
@@ -31,7 +31,8 @@ SectionAddByte(segment_t segment,
 #define EMIT(_X_) SegmentEmitByte(segment, (_X_))
 #define EMIT_D(_X_) SegmentEmitDword(segment, (_X_))
 #define EMIT_Q(_X_) SegmentEmitQword(segment, (_X_))
-#define DEBUG() EMIT(FILL_BETWEEN_INSTR)
+#define DEBUG() \
+EMIT(FILL_BETWEEN_INSTR)
 
 // ================================= EMITERS ==================================
 
@@ -220,9 +221,12 @@ emit_mov_mem(segment_t segment,
         
     const uint8_t m_to_r = 0b10000000;
     
-    EMIT((uint8_t) (m_to_r | ((reg_d & ~REG_EXTENDED) << 3 | (reg_b & ~REG_EXTENDED))));
+    const uint8_t mode = uint8_t (offset >= -128) && (offset <= 127) ? 0b01 : 0b10;
     
-    EMIT_D((uint32_t) offset);
+    EMIT((uint8_t) (mode << 6 | ((reg_d & ~REG_EXTENDED) << 3 | (reg_b & ~REG_EXTENDED))));
+    
+    if (mode == 0b01) EMIT((uint8_t) offset);
+    else if (mode == 0b01) EMIT_D((uint32_t) offset);
 }
 
 void 
@@ -435,7 +439,7 @@ emit_mul(segment_t segment,
 }
 
 void 
-emit_sub_rbx_const(segment_t segment, 
+emit_sub_rsp_const(segment_t segment, 
                    int32_t   num)
 {
     assert(segment != nullptr);
@@ -444,7 +448,7 @@ emit_sub_rbx_const(segment_t segment,
 
     const uint8_t rex_byte = 0x48;
     const uint8_t op_code = 0x81;
-    const uint8_t sib = 0xeb;
+    const uint8_t sib = 0xec;
 
     EMIT(rex_byte);
     EMIT(op_code);

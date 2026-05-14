@@ -8,6 +8,7 @@
 #include "tree.h"
 #include "buffer.h"
 #include "list.h"
+#include "hashtable.h"
 
 struct placeholders_s 
 {
@@ -24,6 +25,7 @@ struct compiler_s
     size_t         label_count;
     segment_t      main_segment;
     placeholders_s placehldr;
+    hashtable_t    name_table;
 };
 typedef compiler_s* compiler_t;
 
@@ -38,7 +40,8 @@ enum compiler_return_e
     COMPILER_RETURN_FILE_CLOSE_ERROR,
     COMPILER_RETURN_INCORRECT_AST,
     COMPILER_RETURN_SECTION_ERROR,
-    COMPILER_RETURN_LIST_ERROR
+    COMPILER_RETURN_LIST_ERROR,
+    COMPILER_RETURN_HT_ERROR
 };
 
 // =========================== MEMORY_CONTROLLING =============================

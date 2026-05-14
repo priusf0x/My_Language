@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "hash.h"
+#include "hashtable.h"
 #include "list.h"
 #include "my_elf.h"
 #include "tree.h"
@@ -27,6 +29,7 @@ CompilerCtor(const char* input_name,
     const size_t start_tree_size = 100;
     const size_t start_section_size = 100;
     const size_t placeholder_size = 10;
+    const size_t hashtable_size = 100;
 
     *compiler = (compiler_t) calloc(1, sizeof(compiler_s));
 
@@ -72,6 +75,12 @@ CompilerCtor(const char* input_name,
         output = COMPILER_RETURN_LIST_ERROR;
         goto error;
     }
+    
+    if (HashTableCtor(&(*compiler)->name_table, hashtable_size, HashCRC32))
+    {
+        output = COMPILER_RETURN_HT_ERROR;
+        goto error;
+    }
 
     return COMPILER_RETURN_SUCCESS;
     
@@ -80,6 +89,7 @@ error:
     BufferDtor(&(*compiler)->buffer);
     fclose((*compiler)->file_output);
     SegmentDtor((*compiler)->main_segment);
+    DestroyList((*compiler)->placehldr.list);
     free(*compiler);
     *compiler = nullptr;
     
@@ -96,6 +106,7 @@ CompilerDtor(compiler_t* compiler)
         fclose((*compiler)->file_output);
         SegmentDtor((*compiler)->main_segment);
         DestroyList((*compiler)->placehldr.list);
+        HashTableDtor((*compiler)->name_table);
         free(*compiler);
 
         *compiler = nullptr;

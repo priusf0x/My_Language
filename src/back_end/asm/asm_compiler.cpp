@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <stdlib.h>
+#include <string.h>
 
 #include "emiters.h"
 #include "lexes.h"
@@ -159,11 +160,45 @@ SetPlaceholder(compiler_t compiler,
         }
         *prev_el = (size_t) GetNextElement(list, *prev_el);
     } 
-    
-    
+
     return COMPILER_RETURN_SUCCESS;
 }
 
+static compiler_return_e 
+SetCall(compiler_t compiler,
+        string_s   func,
+        size_t     offset)
+{
+    assert(compiler != nullptr);
+
+    uint64_t addr = HashTableGetElem(compiler->name_table, func);
+
+    size_t cur_pos = compiler->main_segment->cur_pos;
+    compiler->main_segment->cur_pos = offset;
+    emit_call(compiler->main_segment, addr);
+    compiler->main_segment->cur_pos = cur_pos;
+
+    return COMPILER_RETURN_SUCCESS;
+}
+
+
+static compiler_return_e
+FixPlaceHolders(compiler_t compiler)
+{
+    assert(compiler != nullptr);
+
+    ssize_t prev_el = (ssize_t) compiler->placehldr.func;
+
+    while (prev_el)
+    {
+        data_type el_val = {}; 
+        GetElementValue(compiler->placehldr.list, (size_t) prev_el, &el_val);
+        SetCall(compiler, el_val.string, el_val.addr);
+        prev_el = GetPreviousElement(compiler->placehldr.list, (size_t) prev_el);
+    } 
+
+    return COMPILER_RETURN_SUCCESS;
+}
 
 // ----------------------------- compile_id -----------------------------------
 
@@ -254,7 +289,11 @@ CompileFuncCall(ssize_t    lex,
     CHECK_OUTPUT(CompileFunctionArgs(lex, compiler));
     fprintf(compiler->file_output, "\tcall %.*s\n", 
                 (int) id.id.size, id.id.string);
-    //NOTE
+    
+    SetPlaceholder(compiler, id.id, compiler->main_segment->cur_pos, 
+                        &compiler->placehldr.func);
+    emit_call(compiler->main_segment, 0x0); // placeholder
+
     fprintf(compiler->file_output, "\tmov rbx, rax\n");
     emit_mov(compiler->main_segment, RBX, RAX);
 
@@ -465,6 +504,9 @@ SetFunctionName(ssize_t    lex,
     fprintf(compiler->file_output, "\n%.*s:\n", 
                 (int) id.size, id.string);
 
+    HashTableAddElem(compiler->name_table, id, 
+                        compiler->main_segment->cur_pos);
+
     return COMPILER_RETURN_SUCCESS;
 }
 
@@ -489,7 +531,7 @@ CompilePrologue(ssize_t    lex,
 
     fprintf(compiler->file_output,
             "\tsub rsp, %zu\n", 8 * (local_count + 6));   
-    emit_sub_rbx_const(compiler->main_segment, 8 * (int32_t) (local_count + 6));
+    emit_sub_rsp_const(compiler->main_segment, 8 * (int32_t) (local_count + 6));
     CompileArguments(lex, compiler);
 
     fprintf(compiler->file_output,
@@ -562,10 +604,10 @@ CompileReturn(ssize_t    lex,
     node_s cur_node = array[lex];
     
     CHECK_OUTPUT(CompileRValue(cur_node.right_index, compiler)); 
-    CHECK_OUTPUT(CompileEpilogue(lex, compiler));
-    fprintf(compiler->file_output, "\tmov rax, rbx\n"
-                                   "\tret\n");
+    fprintf(compiler->file_output, "\tmov rax, rbx\n");
     emit_mov(compiler->main_segment, RAX, RBX);
+    CHECK_OUTPUT(CompileEpilogue(lex, compiler));
+    fprintf(compiler->file_output, "\tret\n");
     emit_ret(compiler->main_segment);
 
     return COMPILER_RETURN_SUCCESS;
@@ -588,7 +630,6 @@ CompileIf(ssize_t    lex,
     size_t cond_jmp = compiler->label_count;
     compiler->label_count++;
     
-    CHECK_OUTPUT(CompileRValue(cur_node.left_index, compiler));
     fprintf(compiler->file_output, "\ttest rbx, rbx\n");
     emit_test(compiler->main_segment, RBX, RBX);
     fprintf(compiler->file_output, "\tjz .L%zu\n", cond_jmp); 
@@ -1014,7 +1055,7 @@ SetASMHeader(compiler_t compiler)
 /* nasm part */ 
 
     const char* asm_header = 
-                            //  "global main\n";
+                             "global _start\n"
                              "_start:\n"
                              "\tcall main\n"
                              "\tmov rdi, rax\n"
@@ -1023,14 +1064,21 @@ SetASMHeader(compiler_t compiler)
 
     fprintf(compiler->file_output, "%s", asm_header);
     
+
 /* elf part*/
 
     SegmentCreateFileH(compiler->main_segment);
     SegmentCreateProgramH(compiler->main_segment);
+   
+    const size_t main_pos = compiler->main_segment->cur_pos;
+    emit_call(compiler->main_segment, 0x0);
 
     emit_mov(compiler->main_segment, RDI, RAX);
     emit_mov(compiler->main_segment, RAX, (uint64_t) 0x3c);
     emit_syscall(compiler->main_segment);
+    string_s main_name = {(char*) "main", strlen(main_name.string)};
+    SetPlaceholder(compiler, main_name, 
+                main_pos, &compiler->placehldr.func);
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -1047,7 +1095,11 @@ CompileAST(compiler_t compiler)
     node_s* array = compiler->compiler_tree->nodes_array;
     ssize_t start_node= array[0].left_index;
 
-    return CompileBranch(start_node, compiler);
+    CHECK_OUTPUT(CompileBranch(start_node, compiler)); 
+
+    FixPlaceHolders(compiler);
+
+    return COMPILER_RETURN_SUCCESS;
 }
 
 #pragma clang diagnostic warning "-Wformat-nonliteral"

@@ -1,7 +1,8 @@
-#include <cstdint>
 #ifndef HASHTABLE_H
+#define HASHTABLE_H
 
 #include "list.h"
+#include <cstdint>
 #include "buffer.h"
 #include "string.h"
 
