@@ -1,10 +1,8 @@
-var X_MAX = 30;
-var Y_MAX = 30;
-var RADIUS = 7;
-
 function main()
 {
-    setscreen();
+    var X_MAX = 30;
+    var Y_MAX = 30;
+    var RADIUS = 7;
 
     var x = 0;
     var y = 0;
@@ -18,12 +16,17 @@ function main()
             if (((x - X_MAX / 2)*(x- X_MAX /2 )  + (y - Y_MAX /2 )*(y - Y_MAX / 2) * 4)
                     < RADIUS * RADIUS) 
             {
-                set(x, y, 42)
+                putc(35);
+            }
+            else 
+            {
+                putc(32);
             }
             x = x + 1;
         }
         y = y + 1;
-    }
 
-    draw();
+        putc(10);
+    }
+    return 0;
 }

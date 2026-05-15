@@ -175,33 +175,6 @@ emit_move_mem(segment_t segment,
 }
 
 void 
-emit_mov_abs_mem(segment_t segment,
-              uint64_t  addr,
-              reg_e     reg_d)
-{
-    assert(segment != nullptr);
-    
-    DEBUG();
-    const uint8_t op_code = 0x89;
-    
-    uint8_t rex_byte = MAGIC_NUM_REX | W_REX;
-    if (reg_d & REG_EXTENDED)
-    {                
-        rex_byte |= R_REX;
-    }
-    EMIT(rex_byte);
-    EMIT(op_code);
-
-    uint8_t rw_byte = (uint8_t) ((reg_d & ~REG_EXTENDED) << 3 | 0b100);
-    EMIT(rw_byte);
-
-    const uint8_t magic_byte = 0x25;
-    EMIT(magic_byte);
-    
-    EMIT_D((uint32_t) addr);
-}
-
-void 
 emit_mov_mem(segment_t segment,
               reg_e     reg_d,
               reg_e     reg_b,
@@ -413,9 +386,9 @@ emit_sub(segment_t segment,
 }
 
 void 
-emit_mul(segment_t segment,
-         reg_e     reg_d,
-         reg_e     reg_s)
+emit_imul(segment_t segment,
+          reg_e     reg_d,
+          reg_e     reg_s)
 {
     assert(segment != nullptr);
 
@@ -433,8 +406,8 @@ emit_mul(segment_t segment,
     EMIT(op_code_2);
     
     const uint8_t r_to_r = 0b11000000;
-    uint8_t rw_byte = (uint8_t) (r_to_r |((reg_s & ~REG_EXTENDED) << 3) 
-                                    | (reg_d & ~REG_EXTENDED));
+    uint8_t rw_byte = (uint8_t) (r_to_r |((reg_d & ~REG_EXTENDED) << 3) 
+                                    | (reg_s & ~REG_EXTENDED));
     EMIT(rw_byte);
 }
 
@@ -454,6 +427,36 @@ emit_sub_rsp_const(segment_t segment,
     EMIT(op_code);
     EMIT(sib);
     EMIT_D((uint32_t) num);
+}
+
+void 
+emit_idiv(segment_t segment,
+          reg_e     reg)
+{
+    assert(segment != nullptr);
+
+    DEBUG();
+    const uint8_t op_code_1 = 0xf7;
+    const uint8_t op_code_2 = 0xf8;
+    uint8_t rex_byte = W_REX | MAGIC_NUM_REX;
+
+    if (reg & REG_EXTENDED) rex_byte |= B_REX;
+
+    EMIT(rex_byte);
+    EMIT(op_code_1);
+    EMIT(op_code_2 | (~REG_EXTENDED & reg));
+}
+
+void 
+emit_cqo(segment_t segment)
+{
+    assert(segment != nullptr);
+
+    const uint8_t op_code_1 = 0x48;
+    const uint8_t op_code_2 = 0x99;
+    
+    EMIT(op_code_1);
+    EMIT(op_code_2);
 }
 
 void 

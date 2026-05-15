@@ -17,6 +17,7 @@ struct buffer_s
 {
     char*  buffer;
     size_t current_position;
+    size_t max_buffer;
 };
 
 typedef buffer_s* buffer_t;

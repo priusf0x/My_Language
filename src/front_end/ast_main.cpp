@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-const char* INPUT_FILE_NAME = "examples/factorial.zov";
+const char* INPUT_FILE_NAME = "examples/circle.zov";
 const char* OUTPUT_FILE_NAME = "cache/ast.txt"; 
 
 // TODO: ADD ERROR MESSAGES AND CHECK

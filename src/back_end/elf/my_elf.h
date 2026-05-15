@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "my_string.h"
+
 enum segment_return_e
 {
     SEGMENT_SUCCESS,
@@ -51,5 +53,8 @@ segment_return_e
 SegmentWriteInFile(segment_t   segment,
                    const char* file_name);
 
+segment_return_e 
+SectionInsertString(segment_t segment,
+                    string_s  string);
 
 #endif // ELF_H

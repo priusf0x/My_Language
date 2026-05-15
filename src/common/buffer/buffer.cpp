@@ -76,6 +76,7 @@ BufferCtor(buffer_t*    buffer,
     }
     
     (*buffer)->buffer[read_count] = 0;
+    (*buffer)->max_buffer = read_count;
 
     return BUFFER_RETURN_SUCCESS;
 }

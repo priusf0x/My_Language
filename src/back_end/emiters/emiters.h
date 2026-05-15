@@ -140,14 +140,16 @@ emit_sub_rsp_const(segment_t segment,
                    int32_t   num);
          
 void 
-emit_div(segment_t segment,
-         reg_e     reg_d,
-         reg_e     reg_s);
+emit_idiv(segment_t segment,
+          reg_e     reg);
          
 void 
-emit_mul(segment_t segment,
-         reg_e     reg_d,
-         reg_e     reg_s);
+emit_imul(segment_t segment,
+          reg_e     reg_d,
+          reg_e     reg_s);
+
+void 
+emit_cqo(segment_t segment);
 
 // ================================== JUMPS ===================================
           

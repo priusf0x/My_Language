@@ -171,7 +171,7 @@ SegmentEmitQword(segment_t segment,
     return SEGMENT_SUCCESS;
 }
 
-static segment_return_e 
+segment_return_e 
 SectionInsertString(segment_t segment,
                     string_s  string)
 {

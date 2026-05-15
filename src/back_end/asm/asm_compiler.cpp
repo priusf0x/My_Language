@@ -1,3 +1,4 @@
+#include "buffer.h"
 #include "compiler.h"
 
 #include <assert.h>
@@ -7,11 +8,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "buffer.h"
 #include "emiters.h"
 #include "lexes.h"
 #include "list.h"
 #include "my_elf.h"
 #include "tree.h"
+#include "my_lang_lib.h"
 
 // ============================== MACROS/STRUCTS ==============================
 
@@ -28,6 +31,7 @@ struct handler_s
 };
 
 #define COMMENT(___X___) fprintf(compiler->file_output, ___X___) 
+
 
 // ================================ HELPERS ===================================
 
@@ -628,7 +632,7 @@ CompileIf(ssize_t    lex,
     CHECK_OUTPUT(CompileRValue(cur_node.left_index, compiler));
     
     size_t cond_jmp = compiler->label_count;
-    compiler->label_count++;
+    compiler->label_count += 2;
     
     fprintf(compiler->file_output, "\ttest rbx, rbx\n");
     emit_test(compiler->main_segment, RBX, RBX);
@@ -640,12 +644,27 @@ CompileIf(ssize_t    lex,
     COMMENT("\n;if body\n");
     
     CHECK_OUTPUT(CompileBranch(cur_node.right_index, compiler));
-    fprintf(compiler->file_output, "\t.L%zu:\n", cond_jmp);
-    
-    const size_t skip_label = compiler->main_segment->cur_pos;
+
+    const size_t jmp_placeholder = compiler->main_segment->cur_pos;  
+    emit_jmp(compiler->main_segment, 0x0);
+    fprintf(compiler->file_output, "\tjmp .L%zu\n", cond_jmp + 1); 
+
+    fprintf(compiler->file_output, ".L%zu:\n", cond_jmp);
+    const size_t if_skip_label = compiler->main_segment->cur_pos;
     compiler->main_segment->cur_pos = jz_placeholder;
-    emit_jz(compiler->main_segment, skip_label);
-    compiler->main_segment->cur_pos = skip_label;
+    emit_jz(compiler->main_segment, if_skip_label);
+    compiler->main_segment->cur_pos = if_skip_label;
+    
+    if (array[cur_node.parent_index].right_index != NO_LINK) 
+    {
+        CHECK_OUTPUT(CompileBranch(array[cur_node.parent_index].right_index, compiler));
+    }
+    
+    fprintf(compiler->file_output, ".L%zu:\n", cond_jmp + 1); 
+    const size_t else_skip_label = compiler->main_segment->cur_pos;
+    compiler->main_segment->cur_pos = jmp_placeholder;
+    emit_jmp(compiler->main_segment, else_skip_label);
+    compiler->main_segment->cur_pos = else_skip_label;
     
     /*
         // condition 
@@ -707,6 +726,11 @@ CompileWhile(ssize_t    lex,
     return COMPILER_RETURN_SUCCESS;
 }
 
+
+static compiler_return_e
+CompileStatement(ssize_t    lex,
+                 compiler_t compiler);
+
 static compiler_return_e 
 CompileElse(ssize_t    lex,
             compiler_t compiler)
@@ -716,25 +740,26 @@ CompileElse(ssize_t    lex,
 
     node_s* array = compiler->compiler_tree->nodes_array;
     node_s cur_node = array[lex];
-    
-    assert(cur_node.left_index != NO_LINK);
-    
-    do
+
+    ssize_t kw_node = cur_node.left_index;
+    assert(kw_node != NO_LINK);
+
+    switch (array[kw_node].node_value.value.key_word)
     {
-        ssize_t kw_node = array[lex].left_index;
-        switch (array[kw_node].node_value.value.key_word)
-        {
-            case KEY_WORD_IF:        return CompileIf(kw_node, compiler);
-            case KEY_WORD_WHILE:     return CompileWhile(kw_node, compiler);
-            case KEY_WORD_VAR:       
-            case KEY_WORD_FUNCTION:  
-            case KEY_WORD_RETURN:    
-            case KEY_WORD_ELSE:      
-            case KEY_WORD_UNDEFINED: return COMPILER_RETURN_INCORRECT_AST;
-            default: assert(0);
-        }
-    } while (cur_node.right_index != NO_LINK);
-    
+        case KEY_WORD_IF:        
+            CHECK_OUTPUT(CompileIf(kw_node, compiler));
+            break;
+        case KEY_WORD_WHILE:     
+            CHECK_OUTPUT(CompileWhile(kw_node, compiler));
+            break;
+        case KEY_WORD_VAR:       
+        case KEY_WORD_FUNCTION:  
+        case KEY_WORD_RETURN:    
+        case KEY_WORD_ELSE:      
+        case KEY_WORD_UNDEFINED: return COMPILER_RETURN_INCORRECT_AST;
+        default: assert(0);
+    }
+
     return COMPILER_RETURN_SUCCESS;
 }
 
@@ -835,7 +860,7 @@ CompileAssignment(ssize_t    lex,
     GetVarPos(cur_node.left_index, compiler);
     fprintf(compiler->file_output, ", rbx\n");
 
-    MovRegVar(compiler, cur_node.left_index, RBX);
+    MovRegVar(compiler, cur_node.left_index, RBX, true);
     
     return COMPILER_RETURN_SUCCESS;
 }
@@ -936,9 +961,20 @@ CompileArithm(ssize_t         lex,
             break;
         case OPERATOR_MUL:
             fprintf(compiler->file_output,  "\timul rbx, rax\n");
-            emit_mul(compiler->main_segment, RBX, RAX);
+            emit_imul(compiler->main_segment, RBX, RAX);
             break;
         case OPERATOR_DIV:
+            fprintf(compiler->file_output, "\tmov rcx, rax\n");
+            emit_mov(compiler->main_segment, RCX, RAX);
+            fprintf(compiler->file_output, "\tmov rax, rbx\n");
+            emit_mov(compiler->main_segment, RAX, RBX);
+            fprintf(compiler->file_output, "\tcqo\n");
+            emit_cqo(compiler->main_segment);
+            fprintf(compiler->file_output, "\tidiv rcx\n");
+            emit_idiv(compiler->main_segment, RCX);
+            fprintf(compiler->file_output, "\tmov rbx, rax\n");
+            emit_mov(compiler->main_segment, RBX, RAX);
+            break;
         default: assert(0);
     } 
     
@@ -1033,7 +1069,7 @@ CompileBranch(ssize_t    lex,
         if (!((val.lex_type == LEX_TYPE_SYNTAX)
                 && (val.value.syntax == SYNTAX_STATEMENT_CONNECTOR)))
         {
-            return COMPILER_RETURN_INCORRECT_AST;
+            return CompileStatement(lex, compiler);
         }
 
         CHECK_OUTPUT(CompileStatement(array[lex].right_index, compiler));  
@@ -1046,6 +1082,7 @@ CompileBranch(ssize_t    lex,
 }
 
 // --------------------------- set_asm_header ---------------------------------
+
 
 static compiler_return_e 
 SetASMHeader(compiler_t compiler)
@@ -1083,6 +1120,35 @@ SetASMHeader(compiler_t compiler)
     return COMPILER_RETURN_SUCCESS;
 }
 
+// ------------------------------- std_lib ------------------------------------
+
+
+static compiler_return_e 
+CompileStdLib(compiler_t compiler)
+{
+    assert(compiler != nullptr);
+
+    for (size_t i = 0; i < FUNCTIONS_AMOUNT; i++)
+    {
+        buffer_t buffer = nullptr;
+        if (BufferCtor(&buffer, FUNCTIONS[i].file))
+        {
+            return COMPILER_RETURN_BUFFER_ERROR;
+        }
+
+        size_t cur_pos = compiler->main_segment->cur_pos;
+        SectionInsertString(compiler->main_segment, {buffer->buffer, buffer->max_buffer});
+        HashTableAddElem(compiler->name_table, FUNCTIONS[i].function_name, cur_pos);
+        
+        if (BufferDtor(&buffer))
+        {
+            return COMPILER_RETURN_BUFFER_ERROR;
+        }
+    }
+        
+    return COMPILER_RETURN_SUCCESS;
+}
+
 // ---------------------------- main_interface --------------------------------
 
 compiler_return_e
@@ -1094,6 +1160,8 @@ CompileAST(compiler_t compiler)
 
     node_s* array = compiler->compiler_tree->nodes_array;
     ssize_t start_node= array[0].left_index;
+
+    CompileStdLib(compiler);
 
     CHECK_OUTPUT(CompileBranch(start_node, compiler)); 
 
