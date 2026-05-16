@@ -28,7 +28,6 @@ enum reg_e
     R13 = 0b101 | REG_EXTENDED,
     R14 = 0b110 | REG_EXTENDED,
     R15 = 0b111 | REG_EXTENDED,
-    NONE = 0b10000
 };
 
 void 

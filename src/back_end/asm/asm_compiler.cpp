@@ -15,6 +15,7 @@
 #include "my_elf.h"
 #include "tree.h"
 #include "my_lang_lib.h"
+#include "common_emiters.h"
 
 // ============================== MACROS/STRUCTS ==============================
 
@@ -30,107 +31,8 @@ struct handler_s
     compiler_return_e (*handler) (ssize_t, compiler_t) = {};
 };
 
-#define COMMENT(___X___) fprintf(compiler->file_output, ___X___) 
+#define COMMENT(___X___) fprintf(compiler->file_output, (___X___)) 
 
-
-// ================================ HELPERS ===================================
-
-static compiler_return_e 
-GetVarPos(ssize_t    lex,
-          compiler_t compiler)
-{
-    assert(compiler != nullptr);
-
-    node_s* array = compiler->compiler_tree->nodes_array;
-    node_s cur_node = array[lex];
-    node_data_t val = cur_node.node_value;
-
-    assert(val.lex_type == LEX_TYPE_ID);    
-    assert(!val.value.id.is_function);    
-
-    if (val.value.id.is_global)
-    {
-        fprintf(compiler->file_output, "qword [%.*s]", 
-                    (int) val.value.id.id.size,
-                    val.value.id.id.string);
-    }
-    else 
-    {
-        if (val.value.id.info2) // check if argument 
-        {
-            if (val.value.id.info1 < 7)
-            {
-                fprintf(compiler->file_output, "qword [rbp - %ld]",
-                    8 * val.value.id.info1 + 8);
-                
-            }
-            else 
-            {
-                fprintf(compiler->file_output, "qword [rbp + %ld]",
-                    8 * val.value.id.info1 + 16);
-            }
-        }
-        else 
-        {
-            fprintf(compiler->file_output, "qword [rbp - %ld]",
-                        8 * val.value.id.info1 + 56);
-        }
-    }
-
-    return COMPILER_RETURN_SUCCESS;
-}
-
-static compiler_return_e 
-MovRegVar(compiler_t compiler,
-          ssize_t    lex,
-          reg_e      reg,
-          bool       reverse = false)
-{
-    assert(compiler != nullptr);
-    assert(lex != NO_LINK);
-
-    node_s* array = compiler->compiler_tree->nodes_array;
-    node_s cur_node = array[lex];
-    node_data_t val = cur_node.node_value;
-
-    assert(val.lex_type == LEX_TYPE_ID);    
-    assert(!val.value.id.is_function);    
-
-    if (val.value.id.is_global)
-    {
-        assert(0); // not added yet 
-    }
-    else 
-    {
-        if (val.value.id.info2) // check if argument 
-        {
-            if (val.value.id.info1 < 7)
-            {
-                reverse ?   emit_mov_mem(compiler->main_segment, RBP, 
-                                - (int64_t) (val.value.id.info1 * 8 + 8), reg) :
-                            emit_mov_mem(compiler->main_segment, reg, RBP, 
-                                - (int64_t) (val.value.id.info1 * 8 + 8));
-            }
-            else 
-            {
-                reverse ?   emit_mov_mem(compiler->main_segment, RBP, 
-                                 (int64_t) (val.value.id.info1 * 8 + 16), reg) :
-                            emit_mov_mem(compiler->main_segment, reg, RBP, 
-                                 (int64_t) (val.value.id.info1 * 8 + 16));
-            }
-        }
-        else 
-        {
-            reverse ?   emit_mov_mem(compiler->main_segment, RBP, 
-                            - (int64_t) (val.value.id.info1 * 8 + 56), reg) :
-                        emit_mov_mem(compiler->main_segment, reg, RBP, 
-                            - (int64_t) (val.value.id.info1 * 8  + 56));
-        }
-    }
-    
-    return COMPILER_RETURN_SUCCESS;
-}
-    
 // ============================= AST COMPILE ==================================
 
 // ---------------------------- placeholder -----------------------------------
@@ -219,15 +121,6 @@ CompileRegArg(size_t     arg_num,
     }
     
     assert(arg_num <= 5);
-    const char* registers[] = 
-    {
-        "rdi", 
-        "rsi", 
-        "rdx", 
-        "rcx", 
-        "r8", 
-        "r9"
-    };
     
     const reg_e elf_registers[] = 
     {
@@ -239,10 +132,7 @@ CompileRegArg(size_t     arg_num,
         R9
     };
     
-    fprintf(compiler->file_output, 
-                "\tmov %s, rbx\n", registers[arg_num]);
-    emit_mov(compiler->main_segment, 
-                elf_registers[arg_num], RBX);
+    EMIT_MOV_REG_REG(elf_registers[arg_num], RBX);
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -288,18 +178,12 @@ CompileFuncCall(ssize_t    lex,
 
     node_s* array = compiler->compiler_tree->nodes_array;
     node_data_t val = array[lex].node_value;
-    id_s id = val.value.id;
+    string_s id = val.value.id.id;
+
 
     CHECK_OUTPUT(CompileFunctionArgs(lex, compiler));
-    fprintf(compiler->file_output, "\tcall %.*s\n", 
-                (int) id.id.size, id.id.string);
-    
-    SetPlaceholder(compiler, id.id, compiler->main_segment->cur_pos, 
-                        &compiler->placehldr.func);
-    emit_call(compiler->main_segment, 0x0); // placeholder
-
-    fprintf(compiler->file_output, "\tmov rbx, rax\n");
-    emit_mov(compiler->main_segment, RBX, RAX);
+    EMIT_CALL(id);
+    EMIT_MOV_REG_REG(RBX, RAX);
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -321,10 +205,7 @@ CompileID(ssize_t    lex,
     }
     else
     {
-        fprintf(compiler->file_output, "\tmov rbx, ");
-        GetVarPos(lex, compiler);
-        fprintf(compiler->file_output, "\n");
-        MovRegVar(compiler, lex, RBX);
+        EMIT_MOV_REG_VAR(RBX, lex);
     }
 
     return COMPILER_RETURN_SUCCESS;
@@ -332,54 +213,6 @@ CompileID(ssize_t    lex,
 
 
 // --------------------------- compile_keyword ------------------------------
-
-static compiler_return_e 
-CompileGlobalData(ssize_t    lex, 
-           compiler_t compiler)
-{
-    assert(compiler != nullptr);
-    assert(lex != NO_LINK);
-
-    const char* data_template = 
-        "segment .data\n" 
-        "\t%.*s dq %ld\n" 
-        "segment .text\n";
-    
-    node_s* array = compiler->compiler_tree->nodes_array;
-    node_s id_node = array[array[lex].left_index];
-    node_s val_node = array[array[lex].right_index];
-    node_data_t val_str = id_node.node_value;
-        
-    fprintf(compiler->file_output, data_template, 
-                val_str.value.id.id.size, val_str.value.id.id.string,
-                val_node.node_value.value.constant);
-    
-    return COMPILER_RETURN_SUCCESS;
-}
-
-
-static compiler_return_e 
-CompileGlobalBSS(ssize_t    lex, 
-                 compiler_t compiler)
-{
-    assert(compiler != nullptr);
-    assert(lex != NO_LINK);
-
-    const char* bss_template = 
-        "segment .bss\n" 
-        "\t%.*s resq 1\n" 
-        "segment .code\n";
-    
-    node_s* array = compiler->compiler_tree->nodes_array;
-    node_s cur_node = array[array[lex].left_index];
-    node_data_t val = cur_node.node_value;
-        
-    fprintf(compiler->file_output, bss_template, 
-                val.value.id.id.size, val.value.id.id.string);
-
-    return COMPILER_RETURN_SUCCESS;
-}
-
 
 static compiler_return_e 
 CompileRValue(ssize_t    lex, 
@@ -395,10 +228,7 @@ CompileLocalVar(ssize_t    lex,
     node_s* array = compiler->compiler_tree->nodes_array;
     
     CHECK_OUTPUT(CompileRValue(array[lex].right_index, compiler)); 
-    fprintf(compiler->file_output, "\tmov ");
-    GetVarPos(array[lex].left_index, compiler);
-    fprintf(compiler->file_output, ", rbx\n");
-    MovRegVar(compiler, array[lex].left_index, RBX, true);
+    EMIT_MOV_VAR_REG(RBX, array[lex].left_index);
     
     return COMPILER_RETURN_SUCCESS; 
 }
@@ -421,11 +251,11 @@ CompileVarKW(ssize_t    lex,
     {
         if (array[lex].right_index != NO_LINK)
         {
-            CHECK_OUTPUT(CompileGlobalData(lex, compiler));
+            assert(0); // sorry not added yet
         }
         else
         {
-            CHECK_OUTPUT(CompileGlobalBSS(lex, compiler));
+            assert(0);
         }
     }
     else 
@@ -522,25 +352,18 @@ CompilePrologue(ssize_t    lex,
     assert(lex != NO_LINK);
     
     COMMENT("\n;prologue\n");
-    
-    fprintf(compiler->file_output,
-            "\tpush rbp\n"
-            "\tmov rbp, rsp\n");   
-    emit_push(compiler->main_segment, RBP);
-    emit_mov(compiler->main_segment, RBP, RSP);
+
+    EMIT_PUSH_REG(RBP);
+    EMIT_MOV_REG_REG(RBP, RSP);
     
     node_s* array = compiler->compiler_tree->nodes_array;
     size_t local_count = (size_t) array[array[lex].left_index] 
                                     .node_value.value.id.info2;
 
-    fprintf(compiler->file_output,
-            "\tsub rsp, %zu\n", 8 * (local_count + 6));   
-    emit_sub_rsp_const(compiler->main_segment, 8 * (int32_t) (local_count + 6));
+    EMIT_SUB_RSP_CONST(8 * (local_count + 6));
     CompileArguments(lex, compiler);
 
-    fprintf(compiler->file_output,
-            "\tpush rbx\n");
-    emit_push(compiler->main_segment, RBX);
+    EMIT_PUSH_REG(RBX);
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -555,15 +378,9 @@ CompileEpilogue(ssize_t    lex,
     
     COMMENT("\n;epilogue\n");
     
-    fprintf(compiler->file_output,
-            "\tpop rbx\n");
-    emit_pop(compiler->main_segment, RBX);
-
-    fprintf(compiler->file_output,
-            "\tmov rsp, rbp\n"
-            "\tpop rbp\n");   
-    emit_mov(compiler->main_segment, RSP, RBP);
-    emit_pop(compiler->main_segment, RBP);
+    EMIT_POP_REG(RBX);
+    EMIT_MOV_REG_REG(RSP, RBP);
+    EMIT_POP_REG(RBP);
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -608,11 +425,9 @@ CompileReturn(ssize_t    lex,
     node_s cur_node = array[lex];
     
     CHECK_OUTPUT(CompileRValue(cur_node.right_index, compiler)); 
-    fprintf(compiler->file_output, "\tmov rax, rbx\n");
-    emit_mov(compiler->main_segment, RAX, RBX);
+    EMIT_MOV_REG_REG(RAX, RBX);
     CHECK_OUTPUT(CompileEpilogue(lex, compiler));
-    fprintf(compiler->file_output, "\tret\n");
-    emit_ret(compiler->main_segment);
+    EMIT_RET();
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -805,10 +620,7 @@ CompileConst(ssize_t    lex,
 
     assert(cur_node.node_value.lex_type == LEX_TYPE_CONST);
 
-    fprintf(compiler->file_output, "\tmov rbx, %ld\n", 
-                cur_node.node_value.value.constant);    
-    emit_mov(compiler->main_segment, RBX, 
-                cur_node.node_value.value.constant);
+    EMIT_MOV_REG_CONST(RBX, cur_node.node_value.value.constant);
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -855,12 +667,7 @@ CompileAssignment(ssize_t    lex,
     node_s* array = compiler->compiler_tree->nodes_array;
     node_s cur_node = array[lex];
     CHECK_OUTPUT(CompileRValue(cur_node.right_index, compiler));
-
-    fprintf(compiler->file_output, "\tmov ");
-    GetVarPos(cur_node.left_index, compiler);
-    fprintf(compiler->file_output, ", rbx\n");
-
-    MovRegVar(compiler, cur_node.left_index, RBX, true);
+    EMIT_MOV_VAR_REG(RBX, cur_node.left_index);
     
     return COMPILER_RETURN_SUCCESS;
 }
@@ -881,13 +688,14 @@ CompileBool(ssize_t         lex,
     node_s cur_node = array[lex];
 
     CHECK_OUTPUT(CompileRValue(cur_node.left_index, compiler));
-    fprintf(compiler->file_output, "\tpush rbx\n");
-    emit_push(compiler->main_segment, RBX);
+
+    EMIT_PUSH_REG(RBX);
+
     CHECK_OUTPUT(CompileRValue(cur_node.right_index, compiler));
-    fprintf(compiler->file_output, "\tmov rax, rbx\n");
-    emit_mov(compiler->main_segment, RAX, RBX);
-    fprintf(compiler->file_output, "\tpop rbx\n");
-    emit_pop(compiler->main_segment, RBX);
+
+    EMIT_MOV_REG_REG(RAX, RBX);
+    EMIT_POP_REG(RBX);
+
     fprintf(compiler->file_output, "\tcmp rbx, rax\n");
     emit_cmp(compiler->main_segment, RBX, RAX);
     fprintf(compiler->file_output, "\tmov rbx, 0\n");
@@ -896,28 +704,22 @@ CompileBool(ssize_t         lex,
     switch(op)
     {
         case OPERATOR_EQUALITY:
-            fprintf(compiler->file_output, "\tsete bl\n");
-            emit_sete_bl(compiler->main_segment);
+            EMIT_SETE_BL();
             break;
         case OPERATOR_N_EQUALITY:
-            fprintf(compiler->file_output, "\tsetne bl\n");
-            emit_setne_bl(compiler->main_segment);
+            EMIT_SETNE_BL();
             break;
         case OPERATOR_MORE:
-            fprintf(compiler->file_output, "\tsetg bl\n");
-            emit_setg_bl(compiler->main_segment);
+            EMIT_SETG_BL();
             break;
         case OPERATOR_MORE_OR_EQ:
-            fprintf(compiler->file_output, "\tsetge bl\n");
-            emit_setge_bl(compiler->main_segment);
+            EMIT_SETGE_BL();
             break;
         case OPERATOR_LESS:
-            fprintf(compiler->file_output, "\tsetl bl\n");
-            emit_setl_bl(compiler->main_segment);
+            EMIT_SETL_BL();
             break;
         case OPERATOR_LESS_OR_EQUAL:
-            fprintf(compiler->file_output, "\tsetle bl\n");
-            emit_setle_bl(compiler->main_segment);
+            EMIT_SETLE_BL();
             break;
         default: assert(0);
     }
@@ -941,39 +743,28 @@ CompileArithm(ssize_t         lex,
     node_s cur_node = array[lex];
     
     CHECK_OUTPUT(CompileRValue(cur_node.left_index, compiler));
-    fprintf(compiler->file_output, "\tpush rbx\n");
-    emit_push(compiler->main_segment, RBX);
+    EMIT_PUSH_REG(RBX);
     CHECK_OUTPUT(CompileRValue(cur_node.right_index, compiler));
-    fprintf(compiler->file_output, "\tmov rax, rbx\n");
-    emit_mov(compiler->main_segment, RAX, RBX);
-    fprintf(compiler->file_output, "\tpop rbx\n");
-    emit_pop(compiler->main_segment, RBX);
+    EMIT_MOV_REG_REG(RAX, RBX);
+    EMIT_POP_REG(RBX);
     
     switch(op)
     {
         case OPERATOR_PLUS:
-            fprintf(compiler->file_output,  "\tadd rbx, rax\n");
-            emit_add(compiler->main_segment, RBX, RAX);
+            EMIT_ADD_REG_REG(RBX, RAX);
             break;
         case OPERATOR_MINUS:
-            fprintf(compiler->file_output,  "\tsub rbx, rax\n");
-            emit_sub(compiler->main_segment, RBX, RAX);
+            EMIT_SUB_REG_REG(RBX, RAX);
             break;
         case OPERATOR_MUL:
-            fprintf(compiler->file_output,  "\timul rbx, rax\n");
-            emit_imul(compiler->main_segment, RBX, RAX);
+            EMIT_IMUL_REG_REG(RBX, RAX);
             break;
         case OPERATOR_DIV:
-            fprintf(compiler->file_output, "\tmov rcx, rax\n");
-            emit_mov(compiler->main_segment, RCX, RAX);
-            fprintf(compiler->file_output, "\tmov rax, rbx\n");
-            emit_mov(compiler->main_segment, RAX, RBX);
-            fprintf(compiler->file_output, "\tcqo\n");
-            emit_cqo(compiler->main_segment);
-            fprintf(compiler->file_output, "\tidiv rcx\n");
-            emit_idiv(compiler->main_segment, RCX);
-            fprintf(compiler->file_output, "\tmov rbx, rax\n");
-            emit_mov(compiler->main_segment, RBX, RAX);
+            EMIT_MOV_REG_REG(RCX, RAX);
+            EMIT_MOV_REG_REG(RAX, RBX);
+            EMIT_CQO();
+            EMIT_IDIV_REG(RCX);
+            EMIT_MOV_REG_REG(RBX, RAX);
             break;
         default: assert(0);
     } 
@@ -1089,39 +880,26 @@ SetASMHeader(compiler_t compiler)
 {
     assert(compiler != nullptr);
 
-/* nasm part */ 
-
-    const char* asm_header = 
-                             "global _start\n"
-                             "_start:\n"
-                             "\tcall main\n"
-                             "\tmov rdi, rax\n"
-                             "\tmov rax, 60\n"        
-                             "\tsyscall\n";
-
-    fprintf(compiler->file_output, "%s", asm_header);
+    NASM_EMIT("global _start\n");
+    NASM_EMIT("_start:\n");
     
-
-/* elf part*/
-
     SegmentCreateFileH(compiler->main_segment);
     SegmentCreateProgramH(compiler->main_segment);
+
+    string_s main_name = {(char*) "main", strlen(main_name.string)};
    
-    const size_t main_pos = compiler->main_segment->cur_pos;
-    emit_call(compiler->main_segment, 0x0);
+    EMIT_CALL(main_name);
 
     emit_mov(compiler->main_segment, RDI, RAX);
-    emit_mov(compiler->main_segment, RAX, (uint64_t) 0x3c);
-    emit_syscall(compiler->main_segment);
-    string_s main_name = {(char*) "main", strlen(main_name.string)};
-    SetPlaceholder(compiler, main_name, 
-                main_pos, &compiler->placehldr.func);
+    EMIT_MOV_REG_REG(RDI, RAX);
+    const uint64_t exit_syscall = 0x3c;
+    EMIT_MOV_REG_CONST(RAX, exit_syscall);
+    EMIT_SYSCALL();
 
     return COMPILER_RETURN_SUCCESS;
 }
 
 // ------------------------------- std_lib ------------------------------------
-
 
 static compiler_return_e 
 CompileStdLib(compiler_t compiler)

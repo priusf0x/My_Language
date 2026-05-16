@@ -1,3 +1,12 @@
+ putc:
+    push rdi
+    mov rax, 1      
+    mov rdi, 1      
+    mov rsi, rsp    
+    mov rdx, 1      
+    syscall
+    add rsp, 8
+    ret
 global _start
 _start:
 	call main
@@ -17,52 +26,52 @@ main:
 
 ;body
 	mov rbx, 30
-	mov qword [rbp - 56], rbx
+	mov [rbp - 56], rbx
 	mov rbx, 30
-	mov qword [rbp - 64], rbx
+	mov [rbp - 64], rbx
 	mov rbx, 7
-	mov qword [rbp - 72], rbx
+	mov [rbp - 72], rbx
 	mov rbx, 0
-	mov qword [rbp - 80], rbx
+	mov [rbp - 80], rbx
 	mov rbx, 0
-	mov qword [rbp - 88], rbx
+	mov [rbp - 88], rbx
 
 ;while condition
 .L1:
-	mov rbx, qword [rbp - 88]
+	mov rbx, [rbp - 88]
 	push rbx
-	mov rbx, qword [rbp - 64]
+	mov rbx, [rbp - 64]
 	mov rax, rbx
 	pop rbx
 	cmp rbx, rax
 	mov rbx, 0
-	setl bl
+	setl BL
 	test rbx, rbx
 	jz .L0
 
 ;while body
 	mov rbx, 0
-	mov qword [rbp - 80], rbx
+	mov [rbp - 80], rbx
 
 ;while condition
 .L3:
-	mov rbx, qword [rbp - 80]
+	mov rbx, [rbp - 80]
 	push rbx
-	mov rbx, qword [rbp - 56]
+	mov rbx, [rbp - 56]
 	mov rax, rbx
 	pop rbx
 	cmp rbx, rax
 	mov rbx, 0
-	setl bl
+	setl BL
 	test rbx, rbx
 	jz .L2
 
 ;while body
 
 ;if condition
-	mov rbx, qword [rbp - 80]
+	mov rbx, [rbp - 80]
 	push rbx
-	mov rbx, qword [rbp - 56]
+	mov rbx, [rbp - 56]
 	push rbx
 	mov rbx, 2
 	mov rax, rbx
@@ -76,9 +85,9 @@ main:
 	pop rbx
 	sub rbx, rax
 	push rbx
-	mov rbx, qword [rbp - 80]
+	mov rbx, [rbp - 80]
 	push rbx
-	mov rbx, qword [rbp - 56]
+	mov rbx, [rbp - 56]
 	push rbx
 	mov rbx, 2
 	mov rax, rbx
@@ -95,9 +104,9 @@ main:
 	pop rbx
 	imul rbx, rax
 	push rbx
-	mov rbx, qword [rbp - 88]
+	mov rbx, [rbp - 88]
 	push rbx
-	mov rbx, qword [rbp - 64]
+	mov rbx, [rbp - 64]
 	push rbx
 	mov rbx, 2
 	mov rax, rbx
@@ -111,9 +120,9 @@ main:
 	pop rbx
 	sub rbx, rax
 	push rbx
-	mov rbx, qword [rbp - 88]
+	mov rbx, [rbp - 88]
 	push rbx
-	mov rbx, qword [rbp - 64]
+	mov rbx, [rbp - 64]
 	push rbx
 	mov rbx, 2
 	mov rax, rbx
@@ -138,9 +147,9 @@ main:
 	pop rbx
 	add rbx, rax
 	push rbx
-	mov rbx, qword [rbp - 72]
+	mov rbx, [rbp - 72]
 	push rbx
-	mov rbx, qword [rbp - 72]
+	mov rbx, [rbp - 72]
 	mov rax, rbx
 	pop rbx
 	imul rbx, rax
@@ -148,7 +157,7 @@ main:
 	pop rbx
 	cmp rbx, rax
 	mov rbx, 0
-	setl bl
+	setl BL
 	test rbx, rbx
 	jz .L4
 
@@ -164,22 +173,22 @@ main:
 	call putc
 	mov rbx, rax
 .L5:
-	mov rbx, qword [rbp - 80]
+	mov rbx, [rbp - 80]
 	push rbx
 	mov rbx, 1
 	mov rax, rbx
 	pop rbx
 	add rbx, rax
-	mov qword [rbp - 80], rbx
+	mov [rbp - 80], rbx
 	jmp .L3
 .L2:
-	mov rbx, qword [rbp - 88]
+	mov rbx, [rbp - 88]
 	push rbx
 	mov rbx, 1
 	mov rax, rbx
 	pop rbx
 	add rbx, rax
-	mov qword [rbp - 88], rbx
+	mov [rbp - 88], rbx
 	mov rbx, 10
 	mov rdi, rbx
 	call putc
