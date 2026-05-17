@@ -37,7 +37,7 @@ MovRegVar(compiler_t compiler,
                             emit_mov_mem(compiler->main_segment, reg, RBP, 
                                 - (int64_t) (val.value.id.info1 * 8 + 8));
                 reverse ?   NASM_EMIT("\tmov [rbp - %ld], %s\n", 
-                                - (int64_t) (val.value.id.info1 * 8 + 8), REG_NAMES[reg]) :
+                                 (int64_t) (val.value.id.info1 * 8 + 8), REG_NAMES[reg]) :
                             NASM_EMIT("\tmov %s, [rbp - %ld]\n", REG_NAMES[reg],
                                         (int64_t) (val.value.id.info1 * 8 + 8));
             }

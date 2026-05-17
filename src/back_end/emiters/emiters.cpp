@@ -31,8 +31,8 @@ SectionAddByte(segment_t segment,
 #define EMIT(_X_) SegmentEmitByte(segment, (_X_))
 #define EMIT_D(_X_) SegmentEmitDword(segment, (_X_))
 #define EMIT_Q(_X_) SegmentEmitQword(segment, (_X_))
-#define DEBUG() \
-EMIT(FILL_BETWEEN_INSTR)
+#define DEBUG() 
+// EMIT(FILL_BETWEEN_INSTR)
 
 // ================================= EMITERS ==================================
 
@@ -482,22 +482,11 @@ emit_jmp(segment_t segment,
 
     DEBUG();
 
-    const uint8_t short_op_code = 0xeb;
     const uint8_t long_op_code = 0xe9;
-    
-    int32_t short_rel_address = (int32_t) (addr) 
-                        - (int32_t) (segment->cur_pos + 2);  
     int32_t long_rel_address = (int32_t) (addr) 
                         - (int32_t) (segment->cur_pos + 5);  
-    
-    bool is_short = (short_rel_address >= -128)     
-                        && (short_rel_address <= 127);
-
-    is_short ? EMIT(short_op_code) 
-             : EMIT(long_op_code);
-
-    is_short ? EMIT((int8_t) short_rel_address) 
-             : EMIT_D((int32_t) long_rel_address);
+    EMIT(long_op_code);
+    EMIT_D((int32_t) long_rel_address);
 }
 
 void 
@@ -512,7 +501,7 @@ emit_jz(segment_t segment,
     const uint8_t long_op_code_2 = 0x84;
     
     int32_t long_rel_address = (int32_t) (addr) 
-                        - (int32_t) (segment->cur_pos + 5);  
+                        - (int32_t) (segment->cur_pos + 6);  
 
     EMIT(long_op_code_1);
     EMIT(long_op_code_2);

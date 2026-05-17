@@ -12,7 +12,7 @@ main()
 {
     
     [[maybe_unused]] int return_code = 0;
-    read_context_t read_context = NULL;
+    read_context_t read_context = nullptr;
 
     ReadContextCtor(&read_context, INPUT_FILE_NAME);
     

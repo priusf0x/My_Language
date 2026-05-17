@@ -25,7 +25,7 @@ function discriminant(var a, var b, var c)
 
 function main()
 {
-    var a = scan(); var b = scan(); var c = scan();
+    var a = 1; var b = 10; var c = 4;
 
     if (a == 0)
     {
@@ -52,9 +52,10 @@ function main()
     else 
     {
         var d = discriminant(a, b, c);
+
         if (d == 0)
         {
-            print(0);
+            print(-b/(2*a));
         }
         else if (d < 0)
         {
@@ -68,5 +69,5 @@ function main()
         }
     }
 
-    
+    return 0;
 }

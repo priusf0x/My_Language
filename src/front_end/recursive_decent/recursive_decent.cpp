@@ -66,7 +66,7 @@ ReadContextCtor(read_context_t* context,
     assert(context != NULL);
     assert(input_file_name != NULL);
 
-    const size_t start_tree_size = 50;
+    const size_t start_tree_size = 5000;
     const size_t start_vector_size = 10;
     const size_t name_table_size = 10;
     

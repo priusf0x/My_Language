@@ -6,45 +6,43 @@
 #include <elf.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <elf.h>
 
 #include "compiler.h"
 #include "tools.h"
 
-static const char* const ELF_FILE_HEADER = 
-    "\x7f\x45\x4c\x46"                     /*magic numbers*/
-    "\x02"                                 /*ELF class (32b or 64b)*/
-    "\x01"                                 /*Little- or Big- endian*/
-    "\x01"                                 /*ELF version(always 1)*/ 
-    "\x00"                                 /*Specific ABI(none)*/ 
-    "\x00"                                 /*ABI version*/
-    "\x00\x00\x00\x00\x00\x00\x00"         /*Padding*/
-    "\x02\x00"                             /*File type*/
-    "\x3e\x00"                             /*machine type*/
-    "\x01\x00\x00\x00"                     /*format version*/
-    "\x78\x00\x40\x00\x00\x00\x00\x00"     /*virtual entry(78 for now)*/
-    "\x40\x00\x00\x00\x00\x00\x00\x00"     /*program header offset*/
-    "\x00\x00\x00\x00\x00\x00\x00\x00"     /*section header offset*/
-    "\x00\x00\x00\x00"                     /*processors flags*/
-    "\x40\x00"                             /*file header size*/
-    "\x38\x00"                             /*program header size*/
-    "\x01\x00"                             /*amount of program headers*/
-    "\x40\x00"                             /*size of section*/
-    "\x00\x00"                             /*amount of sections*/
-    "\x00\x00"                             /*index of shrtab*/
-    ;
-static const size_t ELF_FILE_H_SIZE = 64;
+const Elf64_Addr VIRTUAL_START = 0x400000;
+const Elf64_Addr ENTRY_POINT = 0x400078;
 
-static const char* const ELF_PROGRAM_HEADER = 
-    "\x01\x00\x00\x00"                     /*type of segment*/
-    "\x07\x00\x00\x00"                     /*access*/
-    "\x00\x00\x00\x00\x00\x00\x00\x00"     /*offset*/
-    "\x00\x00\x40\x00\x00\x00\x00\x00"     /*load address in vm*/
-    "\x00\x00\x40\x00\x00\x00\x00\x00"     /*phys addr*/
-    "\x00\x00\x00\x00\x00\x00\x00\x00"     /*segment file size*/
-    "\x00\x00\x00\x00\x00\x00\x00\x00"     /*segment mem size*/
-    "\x00\x00\x00\x00\x00\x00\x00\x00"     /*align*/
-    ;
-static const size_t ELF_PROGRAM_H_SIZE = 56;
+const Elf64_Ehdr EHDR_REFERENCE =
+{                 // .     E     L     F
+    .e_ident     = {0x7f, 0x45, 0x4c, 0x46, 0x02, 0x01, 0x01},
+    .e_type      = ET_EXEC,
+    .e_machine   = EM_X86_64,
+    .e_version   = 0x01,
+    .e_entry     = ENTRY_POINT,
+    .e_phoff     = 0x40,
+    .e_shoff     = 0x00,
+    .e_flags     = 0x00,
+    .e_ehsize    = 0x40,
+    .e_phentsize = 0x38,
+    .e_phnum     = 0x01,
+    .e_shentsize = 0x40,
+    .e_shnum     = 0x00,
+    .e_shstrndx  = 0x00  
+};
+
+const Elf64_Phdr PHDR_REFERENCE = 
+{
+    .p_type = PT_LOAD,
+    .p_flags = PF_X | PF_R | PF_W,
+    .p_offset = 0x00,
+    .p_vaddr = VIRTUAL_START,
+    .p_paddr = VIRTUAL_START,
+    .p_filesz = 0x00,
+    .p_memsz = 0x00,
+    .p_align = 0x00
+};
 
 // ============================== SECTION_METHODS =============================
 
@@ -203,7 +201,7 @@ SegmentCreateFileH(segment_t segment)
 {
     assert(segment != nullptr);
 
-    const string_s elf_header ={(char*) ELF_FILE_HEADER, ELF_FILE_H_SIZE};
+    const string_s elf_header ={(char*) &EHDR_REFERENCE, sizeof(EHDR_REFERENCE)};
     return SectionInsertString(segment, elf_header);
 }
 
@@ -214,7 +212,7 @@ SegmentCreateProgramH(segment_t segment)
     assert(segment != nullptr);
     
     segment->program_header = segment->cur_pos;
-    const string_s elf_header ={(char*) ELF_PROGRAM_HEADER, ELF_PROGRAM_H_SIZE};
+    const string_s elf_header ={(char*) &PHDR_REFERENCE, sizeof(PHDR_REFERENCE)};
     return SectionInsertString(segment, elf_header);
 }
 
@@ -224,13 +222,10 @@ SegmentSetSegmentSize(segment_t segment,
 {
     assert(segment != nullptr);
 
-    const size_t segment_size_pos = 32;
-    const size_t segment_mem_size_pos = 40;
-
-    memcpy(segment->segment + segment->program_header + segment_size_pos, 
-                &size, sizeof(size_t));
-    memcpy(segment->segment + segment->program_header + segment_mem_size_pos, 
-                &size, sizeof(size_t));
+    Elf64_Phdr* phdr = (Elf64_Phdr*) (segment->segment + segment->program_header);
+    
+    phdr->p_filesz = size;
+    phdr->p_memsz = size;
 
     return SEGMENT_SUCCESS;
 }

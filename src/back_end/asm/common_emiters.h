@@ -80,6 +80,11 @@ MovRegVar(compiler_t compiler,
         REG_NAMES[(___REG___)], ___CONST___);    \
     emit_mov(compiler->main_segment, (___REG___), (___CONST___)); } while (0)
 
+#define EMIT_MOV_MEM_OFF_REG(___REG_B___, ___OFFSET___, ___REG___)\
+    do {NASM_EMIT("\tmov qword [%s + %ld], %s\n",\
+        REG_NAMES[(___REG_B___)], (___OFFSET___), REG_NAMES[(___REG___)]);\
+    emit_mov_mem(compiler->main_segment, (___REG_B___), (___OFFSET___), ___REG___);} while (0);
+
 // -------------------------------- push/pop ----------------------------------
 
 #define EMIT_PUSH_REG(___REG___) \
@@ -140,6 +145,10 @@ do {NASM_EMIT("\tcall %.*s\n", (int) (___STRING___).size, (___STRING___).string)
 
 // -------------------------------- test --------------------------------------
 
-#
+#define EMIT_TEST(___REG_L___, ___REG_R___)\
+    do {NASM_EMIT("\ttest %s, %s\n", \
+    REG_NAMES[(___REG_L___)], REG_NAMES[(___REG_R___)]);\
+    emit_test(compiler->main_segment, (___REG_L___), (___REG_R___));\
+    } while (0)
 
 #endif // COMMON_EMITERS_H

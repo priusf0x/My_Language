@@ -290,29 +290,17 @@ CompileArguments(ssize_t    lex,
     {
         default:
         case 6:
-            fprintf(compiler->file_output,
-                        "\tmov qword [rbp - 48], r9\n");
-            emit_mov_mem(compiler->main_segment, RBP, -48, R9);
+            EMIT_MOV_MEM_OFF_REG(RBP, -48, R9);
         case 5:
-            fprintf(compiler->file_output,
-                        "\tmov qword [rbp - 40], r8\n");
-            emit_mov_mem(compiler->main_segment, RBP, -40, R8);
+            EMIT_MOV_MEM_OFF_REG(RBP, -40, R8);
         case 4:
-            fprintf(compiler->file_output,
-                        "\tmov qword [rbp - 32], rcx\n");
-            emit_mov_mem(compiler->main_segment, RBP, -32, RCX);
+            EMIT_MOV_MEM_OFF_REG(RBP, -32, RCX);
         case 3:
-            fprintf(compiler->file_output,
-                        "\tmov qword [rbp - 24], rdx\n");
-            emit_mov_mem(compiler->main_segment, RBP, -24, RCX);
+            EMIT_MOV_MEM_OFF_REG(RBP, -24, RDX);
         case 2: 
-            fprintf(compiler->file_output,
-                        "\tmov qword [rbp - 16], rsi\n");
-            emit_mov_mem(compiler->main_segment, RBP, -16, RSI);
+            EMIT_MOV_MEM_OFF_REG(RBP, -16, RSI);
         case 1:
-            fprintf(compiler->file_output,
-                        "\tmov qword [rbp - 8], rdi\n");
-            emit_mov_mem(compiler->main_segment, RBP, -8, RDI);
+            EMIT_MOV_MEM_OFF_REG(RBP, -8, RDI);
         case 0:;
     }
 
@@ -431,7 +419,7 @@ CompileReturn(ssize_t    lex,
 
     return COMPILER_RETURN_SUCCESS;
 }
-
+ 
 static compiler_return_e
 CompileIf(ssize_t    lex,
           compiler_t compiler)
@@ -448,13 +436,12 @@ CompileIf(ssize_t    lex,
     
     size_t cond_jmp = compiler->label_count;
     compiler->label_count += 2;
+    EMIT_TEST(RBX, RBX);
     
-    fprintf(compiler->file_output, "\ttest rbx, rbx\n");
-    emit_test(compiler->main_segment, RBX, RBX);
-    fprintf(compiler->file_output, "\tjz .L%zu\n", cond_jmp); 
+    NASM_EMIT("\tjz .L%zu\n", cond_jmp); 
 
     const size_t jz_placeholder = compiler->main_segment->cur_pos;  
-    emit_jz(compiler->main_segment, 0);
+    emit_jz(compiler->main_segment, 0x0);
 
     COMMENT("\n;if body\n");
     
@@ -462,9 +449,9 @@ CompileIf(ssize_t    lex,
 
     const size_t jmp_placeholder = compiler->main_segment->cur_pos;  
     emit_jmp(compiler->main_segment, 0x0);
-    fprintf(compiler->file_output, "\tjmp .L%zu\n", cond_jmp + 1); 
+    NASM_EMIT("\tjmp .L%zu\n", cond_jmp + 1); 
 
-    fprintf(compiler->file_output, ".L%zu:\n", cond_jmp);
+    NASM_EMIT(".L%zu:\n", cond_jmp);
     const size_t if_skip_label = compiler->main_segment->cur_pos;
     compiler->main_segment->cur_pos = jz_placeholder;
     emit_jz(compiler->main_segment, if_skip_label);
@@ -475,7 +462,7 @@ CompileIf(ssize_t    lex,
         CHECK_OUTPUT(CompileBranch(array[cur_node.parent_index].right_index, compiler));
     }
     
-    fprintf(compiler->file_output, ".L%zu:\n", cond_jmp + 1); 
+    NASM_EMIT(".L%zu:\n", cond_jmp + 1); 
     const size_t else_skip_label = compiler->main_segment->cur_pos;
     compiler->main_segment->cur_pos = jmp_placeholder;
     emit_jmp(compiler->main_segment, else_skip_label);
@@ -511,17 +498,16 @@ CompileWhile(ssize_t    lex,
     const size_t test_jmp_pos = compiler->main_segment->cur_pos; 
 
     CHECK_OUTPUT(CompileRValue(cur_node.left_index, compiler));
-    fprintf(compiler->file_output, "\ttest rbx, rbx\n");
-    emit_test(compiler->main_segment, RBX, RBX);
-    fprintf(compiler->file_output, "\tjz .L%zu\n", cond_jmp); 
+    EMIT_TEST(RBX, RBX);
+    NASM_EMIT("\tjz .L%zu\n", cond_jmp); 
     
     const size_t jz_placeholder = compiler->main_segment->cur_pos;  
     emit_jz(compiler->main_segment, 0);
 
     COMMENT("\n;while body\n");
     CHECK_OUTPUT(CompileBranch(cur_node.right_index, compiler));
-    fprintf(compiler->file_output,"\tjmp .L%zu\n" 
-                                  ".L%zu:\n", test_jmp, cond_jmp);
+    NASM_EMIT("\tjmp .L%zu\n" 
+              ".L%zu:\n", test_jmp, cond_jmp);
     emit_jmp(compiler->main_segment, (uint32_t) test_jmp_pos);
     
     const size_t skip_label = compiler->main_segment->cur_pos;
