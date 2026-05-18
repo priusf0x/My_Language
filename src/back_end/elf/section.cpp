@@ -178,6 +178,7 @@ RelatabAddFunc(elf_t     elf,
     const int32_t rel_addr_addend = 4;
 
     uint64_t sym_tab_index = HashTableGetElem(elf->str_hash, string);
+
     if (sym_tab_index == ~ (uint64_t) 0)
     {
         SymtabAddGlobFunc(elf, string, 0, 0, false); 
@@ -232,7 +233,7 @@ AddStrToStrtab(elf_t       elf,
     assert(index != nullptr);
 
     *index = (uint32_t) elf->strtab->cur_pos;
-
+    
     SectionInsertString(elf->strtab, string);
     SectionEmitByte(elf->strtab, 0x00);
     

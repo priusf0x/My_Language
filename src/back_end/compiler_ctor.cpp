@@ -81,6 +81,12 @@ CompilerCtor(const char* input_name,
         output = COMPILER_RETURN_HT_ERROR;
         goto error;
     }
+    
+    if (ElfCtor(&(*compiler)->elf, (*compiler)->code_section))
+    {
+        output = COMPILER_RETURN_HT_ERROR;
+        goto error;
+    }
 
     return COMPILER_RETURN_SUCCESS;
     
@@ -90,6 +96,7 @@ error:
     fclose((*compiler)->file_output);
     SectionDtor((*compiler)->code_section);
     DestroyList((*compiler)->placehldr.list);
+    ElfDtor((*compiler)->elf);
     free(*compiler);
     *compiler = nullptr;
     
@@ -107,6 +114,7 @@ CompilerDtor(compiler_t* compiler)
         SectionDtor((*compiler)->code_section);
         DestroyList((*compiler)->placehldr.list);
         HashTableDtor((*compiler)->name_table);
+        ElfDtor((*compiler)->elf);
         free(*compiler);
 
         *compiler = nullptr;

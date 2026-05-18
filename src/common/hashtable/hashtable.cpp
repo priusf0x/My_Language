@@ -138,7 +138,7 @@ HashTableGetElem(hashtable_t ht,
     
     if (list_index == 0)
     {
-        return HT_NO_SUCH_ELEM; 
+        return ~ (uint64_t) 0; 
     }
     else 
     {

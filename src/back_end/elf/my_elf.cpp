@@ -30,7 +30,7 @@ const Elf64_Ehdr EHDR_REFERENCE =
     .e_phnum     = 0x00,
     .e_shentsize = 0x40,
     .e_shnum     = 0x06,
-    .e_shstrndx  = 0x05  
+    .e_shstrndx  = 0x05
 };
 
 // ================================== ELF =====================================
@@ -76,8 +76,8 @@ ElfCtor(elf_t*    elf,
     // add null byte 
     
     (*elf)->symtab_size++;
-    (*elf)->shstrtab->cur_pos++;
-    (*elf)->strtab->cur_pos++;
+    SectionEmitByte((*elf)->shstrtab, 0x00);
+    SectionEmitByte((*elf)->strtab, 0x00);
     
     SectionInsertString((*elf)->symtab, {(char*) &null_sym, sizeof(null_sym)});
 
@@ -123,7 +123,7 @@ ElfCreateEhdr(section_t section)
 }
 
     
-elf_return_e 
+static elf_return_e 
 ElfCreateTable(elf_t elf)
 {
     assert(elf != nullptr);
@@ -177,7 +177,7 @@ ElfCreateTable(elf_t elf)
 
 // ---------------------------------- shstrtab --------------------------------
     
-    const string_s shstrtab_name = {".shstrtab", 7};
+    const string_s shstrtab_name = {".shstrtab", 9};
     Elf64_Word shstrtab_index = 0;
     AddStrToShstrtab(elf, shstrtab_name, &shstrtab_index);
 
@@ -198,69 +198,57 @@ ElfCreateLinkable(elf_t elf)
     
     elf->file->cur_pos = OFFSET_AFTER_SHDR;
     
-    elf->stab->text = elf->file->cur_pos;
-    SectionInsertString(elf->file, {elf->text, elf->text->cur_pos})
+    elf->stab->text.sh_offset = elf->file->cur_pos;
+    SectionInsertString(elf->file, {(char*) elf->text->section, 
+                        elf->text->cur_pos});
 
+    elf->stab->rela_text.sh_offset = elf->file->cur_pos;
+    SectionInsertString(elf->file, {(char*) elf->rela_text->section, 
+                        elf->rela_text->cur_pos});
+    
+    elf->stab->symtab.sh_offset = elf->file->cur_pos;
+    SectionInsertString(elf->file, {(char*) elf->symtab->section, 
+                        elf->symtab->cur_pos});
+                        
+    elf->stab->strtab.sh_offset = elf->file->cur_pos;
+    SectionInsertString(elf->file, {(char*) elf->strtab->section, 
+                        elf->strtab->cur_pos});
+    
+    elf->stab->shstrtab.sh_offset = elf->file->cur_pos;
+    SectionInsertString(elf->file, {(char*) elf->shstrtab->section, 
+                        elf->shstrtab->cur_pos});
+    
+    size_t file_size = elf->file->cur_pos;
+
+    elf->file->cur_pos = OFFSET_AFTER_EHDR;
+
+    SectionInsertString(elf->file, {(char*) elf->stab, 
+                        sizeof(*elf->stab)});
+    
+    elf->file->cur_pos = file_size;
     
     return ELF_SUCCESS;
 }
 
-// elf_return_e 
-// SectionWriteInFile(section_t   section,
-//                    const char* file_name)
-// {
-//     assert(section != nullptr);
+elf_return_e 
+ElfWriteInFile(elf_t       elf,
+               const char* file_name)
+{
+    assert(elf != nullptr);
+    assert(file_name != nullptr);
 
-//     FILE* file_out = fopen(file_name, "w+");
-//     if (file_out == nullptr)
-//     {
-//         return ELF_FILE_OPEN_ERR;
-//     }
+    FILE* file_out = fopen(file_name, "w+");
+    if (file_out == nullptr)
+    {
+        return ELF_FILE_OPEN_ERR;
+    }
 
-//     SectionSetSegmentSize(section, section->cur_pos);
-//     fwrite(section->section, 1, section->cur_pos, file_out);
+    fwrite(elf->file->section, 1, elf->file->cur_pos, file_out);
 
-//     if (fclose(file_out))
-//     {
-//         return ELF_FILE_CLOSE_ERR;
-//     }
+    if (fclose(file_out))
+    {
+        return ELF_FILE_CLOSE_ERR;
+    }
     
-//     return ELF_SUCCESS;
-// }
-
-
-// elf_return_e
-// SectionCreateProgramH(section_t section)
-// {
-//     assert(section != nullptr);
-    
-//     section->program_header = section->cur_pos;
-//     const string_s elf_header ={(char*) &PHDR_REFERENCE, sizeof(PHDR_REFERENCE)};
-//     return SectionInsertString(section, elf_header);
-// }
-
-// static elf_return_e 
-// SectionSetSegmentSize(section_t section,
-//                       size_t    size)
-// {
-//     assert(section != nullptr);
-
-//     Elf64_Phdr* phdr = (Elf64_Phdr*) (section->section + section->program_header);
-    
-//     phdr->p_filesz = size;
-//     phdr->p_memsz = size;
-
-//     return ELF_SUCCESS;
-// }
-
-// const Elf64_Phdr PHDR_REFERENCE = 
-// {
-//     .p_type = PT_LOAD,
-//     .p_flags = PF_X | PF_R | PF_W,
-//     .p_offset = 0x00,
-//     .p_vaddr = VIRTUAL_START,
-//     .p_paddr = VIRTUAL_START,
-//     .p_filesz = 0x00,
-//     .p_memsz = 0x00,
-//     .p_align = 0x00
-// };
+    return ELF_SUCCESS;
+}

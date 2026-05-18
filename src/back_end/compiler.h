@@ -24,6 +24,7 @@ struct compiler_s
     FILE*          file_output;
     size_t         label_count;
     section_t      code_section;
+    elf_t          elf;
     placeholders_s placehldr;
     hashtable_t    name_table;
 };

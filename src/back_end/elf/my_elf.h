@@ -87,14 +87,18 @@ elf_return_e
 SectionCreateProgramH(section_t section);
 
 elf_return_e 
-SectionWriteInFile(section_t   section,
-                   const char* file_name);
-
-elf_return_e 
 SectionInsertString(section_t section,
                     string_s  string);
 
-// ----------------------------- section_construct ----------------------------
+// --------------------------------- elf_construct ----------------------------
+
+elf_return_e 
+ElfCtor(elf_t*    elf,
+        section_t text);
+
+elf_return_e
+ElfDtor(elf_t elf);
+
 
 elf_return_e
 AddStrToShstrtab(elf_t       elf,
@@ -117,5 +121,14 @@ elf_return_e
 RelatabAddFunc(elf_t     elf, 
                string_s  string,
                size_t    offset);
+
+elf_return_e
+ElfCreateLinkable(elf_t elf);
+
+
+elf_return_e 
+ElfWriteInFile(elf_t       elf,
+               const char* file_name);
+
                   
 #endif // ELF_H

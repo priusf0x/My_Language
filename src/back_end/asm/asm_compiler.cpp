@@ -77,6 +77,7 @@ SetCall(compiler_t compiler,
 {
     assert(compiler != nullptr);
 
+    RelatabAddFunc(compiler->elf, func, offset);
     uint64_t addr = HashTableGetElem(compiler->name_table, func);
 
     size_t cur_pos = compiler->code_section->cur_pos;
@@ -390,6 +391,8 @@ CompileFunction(ssize_t    lex,
     assert(array[lex].node_value.lex_type == LEX_TYPE_KEY_WORD);
     assert(array[lex].node_value.value.key_word == KEY_WORD_FUNCTION);
     
+    size_t start_function = compiler->code_section->cur_pos;
+
     SetFunctionName(lex, compiler);
     CHECK_OUTPUT(CompilePrologue(lex, compiler));
 
@@ -397,7 +400,12 @@ CompileFunction(ssize_t    lex,
     CHECK_OUTPUT(CompileBranch(array[lex].right_index, compiler));
     
     
+    ssize_t id_ind = array[lex].left_index;
+    string_s func_name = array[id_ind].node_value.value.id.id;
     
+    SymtabAddGlobFunc(compiler->elf, func_name, start_function, 
+                        compiler->code_section->cur_pos - start_function, true);
+
     return COMPILER_RETURN_SUCCESS;
 }
 
@@ -634,7 +642,6 @@ CompileRValue(ssize_t    lex,
         case LEX_TYPE_CONST:    return CompileConst(lex, compiler);
         case LEX_TYPE_OPERATOR: return CompileOp(lex, compiler);
         case LEX_TYPE_ID:       return CompileID(lex, compiler);
-
         case LEX_TYPE_UNDEFINED:
         case LEX_TYPE_KEY_WORD:
         case LEX_TYPE_SYNTAX:   return COMPILER_RETURN_INCORRECT_AST;
@@ -883,34 +890,6 @@ SetASMHeader(compiler_t compiler)
     return COMPILER_RETURN_SUCCESS;
 }
 
-// ------------------------------- std_lib ------------------------------------
-
-static compiler_return_e 
-CompileStdLib(compiler_t compiler)
-{
-    assert(compiler != nullptr);
-
-    for (size_t i = 0; i < FUNCTIONS_AMOUNT; i++)
-    {
-        buffer_t buffer = nullptr;
-        if (BufferCtor(&buffer, FUNCTIONS[i].file))
-        {
-            return COMPILER_RETURN_BUFFER_ERROR;
-        }
-
-        size_t cur_pos = compiler->code_section->cur_pos;
-        SectionInsertString(compiler->code_section, {buffer->buffer, buffer->max_buffer});
-        HashTableAddElem(compiler->name_table, FUNCTIONS[i].function_name, cur_pos);
-        
-        if (BufferDtor(&buffer))
-        {
-            return COMPILER_RETURN_BUFFER_ERROR;
-        }
-    }
-        
-    return COMPILER_RETURN_SUCCESS;
-}
-
 // ---------------------------- main_interface --------------------------------
 
 compiler_return_e
@@ -922,8 +901,6 @@ CompileAST(compiler_t compiler)
 
     node_s* array = compiler->compiler_tree->nodes_array;
     ssize_t start_node= array[0].left_index;
-
-    CompileStdLib(compiler);
 
     CHECK_OUTPUT(CompileBranch(start_node, compiler)); 
 

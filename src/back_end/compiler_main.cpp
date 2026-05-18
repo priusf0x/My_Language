@@ -4,6 +4,7 @@
 #include "lexes.h"
 #include "my_elf.h"
 #include "tree.h"
+#include <cstdio>
 
 static const char* AST_FILE =    "cache/ast.txt";
 static const char* OUTPUT_NAME = "compiled.asm";
@@ -27,7 +28,8 @@ int main(void)
 
     CompileAST(compiler);
 
-    SectionWriteInFile(compiler->code_section, "a.out");
+    ElfCreateLinkable(compiler->elf);
+    ElfWriteInFile(compiler->elf, "compiled.o");
 
     CompilerDtor(&compiler);
 
