@@ -149,13 +149,13 @@ main:
 ;if body
 	mov rbx, 35
 	mov rdi, rbx
-	call putc
+	call putchar
 	mov rbx, rax
 	jmp .L5
 .L4:
 	mov rbx, 32
 	mov rdi, rbx
-	call putc
+	call putchar
 	mov rbx, rax
 .L5:
 	mov rbx, [rbp - 80]
@@ -176,7 +176,7 @@ main:
 	mov [rbp - 88], rbx
 	mov rbx, 10
 	mov rdi, rbx
-	call putc
+	call putchar
 	mov rbx, rax
 	jmp .L1
 .L0:

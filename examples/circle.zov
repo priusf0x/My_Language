@@ -16,17 +16,17 @@ function main()
             if (((x - X_MAX / 2)*(x- X_MAX /2 )  + (y - Y_MAX /2 )*(y - Y_MAX / 2) * 4)
                     < RADIUS * RADIUS) 
             {
-                putc(35);
+                putchar(35);
             }
             else 
             {
-                putc(32);
+                putchar(32);
             }
             x = x + 1;
         }
         y = y + 1;
 
-        putc(10);
+        putchar(10);
     }
     return 0;
 }

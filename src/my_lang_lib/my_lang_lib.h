@@ -27,6 +27,9 @@ const function_s FUNCTIONS[] =
     
     FUNCTION(
     "putc", 1, "src/my_lang_lib/putc_comp.o")
+
+    FUNCTION(
+    "putchar", 1, nullptr)
 };
 const size_t FUNCTIONS_AMOUNT = sizeof(FUNCTIONS) / sizeof(FUNCTIONS[0]); 
 

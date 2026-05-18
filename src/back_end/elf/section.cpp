@@ -185,7 +185,7 @@ RelatabAddFunc(elf_t     elf,
         sym_tab_index = HashTableGetElem(elf->str_hash, string);
     }
         
-    rel_el.r_offset = offset + rel_addr_addend; 
+    rel_el.r_offset = offset + 1; 
     rel_el.r_info   = ELF64_R_INFO(sym_tab_index, R_X86_64_PC32);
     rel_el.r_addend = -rel_addr_addend;
     

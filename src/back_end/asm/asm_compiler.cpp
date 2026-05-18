@@ -78,12 +78,6 @@ SetCall(compiler_t compiler,
     assert(compiler != nullptr);
 
     RelatabAddFunc(compiler->elf, func, offset);
-    uint64_t addr = HashTableGetElem(compiler->name_table, func);
-
-    size_t cur_pos = compiler->code_section->cur_pos;
-    compiler->code_section->cur_pos = offset;
-    emit_call(compiler->code_section, addr);
-    compiler->code_section->cur_pos = cur_pos;
 
     return COMPILER_RETURN_SUCCESS;
 }
