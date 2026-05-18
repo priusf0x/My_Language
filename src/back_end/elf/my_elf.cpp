@@ -81,6 +81,8 @@ ElfCtor(elf_t*    elf,
     SectionEmitByte((*elf)->strtab, 0x00);
     
     SectionInsertString((*elf)->symtab, {(char*) &null_sym, sizeof(null_sym)});
+    
+    SymtabAddText(*elf);
 
     return ELF_SUCCESS;
 

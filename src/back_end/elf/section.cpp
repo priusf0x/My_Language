@@ -197,6 +197,27 @@ RelatabAddFunc(elf_t     elf,
 // ---------------------------------- symtab ----------------------------------
 
 elf_return_e
+SymtabAddText(elf_t elf)
+{
+    assert(elf != nullptr);
+
+    Elf64_Sym symbol = {};
+    const string_s text = {".text", 5};
+    
+    AddStrToStrtab(elf, text, &symbol.st_name);
+    HashTableAddElem(elf->str_hash, text, elf->symtab_size);
+    elf->symtab_size++;
+
+    symbol.st_info  = ELF64_ST_INFO(STB_GLOBAL, STT_SECTION);
+    symbol.st_shndx = TEXT_SECTION_NUMBER;
+    
+    SectionInsertString(elf->symtab, {(char*) &symbol, sizeof(symbol)});
+    
+    return ELF_SUCCESS;
+}
+
+
+elf_return_e
 SymtabAddGlobFunc(elf_t    elf, 
                   string_s string, 
                   size_t   offset, 
@@ -212,6 +233,8 @@ SymtabAddGlobFunc(elf_t    elf,
     elf->symtab_size++;
 
     symbol.st_info  = ELF64_ST_INFO(STB_GLOBAL, STT_FUNC);
+    
+    
     symbol.st_other = 0x00;
     symbol.st_shndx = is_defined? TEXT_SECTION_NUMBER : 0;
     symbol.st_value = offset;

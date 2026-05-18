@@ -1,4 +1,4 @@
-function _start()
+function main()
 {
     var X_MAX = 30;
     var Y_MAX = 30;

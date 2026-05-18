@@ -117,6 +117,9 @@ SymtabAddGlobFunc(elf_t    elf,
                   size_t   symb_size,
                   bool     is_defined);
                   
+elf_return_e
+SymtabAddText(elf_t elf);
+
 elf_return_e 
 RelatabAddFunc(elf_t     elf, 
                string_s  string,
