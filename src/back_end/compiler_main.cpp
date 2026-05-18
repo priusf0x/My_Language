@@ -27,7 +27,7 @@ int main(void)
 
     CompileAST(compiler);
 
-    SegmentWriteInFile(compiler->main_segment, "a.out");
+    SectionWriteInFile(compiler->code_section, "a.out");
 
     CompilerDtor(&compiler);
 

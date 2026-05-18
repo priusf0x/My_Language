@@ -31,63 +31,63 @@ enum reg_e
 };
 
 void 
-emit_syscall(segment_t segment);
+emit_syscall(section_t section);
              
 // ================================= PUSH/POP =================================
 
 void 
-emit_push(segment_t segment,
+emit_push(section_t section,
           reg_e     reg);
 
 void 
-emit_pop(segment_t segment,
+emit_pop(section_t section,
          reg_e     reg);
 
 // ================================== CALL/RET ================================
 
 void 
-emit_call(segment_t segment,
+emit_call(section_t section,
           uint64_t  addr);
 
 void 
-emit_ret(segment_t segment);
+emit_ret(section_t section);
 
 // ==================================== MOVE ==================================
 
 // move reg to reg
 
 void 
-emit_mov(segment_t segment,
+emit_mov(section_t section,
          reg_e     reg_d,
          reg_e     reg_s);
 
 // move const to reg
           
 void 
-emit_mov(segment_t segment,
+emit_mov(section_t section,
          reg_e     reg_d,
          int64_t   constant);
 
 // move from/to memory
 
 void 
-emit_mov_abs_mem(segment_t segment,
+emit_mov_abs_mem(section_t section,
                  reg_e     reg_d,
                  uint64_t  addr);
               
 void 
-emit_mov_abs_mem(segment_t segment,
+emit_mov_abs_mem(section_t section,
                  uint64_t  addr,
                  reg_e     reg_d);
 
 void 
-emit_mov_mem(segment_t segment,
+emit_mov_mem(section_t section,
              reg_e     reg_d,
              reg_e     reg_b,
              int64_t   offset);
 
 void 
-emit_mov_mem(segment_t segment,
+emit_mov_mem(section_t section,
              reg_e     reg_b,
              int64_t   offset,
              reg_e     reg_s);
@@ -95,69 +95,69 @@ emit_mov_mem(segment_t segment,
 // ================================== CMOVE ===================================
           
 void 
-emit_sete_bl(segment_t segment);
+emit_sete_bl(section_t section);
 
 void 
-emit_setne_bl(segment_t segment);
+emit_setne_bl(section_t section);
 
 void 
-emit_setg_bl(segment_t segment);
+emit_setg_bl(section_t section);
 
 void 
-emit_setge_bl(segment_t segment);
+emit_setge_bl(section_t section);
 
 void 
-emit_setl_bl(segment_t segment);
+emit_setl_bl(section_t section);
 
 void 
-emit_setle_bl(segment_t segment);
+emit_setle_bl(section_t section);
 
 // ================================ ARITHMETIC ================================
 
 void 
-emit_cmp(segment_t segment,
+emit_cmp(section_t section,
          reg_e     reg_a,
          reg_e     reg_b);
 
 void 
-emit_test(segment_t segment,
+emit_test(section_t section,
           reg_e     reg_l,
           reg_e     reg_r);
          
 void 
-emit_add(segment_t segment,
+emit_add(section_t section,
          reg_e     reg_d,
          reg_e     reg_s);
 
 void 
-emit_sub(segment_t segment,
+emit_sub(section_t section,
          reg_e     reg_d,
          reg_e     reg_s);
 
 void 
-emit_sub_rsp_const(segment_t segment, 
+emit_sub_rsp_const(section_t section, 
                    int32_t   num);
          
 void 
-emit_idiv(segment_t segment,
+emit_idiv(section_t section,
           reg_e     reg);
          
 void 
-emit_imul(segment_t segment,
+emit_imul(section_t section,
           reg_e     reg_d,
           reg_e     reg_s);
 
 void 
-emit_cqo(segment_t segment);
+emit_cqo(section_t section);
 
 // ================================== JUMPS ===================================
           
 void 
-emit_jmp(segment_t segment,
+emit_jmp(section_t section,
          uint32_t  addr);
 
 void 
-emit_jz(segment_t segment,
+emit_jz(section_t section,
         uint32_t  addr);
 
 #endif // EMITERS_H

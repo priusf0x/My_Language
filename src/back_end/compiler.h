@@ -18,12 +18,12 @@ struct placeholders_s
 };
 
 struct compiler_s 
-{  
+{
     buffer_t       buffer;
     tree_t         compiler_tree;
     FILE*          file_output;
     size_t         label_count;
-    segment_t      main_segment;
+    section_t      code_section;
     placeholders_s placehldr;
     hashtable_t    name_table;
 };

@@ -79,10 +79,10 @@ SetCall(compiler_t compiler,
 
     uint64_t addr = HashTableGetElem(compiler->name_table, func);
 
-    size_t cur_pos = compiler->main_segment->cur_pos;
-    compiler->main_segment->cur_pos = offset;
-    emit_call(compiler->main_segment, addr);
-    compiler->main_segment->cur_pos = cur_pos;
+    size_t cur_pos = compiler->code_section->cur_pos;
+    compiler->code_section->cur_pos = offset;
+    emit_call(compiler->code_section, addr);
+    compiler->code_section->cur_pos = cur_pos;
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -327,7 +327,7 @@ SetFunctionName(ssize_t    lex,
                 (int) id.size, id.string);
 
     HashTableAddElem(compiler->name_table, id, 
-                        compiler->main_segment->cur_pos);
+                        compiler->code_section->cur_pos);
 
     return COMPILER_RETURN_SUCCESS;
 }
@@ -395,7 +395,8 @@ CompileFunction(ssize_t    lex,
 
     COMMENT("\n;body\n");
     CHECK_OUTPUT(CompileBranch(array[lex].right_index, compiler));
-
+    
+    
     
     return COMPILER_RETURN_SUCCESS;
 }
@@ -440,22 +441,22 @@ CompileIf(ssize_t    lex,
     
     NASM_EMIT("\tjz .L%zu\n", cond_jmp); 
 
-    const size_t jz_placeholder = compiler->main_segment->cur_pos;  
-    emit_jz(compiler->main_segment, 0x0);
+    const size_t jz_placeholder = compiler->code_section->cur_pos;  
+    emit_jz(compiler->code_section, 0x0);
 
     COMMENT("\n;if body\n");
     
     CHECK_OUTPUT(CompileBranch(cur_node.right_index, compiler));
 
-    const size_t jmp_placeholder = compiler->main_segment->cur_pos;  
-    emit_jmp(compiler->main_segment, 0x0);
+    const size_t jmp_placeholder = compiler->code_section->cur_pos;  
+    emit_jmp(compiler->code_section, 0x0);
     NASM_EMIT("\tjmp .L%zu\n", cond_jmp + 1); 
 
     NASM_EMIT(".L%zu:\n", cond_jmp);
-    const size_t if_skip_label = compiler->main_segment->cur_pos;
-    compiler->main_segment->cur_pos = jz_placeholder;
-    emit_jz(compiler->main_segment, if_skip_label);
-    compiler->main_segment->cur_pos = if_skip_label;
+    const size_t if_skip_label = compiler->code_section->cur_pos;
+    compiler->code_section->cur_pos = jz_placeholder;
+    emit_jz(compiler->code_section, if_skip_label);
+    compiler->code_section->cur_pos = if_skip_label;
     
     if (array[cur_node.parent_index].right_index != NO_LINK) 
     {
@@ -463,10 +464,10 @@ CompileIf(ssize_t    lex,
     }
     
     NASM_EMIT(".L%zu:\n", cond_jmp + 1); 
-    const size_t else_skip_label = compiler->main_segment->cur_pos;
-    compiler->main_segment->cur_pos = jmp_placeholder;
-    emit_jmp(compiler->main_segment, else_skip_label);
-    compiler->main_segment->cur_pos = else_skip_label;
+    const size_t else_skip_label = compiler->code_section->cur_pos;
+    compiler->code_section->cur_pos = jmp_placeholder;
+    emit_jmp(compiler->code_section, else_skip_label);
+    compiler->code_section->cur_pos = else_skip_label;
     
     /*
         // condition 
@@ -495,25 +496,25 @@ CompileWhile(ssize_t    lex,
     compiler->label_count += 2;
     
     fprintf(compiler->file_output, ".L%zu:\n", test_jmp);
-    const size_t test_jmp_pos = compiler->main_segment->cur_pos; 
+    const size_t test_jmp_pos = compiler->code_section->cur_pos; 
 
     CHECK_OUTPUT(CompileRValue(cur_node.left_index, compiler));
     EMIT_TEST(RBX, RBX);
     NASM_EMIT("\tjz .L%zu\n", cond_jmp); 
     
-    const size_t jz_placeholder = compiler->main_segment->cur_pos;  
-    emit_jz(compiler->main_segment, 0);
+    const size_t jz_placeholder = compiler->code_section->cur_pos;  
+    emit_jz(compiler->code_section, 0);
 
     COMMENT("\n;while body\n");
     CHECK_OUTPUT(CompileBranch(cur_node.right_index, compiler));
     NASM_EMIT("\tjmp .L%zu\n" 
               ".L%zu:\n", test_jmp, cond_jmp);
-    emit_jmp(compiler->main_segment, (uint32_t) test_jmp_pos);
+    emit_jmp(compiler->code_section, (uint32_t) test_jmp_pos);
     
-    const size_t skip_label = compiler->main_segment->cur_pos;
-    compiler->main_segment->cur_pos = jz_placeholder;
-    emit_jz(compiler->main_segment, skip_label);
-    compiler->main_segment->cur_pos = skip_label;
+    const size_t skip_label = compiler->code_section->cur_pos;
+    compiler->code_section->cur_pos = jz_placeholder;
+    emit_jz(compiler->code_section, skip_label);
+    compiler->code_section->cur_pos = skip_label;
 
     /* 
         .L124:
@@ -683,9 +684,9 @@ CompileBool(ssize_t         lex,
     EMIT_POP_REG(RBX);
 
     fprintf(compiler->file_output, "\tcmp rbx, rax\n");
-    emit_cmp(compiler->main_segment, RBX, RAX);
+    emit_cmp(compiler->code_section, RBX, RAX);
     fprintf(compiler->file_output, "\tmov rbx, 0\n");
-    emit_mov(compiler->main_segment, RBX, 0);
+    emit_mov(compiler->code_section, RBX, 0);
     
     switch(op)
     {
@@ -868,15 +869,12 @@ SetASMHeader(compiler_t compiler)
 
     NASM_EMIT("global _start\n");
     NASM_EMIT("_start:\n");
-    
-    SegmentCreateFileH(compiler->main_segment);
-    SegmentCreateProgramH(compiler->main_segment);
 
     string_s main_name = {(char*) "main", strlen(main_name.string)};
    
     EMIT_CALL(main_name);
 
-    emit_mov(compiler->main_segment, RDI, RAX);
+    emit_mov(compiler->code_section, RDI, RAX);
     EMIT_MOV_REG_REG(RDI, RAX);
     const uint64_t exit_syscall = 0x3c;
     EMIT_MOV_REG_CONST(RAX, exit_syscall);
@@ -900,8 +898,8 @@ CompileStdLib(compiler_t compiler)
             return COMPILER_RETURN_BUFFER_ERROR;
         }
 
-        size_t cur_pos = compiler->main_segment->cur_pos;
-        SectionInsertString(compiler->main_segment, {buffer->buffer, buffer->max_buffer});
+        size_t cur_pos = compiler->code_section->cur_pos;
+        SectionInsertString(compiler->code_section, {buffer->buffer, buffer->max_buffer});
         HashTableAddElem(compiler->name_table, FUNCTIONS[i].function_name, cur_pos);
         
         if (BufferDtor(&buffer))

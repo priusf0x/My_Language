@@ -64,7 +64,7 @@ CompilerCtor(const char* input_name,
         goto error;
     }
     
-    if (SegmentCtor(&(*compiler)->main_segment, start_section_size))
+    if (SectionCtor(&(*compiler)->code_section, start_section_size))
     {
         output = COMPILER_RETURN_SECTION_ERROR;
         goto error;
@@ -88,7 +88,7 @@ error:
     TreeDtor(&(*compiler)->compiler_tree);
     BufferDtor(&(*compiler)->buffer);
     fclose((*compiler)->file_output);
-    SegmentDtor((*compiler)->main_segment);
+    SectionDtor((*compiler)->code_section);
     DestroyList((*compiler)->placehldr.list);
     free(*compiler);
     *compiler = nullptr;
@@ -104,7 +104,7 @@ CompilerDtor(compiler_t* compiler)
         TreeDtor(&(*compiler)->compiler_tree);
         BufferDtor(&(*compiler)->buffer);
         fclose((*compiler)->file_output);
-        SegmentDtor((*compiler)->main_segment);
+        SectionDtor((*compiler)->code_section);
         DestroyList((*compiler)->placehldr.list);
         HashTableDtor((*compiler)->name_table);
         free(*compiler);

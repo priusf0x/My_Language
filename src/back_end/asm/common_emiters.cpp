@@ -32,9 +32,9 @@ MovRegVar(compiler_t compiler,
         {
             if (val.value.id.info1 < 7)
             {
-                reverse ?   emit_mov_mem(compiler->main_segment, RBP, 
+                reverse ?   emit_mov_mem(compiler->code_section, RBP, 
                                 - (int64_t) (val.value.id.info1 * 8 + 8), reg) :
-                            emit_mov_mem(compiler->main_segment, reg, RBP, 
+                            emit_mov_mem(compiler->code_section, reg, RBP, 
                                 - (int64_t) (val.value.id.info1 * 8 + 8));
                 reverse ?   NASM_EMIT("\tmov [rbp - %ld], %s\n", 
                                  (int64_t) (val.value.id.info1 * 8 + 8), REG_NAMES[reg]) :
@@ -43,9 +43,9 @@ MovRegVar(compiler_t compiler,
             }
             else 
             {
-                reverse ?   emit_mov_mem(compiler->main_segment, RBP, 
+                reverse ?   emit_mov_mem(compiler->code_section, RBP, 
                                  (int64_t) (val.value.id.info1 * 8 + 16), reg) :
-                            emit_mov_mem(compiler->main_segment, reg, RBP, 
+                            emit_mov_mem(compiler->code_section, reg, RBP, 
                                  (int64_t) (val.value.id.info1 * 8 + 16));
                 reverse ?   NASM_EMIT("\tmov [rbp + %ld], %s\n", 
                                  (int64_t) (val.value.id.info1 * 8 + 16), REG_NAMES[reg]) :
@@ -55,9 +55,9 @@ MovRegVar(compiler_t compiler,
         }
         else 
         {
-            reverse ?   emit_mov_mem(compiler->main_segment, RBP, 
+            reverse ?   emit_mov_mem(compiler->code_section, RBP, 
                             - (int64_t) (val.value.id.info1 * 8 + 56), reg) :
-                        emit_mov_mem(compiler->main_segment, reg, RBP, 
+                        emit_mov_mem(compiler->code_section, reg, RBP, 
                             - (int64_t) (val.value.id.info1 * 8  + 56));
             reverse ?   NASM_EMIT("\tmov [rbp - %ld], %s\n", 
                              (int64_t) (val.value.id.info1 * 8 + 56), REG_NAMES[reg]) :

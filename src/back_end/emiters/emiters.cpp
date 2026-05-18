@@ -20,17 +20,17 @@ const uint8_t FILL_BETWEEN_INSTR = 0x90;
 // ============================== SECTION_CONTROL =============================
 
 void 
-SectionAddByte(segment_t segment,
+SectionAddByte(section_t section,
                uint8_t   byte)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
-    *(segment->segment + segment->cur_pos) = byte;
+    *(section->section + section->cur_pos) = byte;
 }
 
-#define EMIT(_X_) SegmentEmitByte(segment, (_X_))
-#define EMIT_D(_X_) SegmentEmitDword(segment, (_X_))
-#define EMIT_Q(_X_) SegmentEmitQword(segment, (_X_))
+#define EMIT(_X_) SectionEmitByte(section, (_X_))
+#define EMIT_D(_X_) SectionEmitDword(section, (_X_))
+#define EMIT_Q(_X_) SectionEmitQword(section, (_X_))
 #define DEBUG() 
 // EMIT(FILL_BETWEEN_INSTR)
 
@@ -39,10 +39,10 @@ SectionAddByte(segment_t segment,
 // ----------------------------------------------------------------------------
 
 void 
-emit_push(segment_t segment,
+emit_push(section_t section,
           reg_e     reg)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     DEBUG();
 
@@ -56,10 +56,10 @@ emit_push(segment_t segment,
 }
 
 void
-emit_pop(segment_t segment,
+emit_pop(section_t section,
          reg_e reg)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     DEBUG();
     const uint8_t op_code = 0x58;
@@ -75,16 +75,16 @@ emit_pop(segment_t segment,
 // ----------------------------------------------------------------------------
 
 void 
-emit_call(segment_t segment,
+emit_call(section_t section,
           uint64_t  address)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     DEBUG();
     const uint8_t op_code = 0xE8;
 
     EMIT(op_code);
-    const size_t rel_start = segment->cur_pos + 4; 
+    const size_t rel_start = section->cur_pos + 4; 
     
     int32_t rel_address = (int32_t) ((int64_t) address - (int64_t) rel_start); 
 
@@ -92,9 +92,9 @@ emit_call(segment_t segment,
 }
 
 void 
-emit_ret(segment_t segment)
+emit_ret(section_t section)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
     DEBUG();
 
     const uint8_t op_code = 0xC3;
@@ -104,11 +104,11 @@ emit_ret(segment_t segment)
 // ----------------------------------------------------------------------------
 
 void 
-emit_mov(segment_t segment,
+emit_mov(section_t section,
          reg_e     reg_d,
          reg_e     reg_s)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
     
     DEBUG();
     const uint8_t op_code = 0x89;
@@ -126,11 +126,11 @@ emit_mov(segment_t segment,
 }
 
 void 
-emit_mov(segment_t segment,
+emit_mov(section_t section,
          reg_e     reg_d,
          int64_t   constant)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     DEBUG();
     const uint8_t op_code = 0xB8;
@@ -148,11 +148,11 @@ emit_mov(segment_t segment,
 }
 
 void 
-emit_move_mem(segment_t segment,
+emit_move_mem(section_t section,
               reg_e     reg_d,
               uint64_t  addr)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
     
     DEBUG();
     const uint8_t op_code = 0x8b;
@@ -175,12 +175,12 @@ emit_move_mem(segment_t segment,
 }
 
 void 
-emit_mov_mem(segment_t segment,
+emit_mov_mem(section_t section,
               reg_e     reg_d,
               reg_e     reg_b,
               int64_t   offset)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     DEBUG();
     const uint8_t op_code = 0x8b;
@@ -203,12 +203,12 @@ emit_mov_mem(segment_t segment,
 }
 
 void 
-emit_mov_mem(segment_t segment,
+emit_mov_mem(section_t section,
              reg_e     reg_b,
              int64_t   offset,
              reg_e     reg_d)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     DEBUG();
     const uint8_t op_code = 0x89;
@@ -231,10 +231,10 @@ emit_mov_mem(segment_t segment,
 // ----------------------------------------------------------------------------
 
 static void 
-emit_set_bl(segment_t segment, 
+emit_set_bl(section_t section, 
             uint8_t   op_code)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     const uint8_t op_code_1 = 0x0f;
     EMIT(op_code_1);
@@ -245,68 +245,68 @@ emit_set_bl(segment_t segment,
 }
 
 void 
-emit_sete_bl(segment_t segment)
+emit_sete_bl(section_t section)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     const uint8_t op_code = 0x94;
-    emit_set_bl(segment, op_code);
+    emit_set_bl(section, op_code);
 }
 
 void 
-emit_setne_bl(segment_t segment)
+emit_setne_bl(section_t section)
 { 
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     const uint8_t op_code = 0x95;
-    emit_set_bl(segment, op_code);
+    emit_set_bl(section, op_code);
 }
 
 void 
-emit_setg_bl(segment_t segment)
+emit_setg_bl(section_t section)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     const uint8_t op_code = 0x9f;
-    emit_set_bl(segment, op_code);
+    emit_set_bl(section, op_code);
 }
 
 void 
-emit_setge_bl(segment_t segment)
+emit_setge_bl(section_t section)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     const uint8_t op_code = 0x9d;
-    emit_set_bl(segment, op_code);
+    emit_set_bl(section, op_code);
 }
 
 void 
-emit_setl_bl(segment_t segment)
+emit_setl_bl(section_t section)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     const uint8_t op_code = 0x9c;
-    emit_set_bl(segment, op_code);
+    emit_set_bl(section, op_code);
 }
 
 void 
-emit_setle_bl(segment_t segment)
+emit_setle_bl(section_t section)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     const uint8_t op_code = 0x9e;
-    emit_set_bl(segment, op_code);
+    emit_set_bl(section, op_code);
 }
 
 // ----------------------------------------------------------------------------
 
 static void 
-emit_arithmetic(segment_t segment,
+emit_arithmetic(section_t section,
                 reg_e     reg_d,
                 reg_e     reg_s,
                 uint8_t   op_code)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     DEBUG();
     uint8_t rex_byte = MAGIC_NUM_REX | W_REX;
@@ -323,24 +323,24 @@ emit_arithmetic(segment_t segment,
 }
 
 void
-emit_cmp(segment_t segment,
+emit_cmp(section_t section,
          reg_e     reg_d,
          reg_e     reg_s)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     DEBUG();
     const uint8_t op_code = 0x39;
 
-    emit_arithmetic(segment, reg_d, reg_s, op_code);
+    emit_arithmetic(section, reg_d, reg_s, op_code);
 }
 
 void 
-emit_test(segment_t segment,
+emit_test(section_t section,
           reg_e     reg_l,
           reg_e     reg_r)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
     
     DEBUG();
 
@@ -360,37 +360,37 @@ emit_test(segment_t segment,
 }
 
 void
-emit_add(segment_t segment,
+emit_add(section_t section,
          reg_e     reg_d,
          reg_e     reg_s)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     DEBUG();
     const uint8_t op_code = 0x01;
 
-    emit_arithmetic(segment, reg_d, reg_s, op_code);
+    emit_arithmetic(section, reg_d, reg_s, op_code);
 }
 
 void
-emit_sub(segment_t segment,
+emit_sub(section_t section,
          reg_e     reg_d,
          reg_e     reg_s)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     DEBUG();
     const uint8_t op_code = 0x29;
 
-    emit_arithmetic(segment, reg_d, reg_s, op_code);
+    emit_arithmetic(section, reg_d, reg_s, op_code);
 }
 
 void 
-emit_imul(segment_t segment,
+emit_imul(section_t section,
           reg_e     reg_d,
           reg_e     reg_s)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     DEBUG();
     
@@ -412,10 +412,10 @@ emit_imul(segment_t segment,
 }
 
 void 
-emit_sub_rsp_const(segment_t segment, 
+emit_sub_rsp_const(section_t section, 
                    int32_t   num)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
     
     DEBUG();
 
@@ -430,10 +430,10 @@ emit_sub_rsp_const(segment_t segment,
 }
 
 void 
-emit_idiv(segment_t segment,
+emit_idiv(section_t section,
           reg_e     reg)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     DEBUG();
     const uint8_t op_code_1 = 0xf7;
@@ -448,9 +448,9 @@ emit_idiv(segment_t segment,
 }
 
 void 
-emit_cqo(segment_t segment)
+emit_cqo(section_t section)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     const uint8_t op_code_1 = 0x48;
     const uint8_t op_code_2 = 0x99;
@@ -460,9 +460,9 @@ emit_cqo(segment_t segment)
 }
 
 void 
-emit_syscall(segment_t segment)
+emit_syscall(section_t section)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     DEBUG();
     const uint8_t op_code_1 = 0x0f;
@@ -475,25 +475,25 @@ emit_syscall(segment_t segment)
 // ----------------------------------------------------------------------------
 
 void 
-emit_jmp(segment_t segment,
+emit_jmp(section_t section,
          uint32_t  addr)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     DEBUG();
 
     const uint8_t long_op_code = 0xe9;
     int32_t long_rel_address = (int32_t) (addr) 
-                        - (int32_t) (segment->cur_pos + 5);  
+                        - (int32_t) (section->cur_pos + 5);  
     EMIT(long_op_code);
     EMIT_D((int32_t) long_rel_address);
 }
 
 void 
-emit_jz(segment_t segment,
+emit_jz(section_t section,
         uint32_t  addr)
 {
-    assert(segment != nullptr);
+    assert(section != nullptr);
 
     DEBUG();
 
@@ -501,7 +501,7 @@ emit_jz(segment_t segment,
     const uint8_t long_op_code_2 = 0x84;
     
     int32_t long_rel_address = (int32_t) (addr) 
-                        - (int32_t) (segment->cur_pos + 6);  
+                        - (int32_t) (section->cur_pos + 6);  
 
     EMIT(long_op_code_1);
     EMIT(long_op_code_2);

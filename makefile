@@ -32,6 +32,7 @@ COMP_SOURCES_ALT = \
  		  back_end/asm/asm_compiler.cpp\
 		  back_end/emiters/emiters.cpp\
 		  back_end/elf/my_elf.cpp\
+		  back_end/elf/section.cpp\
 		  back_end/asm/common_emiters.cpp
 
 
