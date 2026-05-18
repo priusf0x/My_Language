@@ -1,3 +1,4 @@
+extern putc
 putc:
     push rdi
     mov rax, 1      

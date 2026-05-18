@@ -13,7 +13,8 @@
 #include "tools.h"
 
 const size_t OFFSET_AFTER_EHDR = sizeof(Elf64_Ehdr);
-const size_t OFFSET_AFTER_SHDR = sizeof(Elf64_Ehdr) + sizeof(Elf64_Shdr);
+const size_t OFFSET_AFTER_SHDR = sizeof(Elf64_Ehdr) 
+                    + SECTION_AMOUNT * sizeof(Elf64_Shdr);
 
 const Elf64_Ehdr EHDR_REFERENCE =
 {                 //       E     L     F
@@ -197,7 +198,7 @@ ElfCreateLinkable(elf_t elf)
     ElfCreateTable(elf);
     
     elf->file->cur_pos = OFFSET_AFTER_SHDR;
-    
+
     elf->stab->text.sh_offset = elf->file->cur_pos;
     SectionInsertString(elf->file, {(char*) elf->text->section, 
                         elf->text->cur_pos});

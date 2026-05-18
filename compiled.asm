@@ -1,5 +1,5 @@
 
-main:
+_start:
 
 ;prologue
 	push rbp
