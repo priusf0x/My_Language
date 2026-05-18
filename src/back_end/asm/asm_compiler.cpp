@@ -866,38 +866,12 @@ CompileBranch(ssize_t    lex,
     return COMPILER_RETURN_SUCCESS;
 }
 
-// --------------------------- set_asm_header ---------------------------------
-
-
-static compiler_return_e 
-SetASMHeader(compiler_t compiler)
-{
-    assert(compiler != nullptr);
-
-    NASM_EMIT("global _start\n");
-    NASM_EMIT("_start:\n");
-
-    string_s main_name = {(char*) "main", strlen(main_name.string)};
-   
-    EMIT_CALL(main_name);
-
-    emit_mov(compiler->code_section, RDI, RAX);
-    EMIT_MOV_REG_REG(RDI, RAX);
-    const uint64_t exit_syscall = 0x3c;
-    EMIT_MOV_REG_CONST(RAX, exit_syscall);
-    EMIT_SYSCALL();
-
-    return COMPILER_RETURN_SUCCESS;
-}
-
 // ---------------------------- main_interface --------------------------------
 
 compiler_return_e
 CompileAST(compiler_t compiler)
 {
     assert(compiler != nullptr);
-    
-    SetASMHeader(compiler); 
 
     node_s* array = compiler->compiler_tree->nodes_array;
     ssize_t start_node= array[0].left_index;

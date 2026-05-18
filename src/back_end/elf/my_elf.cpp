@@ -134,7 +134,7 @@ ElfCreateTable(elf_t elf)
     Elf64_Word text_index = 0;
     AddStrToShstrtab(elf, text_name, &text_index);
 
-    elf->stab->text.sh_addr = text_index; 
+    elf->stab->text.sh_name = text_index; 
     elf->stab->text.sh_type = SHT_PROGBITS;
     elf->stab->text.sh_flags = SHF_ALLOC | SHF_EXECINSTR;
     elf->stab->text.sh_size = elf->text->cur_pos;
@@ -145,7 +145,7 @@ ElfCreateTable(elf_t elf)
     Elf64_Word rela_index = 0;
     AddStrToShstrtab(elf, rela_name, &rela_index);
 
-    elf->stab->rela_text.sh_addr = rela_index;
+    elf->stab->rela_text.sh_name = rela_index;
     elf->stab->rela_text.sh_type = SHT_RELA;
     elf->stab->rela_text.sh_link = SYMTAB_SECTION_NUMBER;
     elf->stab->rela_text.sh_info = TEXT_SECTION_NUMBER;
@@ -158,7 +158,7 @@ ElfCreateTable(elf_t elf)
     Elf64_Word symtab_index = 0;
     AddStrToShstrtab(elf, symtab_name, &symtab_index);
     
-    elf->stab->symtab.sh_addr = symtab_index;
+    elf->stab->symtab.sh_name = symtab_index;
     elf->stab->symtab.sh_type = SHT_SYMTAB;
     elf->stab->symtab.sh_link = STRTAB_SECTION_NUMBER;
     elf->stab->symtab.sh_info = RELA_SECTION_NUMBER;
@@ -171,7 +171,7 @@ ElfCreateTable(elf_t elf)
     Elf64_Word strtab_index = 0;
     AddStrToShstrtab(elf, strtab_name, &strtab_index);
 
-    elf->stab->strtab.sh_addr = strtab_index;
+    elf->stab->strtab.sh_name = strtab_index;
     elf->stab->strtab.sh_type = SHT_STRTAB;
     elf->stab->strtab.sh_size = elf->strtab->cur_pos;
 
@@ -181,9 +181,9 @@ ElfCreateTable(elf_t elf)
     Elf64_Word shstrtab_index = 0;
     AddStrToShstrtab(elf, shstrtab_name, &shstrtab_index);
 
-    elf->stab->shstrtab.sh_addr = shstrtab_index;
+    elf->stab->shstrtab.sh_name = shstrtab_index;
     elf->stab->shstrtab.sh_type = SHT_STRTAB;
-    elf->stab->shstrtab.sh_size = elf->shstrtab->cur_pos;
+    elf->stab->shstrtab.sh_size = elf->shstrtab->cur_pos;           
 
     return ELF_SUCCESS;
 }
