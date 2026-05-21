@@ -82,7 +82,7 @@ MovRegVar(compiler_t compiler,
 
 #define EMIT_MOV_MEM_OFF_REG(___REG_B___, ___OFFSET___, ___REG___)\
     do {NASM_EMIT("\tmov qword [%s + %ld], %s\n",\
-        REG_NAMES[(___REG_B___)], (___OFFSET___), REG_NAMES[(___REG___)]);\
+        REG_NAMES[(___REG_B___)], (uint64_t) (___OFFSET___), REG_NAMES[(___REG___)]);\
     emit_mov_mem(compiler->main_segment, (___REG_B___), (___OFFSET___), ___REG___);} while (0);
 
 // -------------------------------- push/pop ----------------------------------

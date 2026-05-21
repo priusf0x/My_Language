@@ -1,4 +1,4 @@
-print_dec:              
+print:              
     push rbp         
     mov rbp, rsp    
 

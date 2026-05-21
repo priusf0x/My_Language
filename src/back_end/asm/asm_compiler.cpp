@@ -323,8 +323,7 @@ SetFunctionName(ssize_t    lex,
             
     string_s id = array[id_ind].node_value.value.id.id;
     
-    fprintf(compiler->file_output, "\n%.*s:\n", 
-                (int) id.size, id.string);
+    NASM_EMIT("\n%.*s:\n", (int) id.size, id.string);
 
     HashTableAddElem(compiler->name_table, id, 
                         compiler->main_segment->cur_pos);
@@ -909,7 +908,7 @@ CompileStdLib(compiler_t compiler)
             return COMPILER_RETURN_BUFFER_ERROR;
         }
     }
-        
+
     return COMPILER_RETURN_SUCCESS;
 }
 

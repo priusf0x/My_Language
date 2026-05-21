@@ -23,10 +23,13 @@ struct function_s
 const function_s FUNCTIONS[] =
 {
     FUNCTION(
-    "print", 1, "src/my_lang_lib/print_comp.o")
+    "print", 1, "src/my_lang_lib/print.o")
     
     FUNCTION(
-    "putc", 1, "src/my_lang_lib/putc_comp.o")
+    "putc", 1, "src/my_lang_lib/putc.o")
+    
+    FUNCTION(
+    "scan", 0, "src/my_lang_lib/scan.o")
 };
 const size_t FUNCTIONS_AMOUNT = sizeof(FUNCTIONS) / sizeof(FUNCTIONS[0]); 
 
